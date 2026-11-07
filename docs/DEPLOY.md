@@ -6,14 +6,16 @@ Plan about an hour for the first time; later updates take a few minutes.
 
 ## How it fits together
 
-```
- your Mac                         GitHub                                  your NAS
- ────────                         ──────                                  ────────
- the code (a git "repository")    1. stores the code
-   │  git push  ───────────────▶  2. checks it (tests) and builds the
-   │                                 Docker image
-   │  git push --tags  ────────▶  3. publishes the image on ghcr.io  ───▶ Dockge pulls it,
-                                     (only for a "release" tag)            like any other app
+```mermaid
+flowchart TD
+    mac["Your Mac<br/>the code (git repository)"]
+    gh["GitHub<br/>stores the code, runs the checks,<br/>builds the Docker image"]
+    ghcr["ghcr.io<br/>the published image"]
+    nas["Your NAS<br/>Dockge pulls the image"]
+    mac -- "git push" --> gh
+    mac -- "git push of a v… tag (release)" --> gh
+    gh -- "only for a release" --> ghcr
+    ghcr -- "Deploy / Update" --> nas
 ```
 
 This is the same as the apps you already run: their authors publish images, your Dockge
