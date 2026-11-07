@@ -7,6 +7,7 @@ import { getSeasonMeta } from "~/model";
 import { TeamLink } from "~/components/Elements/TeamLink";
 import { TeamWithMeta } from "~/server/model/team";
 import { useStore } from "~/utils/store";
+import { useIsAdmin } from "~/utils/useIsAdmin";
 
 type TeamOrder =
   | "name"
@@ -21,6 +22,7 @@ type TeamOrder =
 export const TeamTable: FunctionComponent<{ teams: TeamWithMeta[] }> = ({
   teams,
 }) => {
+  const isAdmin = useIsAdmin();
   const selectedSeason = useStore(state => state.season);
   const [orderBy, setOrderBy] = useState<TeamOrder>("rating");
   const [order, setOrder] = useState<"asc" | "desc">("asc");
@@ -129,20 +131,22 @@ export const TeamTable: FunctionComponent<{ teams: TeamWithMeta[] }> = ({
             >
               <td className={`p-3`}>
                 <TeamLink team={team.name} />
-                <button
-                  className="group-hover:opacity-100 opacity-0 transition-opacity mx-3 text-red-500"
-                  onClick={() => {
-                    if (
-                      window.prompt(
-                        `Are you really sure? Please enter "${team.name}" to confirm.`,
-                      ) === team.name
-                    ) {
-                      mutation.mutate({ id: team.id });
-                    }
-                  }}
-                >
-                  <TiDeleteOutline />
-                </button>
+                {isAdmin && (
+                  <button
+                    className="group-hover:opacity-100 opacity-0 transition-opacity mx-3 text-red-500"
+                    onClick={() => {
+                      if (
+                        window.prompt(
+                          `Are you really sure? Please enter "${team.name}" to confirm.`,
+                        ) === team.name
+                      ) {
+                        mutation.mutate({ id: team.id });
+                      }
+                    }}
+                  >
+                    <TiDeleteOutline />
+                  </button>
+                )}
               </td>
               <td className={`p-3`}>{team.meta.totalMatches}</td>
               <td className={`p-3`}>{team.meta.totalWins}</td>

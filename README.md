@@ -17,146 +17,97 @@ A public **demo** is available at [demo.hilde.gg](https://demo.hilde.gg).
 
 1. [Features](#features) - Hilde's features
 2. [Getting Started](#getting-started) - How to get Hilde up and running
-3. [Usage](#usage) - Command line utilities and configuration variables
-4. [Contributing](#contributing) - How to contribute
-5. [License](#license)
+3. [Player statistics](#player-statistics) - Per-player ratings and stats
+4. [Configuration](#configuration) - Environment variables
+5. [Changes in this fork](#changes-in-this-fork) - What was modernized
+6. [License](#license)
 
 ## ⚡️ Features
 
 - Simple, intuitive interface
 - **Elo rating** for each team
-- **Seasons** (managable via admin interface)
-- Detailed team statistics (winstreaks, winrate, elo history chart, ...)
+- **Elo rating for each player** (new), plus per-player statistics, partners and opponents
+- **Seasons** (manageable via admin interface)
+- Detailed team statistics (win streaks, win rate, elo history chart, ...)
 - **Achievements** (e.g. "Win 100 Matches", "Win 10 Matches in a row", ...)
 - Compare teams against each other
 - Teams of any size, simply separated by a comma in the team name
 - **Light/Dark theme**
 - Match comments
 - **Leaderboards**
-- *Optional*: Deployable for free with Vercel & Planetscale
-- *Optional*: Fully dockerized
+- Single container, single SQLite file: no database server needed
 
 ## ⭐ Getting Started
 
-Hilde can be installed in a few minutes, either by deploying it to Vercel, using Docker or setting it up manually.
+After installing you need to add a season via the admin UI (`/admin`), using the password from `ADMIN_PASSWORD`.
 
-Requirements:
+### Docker Compose (recommended)
 
-- Node 14
-- MySQL (5.7+)
-
-Keep in mind that after installing you need to add a season via the admin ui (`/admin`) using the password from the environment variable (`ADMIN_PASSWORD`).
-
-### Free hosting with Vercel & Planetscale
-
-Hilde is designed in a way that it could easily be hosted for free, using [Vercel](https://vercel.com) for hosting
-and [Planetscale](https://planetscale.com) for the database.
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fnehalist%2Fhilde)
-
-### Docker Compose
-
-Example `docker-compose.yml`:
-
-```yaml
-version: '3'
-
-services:
-  hilde:
-    depends_on:
-      - database
-    networks:
-      - internal
-    image: nehalist/hilde
-    ports:
-      - '127.0.0.1:3000:3000'
-    environment:
-      - DATABASE_URL=mysql://root:hildepw@database:3306/hilde
-      - ADMIN_PASSWORD=v3rys3cr3tp4ssw0rd
-
-  database:
-    networks:
-      - internal
-    image: mysql:8.0
-    environment:
-      - MYSQL_DATABASE=hilde
-      - MYSQL_ROOT_PASSWORD=hildepw
-    volumes:
-      - db:/var/lib/mysql
-
-volumes:
-  db:
-
-networks:
-  internal:
+```bash
+cp .env.example .env     # then edit ADMIN_PASSWORD and NEXTAUTH_SECRET
+docker compose up -d
 ```
 
-After running `docker-compose up -d` Hilde is running on `localhost:3000`.
+The app is then available on <http://localhost:3000>. The SQLite database lives in the `hilde-data` volume;
+back that up. Migrations are applied automatically on every start.
 
-### Manually (for development)
+Behind a reverse proxy set `NEXTAUTH_URL` to the public URL (e.g. `https://foosball.example.com`).
 
-1. Clone/fork the repository
-2. Run `npm ci` to install dependencies
-3. Run `docker-compose up -d` in order to start the database container (or adjust the `.env` file to use a different db)
-4. Run `npm run dev` to start the development server
-5. Add awesome features.
+### Manual
 
-### Docker
+Requirements: Node.js 20.9+ (22 recommended).
 
-The official Docker image of Hilde is available on [Docker Hub](https://hub.docker.com/repository/docker/nehalist/hilde). Run it locally
-via:
+```bash
+cp .env.example .env     # then edit it
+npm ci                   # also generates the Prisma client
+npm run db:migrate       # creates/updates the SQLite database
+npm run build
+npm start
+```
 
-1. Run `docker run -p 127.0.0.1:3000:3000 -e DATABASE_URL=mysql://<user>:<password>@<host>:<port>/<db> nehalist/hilde`
-2. Open `http://localhost:3000`
-3. Done.
+Development: `npm run dev`. Checks: `npm run lint && npm test`.
 
-## ⚙️ Usage
+## 👤 Player statistics
 
-### Administration
+Matches are recorded between _teams_ (`anna,marco` vs `luca,sara`), and the team ratings work as before. In addition,
+Hilde now derives **per-player statistics** from the very same matches, so nothing extra has to be entered:
 
-Hilde provides an admin ui at `/admin` which can be used to manage seasons.
+- `/players`: leaderboard for the current season or all time (rating, matches, W/L, win rate, goal difference, streak)
+- `/players/<name>`: rating history, highest/lowest rating, goals, streaks, results per format (1v1, 2v2, ...),
+  results _with_ every partner and _against_ every opponent, best partner / toughest opponent, recent matches
 
-### Commands
+How the player rating works: every player starts at 1000. For each match (replayed in chronological order) a side
+counts with the **average rating of its players**; the usual Elo formula (same K-factors as the team rating) gives each
+player of a side the same expected result and the same win/loss outcome, each player's own K-factor applied to their
+own rating. Because everything is recomputed from the matches, deleting a match simply corrects all player stats.
+Players with fewer than 5 matches are marked as provisional (`*`).
 
-Hilde provides a set of utility terminal commands:
+Player names are the comma separated names in the team name (lower-cased), so `Anna` and `anna` are the same person.
+Use one consistent name per person.
 
-| Command           | Description                   |
-|-------------------|-------------------------------|
-| `npm run dev`     | Starts the development server |
-| `npm run build`   | Builds the app                |
-| `npm run start`   | Starts the production server  |
-| `npm run lint`    | Lints files                   |
-| `npm run migrate` | Executes Prisma migrations    |
+## 🔧 Configuration
 
-### Configuration
+| Variable          | Description                                                                             |
+| ----------------- | --------------------------------------------------------------------------------------- |
+| `ADMIN_PASSWORD`  | Password for `/admin` (min. 8 chars). Required, there is no default.                    |
+| `NEXTAUTH_SECRET` | Random string to sign sessions (min. 16 chars). Required.                               |
+| `NEXTAUTH_URL`    | Public URL of the app.                                                                  |
+| `DATABASE_URL`    | SQLite file, `file:/data/hilde.db` in Docker. Relative paths are relative to `prisma/`. |
 
-Hilde can be configured via environment variables in the `.env` file.
+## 🆕 Changes in this fork
 
-| Variable          | Description                | Default                                        |
-|-------------------|----------------------------|------------------------------------------------|
-| `ADMIN_PASSWORD`  | Administration password    | `h1ldeb3steV3r`                                |
-| `NEXTAUTH_SECRET` | Token secret               | `+Zrk5zW6fgog5k0LbN4bxL1YXKIhvb65Yln5ZKf+g3o=` |
-| `NEXTAUTH_URL`    | Deployed URL of Hilde      | `http://localhost:3000`                        |
-| `DATABASE_URL`    | Database connection string | `mysql://root:hildepw@localhost:3309/hilde`    |
+Based on [nehalist/hilde](https://github.com/nehalist/hilde) (last upstream commit: November 2023).
 
-## 👐 Contributing
-
-Hilde was created for fun and to play around with technologies I don't use on a daily basis in my office job, hence can be improved by many ways.
-
-It's built on:
-
-- [Next.js 13](https://nextjs.org/)
-- [tRPC](https://trpc.io/)
-- [Tailwind CSS](https://tailwindcss.com/)
-- [TypeScript](https://www.typescriptlang.org/)
-- [Prisma](https://www.prisma.io/)
-- [NextAuth.js](https://next-auth.js.org/)
-- and many more (see [package.json](package.json))
-
-PRs are highly appreciated 🥳
-
-If you like Hilde, please consider starring the repository. Thanks!
+- Dependencies brought up to date: Next.js 15, React 19, tRPC 11, TanStack Query 5, Prisma 6, TypeScript 5.9, Node 22
+- **MySQL replaced by SQLite** (Prisma's Rust-free client with the better-sqlite3 driver adapter): one container,
+  one volume. A fresh initial migration replaces the old MySQL ones, **existing MySQL data is not migrated automatically**.
+- Secure by default: no built-in admin password or session secret (the app refuses to start without them);
+  deleting matches/teams/achievements now requires the admin login (it was open to everyone), delete buttons are only shown to admins
+- New per-player statistics (see above)
+- Docker image rebuilt (multi-stage, non-root, healthcheck, migrations on start), CI updated, publishes to GHCR
+- Fixed a MySQL-only assumption (placeholder `id: 0` on team creation) that breaks on SQLite
+- Not changed on purpose: Tailwind 3, ESLint 8 / `next lint`, next-auth 4 (their successors are bigger migrations)
 
 ## License
 
-Developed by [nehalist.io](https://nehalist.io). Licensed under the [MIT License](LICENSE).
+MIT, see [LICENSE](LICENSE). Original work by [nehalist](https://github.com/nehalist).

@@ -1,10 +1,12 @@
-import { NextSeo } from "next-seo";
 import { trpc } from "~/utils/trpc";
 import { useRouter } from "next/router";
-import { LoadingIndicator } from "~/components/Elements";
+import { LoadingIndicator, PageTitle } from "~/components/Elements";
 import { useState } from "react";
+import { keepPreviousData } from "@tanstack/react-query";
 import { Profile } from "~/components/Elements/Profile";
 import { useStore } from "~/utils/store";
+import { parsePlayers } from "~/utils/playerStats";
+import { PlayerLink } from "~/components/Elements";
 
 const Team = () => {
   const teamName = useRouter().query.name as string;
@@ -20,7 +22,7 @@ const Team = () => {
       name: versus || "",
     },
     {
-      keepPreviousData: true,
+      placeholderData: keepPreviousData,
       enabled: !!versus && versus !== "",
     },
   );
@@ -46,7 +48,13 @@ const Team = () => {
 
   return (
     <>
-      <NextSeo title={team ? team.name : "Team"} />
+      <PageTitle title={team ? team.name : "Team"} />
+      <div className="text-sm opacity-70 mb-2 flex gap-2 flex-wrap">
+        Players:
+        {parsePlayers(team.name).map(p => (
+          <PlayerLink key={p} name={p} />
+        ))}
+      </div>
       <Profile
         team={team}
         versus={versus ? versusTeam : undefined}

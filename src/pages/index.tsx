@@ -1,6 +1,5 @@
-import { NextSeo } from "next-seo";
 import { trpc } from "~/utils/trpc";
-import { MatchTable } from "~/components/Elements";
+import { MatchTable, PageTitle } from "~/components/Elements";
 import { MatchCreationForm } from "~/components/Form";
 import { useStore } from "~/utils/store";
 
@@ -13,7 +12,7 @@ const Home = () => {
 
   return (
     <>
-      <NextSeo title={undefined} />
+      <PageTitle />
       <MatchCreationForm />
       {matches.data && matches.data.length > 0 && (
         <div className="mt-12">

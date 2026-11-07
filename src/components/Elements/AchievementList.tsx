@@ -6,6 +6,7 @@ import { TiDeleteOutline } from "react-icons/ti";
 import { trpc } from "~/utils/trpc";
 import { toast } from "react-toastify";
 import { useStore } from "~/utils/store";
+import { useIsAdmin } from "~/utils/useIsAdmin";
 
 const AchievementCard: FunctionComponent<{
   achievement: Achievement;
@@ -28,7 +29,8 @@ const AchievementCard: FunctionComponent<{
     default:
       bgColor = "bg-gradient-to-b from-amber-700 to-amber-800";
   }
-  const utils = trpc.useContext();
+  const isAdmin = useIsAdmin();
+  const utils = trpc.useUtils();
   const deleteMutation = trpc.teams.deleteAchievement.useMutation({
     onSuccess: async () => {
       await utils.teams.invalidate();
@@ -56,21 +58,23 @@ const AchievementCard: FunctionComponent<{
           {display === "single" ? (
             <>
               ✅ <TimeDistance date={new Date(earned[0].date)} />
-              <button
-                className="group-hover:opacity-100 opacity-0 transition-opacity ml-2 text-lg text-red-500"
-                onClick={() => {
-                  if (
-                    window.confirm(
-                      `Are you sure you want to delete the achievement "${achievement.title}" from ${earned[0].teamName}?`,
-                    ) &&
-                    earned[0].id
-                  ) {
-                    deleteMutation.mutate({ id: earned[0].id });
-                  }
-                }}
-              >
-                <TiDeleteOutline />
-              </button>
+              {isAdmin && (
+                <button
+                  className="group-hover:opacity-100 opacity-0 transition-opacity ml-2 text-lg text-red-500"
+                  onClick={() => {
+                    if (
+                      window.confirm(
+                        `Are you sure you want to delete the achievement "${achievement.title}" from ${earned[0].teamName}?`,
+                      ) &&
+                      earned[0].id
+                    ) {
+                      deleteMutation.mutate({ id: earned[0].id });
+                    }
+                  }}
+                >
+                  <TiDeleteOutline />
+                </button>
+              )}
             </>
           ) : (
             <>

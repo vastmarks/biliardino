@@ -2,7 +2,6 @@ import type { AppProps } from "next/app";
 import { ToastContainer } from "react-toastify";
 import "../styles/globals.css";
 import "react-toastify/dist/ReactToastify.css";
-import { DefaultSeo } from "next-seo";
 import { trpc } from "~/utils/trpc";
 import { Layout } from "~/components/Layout";
 import { ThemeProvider } from "next-themes";
@@ -13,11 +12,6 @@ function App({ Component, pageProps }: AppProps) {
     <ThemeProvider themes={["light", "dark"]} attribute="class">
       <SessionProvider session={pageProps.session}>
         <Layout>
-          <DefaultSeo
-            defaultTitle="Hilde"
-            titleTemplate="%s - Hilde"
-            description="A better spreadsheet"
-          />
           <Component {...pageProps} />
           <ToastContainer
             position="bottom-center"

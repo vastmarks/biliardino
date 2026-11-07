@@ -1,4 +1,4 @@
-import { publicProcedure, router } from "~/server/trpc";
+import { protectedProcedure, publicProcedure, router } from "~/server/trpc";
 import { prisma } from "~/server/prisma";
 import { z } from "zod";
 import { deleteMatchFromTeam, getOrCreateTeam } from "~/server/model/team";
@@ -146,7 +146,7 @@ export const matchesRouter = router({
     );
   }),
 
-  delete: publicProcedure
+  delete: protectedProcedure
     .input(
       z.object({
         id: z.number(),

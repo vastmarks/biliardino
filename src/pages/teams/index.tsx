@@ -1,19 +1,24 @@
 import { useState } from "react";
-import { NextSeo } from "next-seo";
+import { keepPreviousData } from "@tanstack/react-query";
 import { trpc } from "~/utils/trpc";
 import { Select } from "~/components/Form";
-import { Card, LoadingIndicator, TeamTable } from "~/components/Elements";
+import {
+  Card,
+  LoadingIndicator,
+  TeamTable,
+  PageTitle,
+} from "~/components/Elements";
 
 const Teams = () => {
   const [teamsize, setTeamsize] = useState(1);
   const { data, isLoading } = trpc.teams.list.useQuery(
     { teamsize },
-    { keepPreviousData: true },
+    { placeholderData: keepPreviousData },
   );
 
   return (
     <>
-      <NextSeo title="Teams" />
+      <PageTitle title="Teams" />
       <div className="my-2">
         <Select
           label={"Team Size"}

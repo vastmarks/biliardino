@@ -1,4 +1,3 @@
-import { inferAsyncReturnType } from "@trpc/server";
 import * as trpcNext from "@trpc/server/adapters/next";
 
 /**
@@ -13,4 +12,4 @@ export async function createContext(opts: trpcNext.CreateNextContextOptions) {
   };
 }
 
-export type Context = inferAsyncReturnType<typeof createContext>;
+export type Context = Awaited<ReturnType<typeof createContext>>;

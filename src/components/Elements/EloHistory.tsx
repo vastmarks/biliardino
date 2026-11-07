@@ -1,6 +1,6 @@
 import type { FunctionComponent } from "react";
 import { useMemo } from "react";
-import { ResponsiveLine, Serie } from "@nivo/line";
+import { ResponsiveLine, LineSeries } from "@nivo/line";
 import { Match } from "@prisma/client";
 import { useTheme } from "next-themes";
 
@@ -8,7 +8,7 @@ export const EloHistory: FunctionComponent<{
   matches: Match[];
   teams: string[];
 }> = ({ teams, matches }) => {
-  const data: Serie[] = useMemo(
+  const data: LineSeries[] = useMemo(
     () =>
       teams.map(t => ({
         id: t,
@@ -35,7 +35,7 @@ export const EloHistory: FunctionComponent<{
         tooltip={({ point }) => {
           return (
             <div className="bg-gray-200 dark:bg-gray-800 p-2 text-sm shadow rounded">
-              <b>{point.serieId}</b>: {(point.data.y as number).toFixed(2)}
+              <b>{point.seriesId}</b>: {(point.data.y as number).toFixed(2)}
             </div>
           );
         }}

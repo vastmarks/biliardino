@@ -1,4 +1,4 @@
-import { publicProcedure, router } from "~/server/trpc";
+import { protectedProcedure, publicProcedure, router } from "~/server/trpc";
 import { z } from "zod";
 import { prisma } from "~/server/prisma";
 import { createTeamMeta } from "~/server/model/team";
@@ -22,7 +22,7 @@ export const teamsRouter = router({
       });
     }),
 
-  delete: publicProcedure
+  delete: protectedProcedure
     .input(
       z.object({
         id: z.number(),
@@ -79,7 +79,7 @@ export const teamsRouter = router({
       return team;
     }),
 
-  deleteAchievement: publicProcedure
+  deleteAchievement: protectedProcedure
     .input(
       z.object({
         id: z.number(),

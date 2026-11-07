@@ -11,13 +11,14 @@ export const trpc = createTRPCNext<AppRouter>({
         : `${process.env.NEXTAUTH_URL}/api/trpc`;
 
     return {
-      transformer: superjson,
       links: [
         httpBatchLink({
           url,
+          transformer: superjson,
         }),
       ],
     };
   },
   ssr: false,
+  transformer: superjson,
 });

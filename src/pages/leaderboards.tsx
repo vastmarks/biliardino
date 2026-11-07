@@ -1,5 +1,8 @@
-import { NextSeo } from "next-seo";
-import { LeaderboardsTable, LoadingIndicator } from "~/components/Elements";
+import {
+  LeaderboardsTable,
+  LoadingIndicator,
+  PageTitle,
+} from "~/components/Elements";
 import { trpc } from "~/utils/trpc";
 import { useStore } from "~/utils/store";
 
@@ -11,7 +14,7 @@ const Leaderboards = () => {
 
   return (
     <>
-      <NextSeo title="Leaderboards" />
+      <PageTitle title="Leaderboards" />
       {isLoading || !data ? (
         <div className="h-32 flex items-center justify-center">
           <LoadingIndicator />

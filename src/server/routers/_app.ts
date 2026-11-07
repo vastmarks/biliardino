@@ -3,12 +3,14 @@ import { matchesRouter } from "~/server/routers/matches";
 import { teamsRouter } from "~/server/routers/teams";
 import { leaderboardsRouter } from "~/server/routers/leaderboards";
 import { seasonsRouter } from "~/server/routers/seasons";
+import { playersRouter } from "~/server/routers/players";
 
 export const appRouter = router({
   matches: matchesRouter,
   teams: teamsRouter,
   leaderboards: leaderboardsRouter,
   seasons: seasonsRouter,
+  players: playersRouter,
 });
 
 export type AppRouter = typeof appRouter;

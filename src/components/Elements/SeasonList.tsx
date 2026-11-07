@@ -8,7 +8,7 @@ import { toast } from "react-toastify";
 export const SeasonList: FunctionComponent<{ seasons: Season[] }> = ({
   seasons,
 }) => {
-  const utils = trpc.useContext();
+  const utils = trpc.useUtils();
   const activateMutation = trpc.seasons.activate.useMutation({
     onSuccess: () => utils.seasons.invalidate(),
   });

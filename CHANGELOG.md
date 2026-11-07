@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-10-31
+
+### Added
+
+- Per-player statistics: `/players` leaderboard and `/players/<name>` profiles (rating history, partners, opponents, formats, streaks)
+- `.env.example`, environment validation for `ADMIN_PASSWORD` / `NEXTAUTH_SECRET`
+
+### Changed
+
+- Next.js 15, React 19, tRPC 11, TanStack Query 5, Prisma 6, TypeScript 5.9, Node 22
+- Database switched from MySQL to SQLite (new initial migration, no automatic data migration)
+- Docker image rebuilt (multi-stage, non-root, runs migrations on start); CI publishes to GHCR
+- `next-seo` replaced by `next/head`
+
+### Fixed
+
+- Deleting matches, teams and achievements required no authentication, now admin only
+- No more default admin password / session secret
+- Placeholder `id: 0` on team creation (only worked on MySQL)
+
 ## [0.3.1] - 2023-16-01
 
 ### Fixed

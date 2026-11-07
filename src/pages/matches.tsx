@@ -1,7 +1,7 @@
-import { NextSeo } from "next-seo";
 import { trpc } from "~/utils/trpc";
-import { Card, MatchTable } from "~/components/Elements";
+import { Card, MatchTable, PageTitle } from "~/components/Elements";
 import { useState } from "react";
+import { keepPreviousData } from "@tanstack/react-query";
 import { Select } from "~/components/Form";
 import { useStore } from "~/utils/store";
 
@@ -24,15 +24,16 @@ const Matches = () => {
       season: selectedSeason,
     },
     {
+      initialCursor: undefined,
       getNextPageParam: lastPage => lastPage.nextCursor,
-      keepPreviousData: true,
+      placeholderData: keepPreviousData,
     },
   );
   const { data: teams } = trpc.teams.list.useQuery({});
 
   return (
     <>
-      <NextSeo title="Matches" />
+      <PageTitle title="Matches" />
       <div className="my-2 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div>

@@ -4,18 +4,22 @@ import { trpc } from "~/utils/trpc";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "~/components/Form";
-import { seasonAddValidation } from "~/utils/validation";
+import {
+  seasonAddValidation,
+  SeasonAddInput,
+  SeasonAddOutput,
+} from "~/utils/validation";
 import { toast } from "react-toastify";
 
 const Seasons = () => {
   const seasons = trpc.seasons.list.useQuery();
-  const utils = trpc.useContext();
+  const utils = trpc.useUtils();
   const {
     register,
     handleSubmit,
     formState: { isValid },
     reset,
-  } = useForm<{ number: string }>({
+  } = useForm<SeasonAddInput, unknown, SeasonAddOutput>({
     defaultValues: {
       number: "",
     },
@@ -38,7 +42,7 @@ const Seasons = () => {
       <SeasonList seasons={seasons.data || []} />
       <form
         onSubmit={handleSubmit(values =>
-          mutation.mutate({ number: +values.number }),
+          mutation.mutate({ number: values.number }),
         )}
       >
         <div className="flex mt-4 dark:bg-gray-700 bg-gray-200 p-3 gap-3 items-center rounded-lg">

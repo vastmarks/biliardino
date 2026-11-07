@@ -11,7 +11,7 @@
 import { Context } from "./context";
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
-import { unstable_getServerSession } from "next-auth";
+import { getServerSession } from "next-auth";
 import { authOptions } from "~/pages/api/auth/[...nextauth]";
 
 const t = initTRPC.context<Context>().create({
@@ -41,11 +41,7 @@ export const publicProcedure = t.procedure;
 
 export const protectedProcedure = t.procedure.use(
   t.middleware(async ({ next, ctx }) => {
-    const session = await unstable_getServerSession(
-      ctx.req,
-      ctx.res,
-      authOptions,
-    );
+    const session = await getServerSession(ctx.req, ctx.res, authOptions);
     if (!session) {
       throw new TRPCError({ code: "UNAUTHORIZED" });
     }

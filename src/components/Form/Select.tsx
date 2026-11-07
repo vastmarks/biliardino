@@ -6,13 +6,12 @@ export const Select: FunctionComponent<{
   options: Array<{ label: string; value: string }>;
   selectedValue: string;
   onChange: ChangeEventHandler<HTMLSelectElement>;
-}> = ({ label, placeholder, selectedValue, onChange, options }) => (
+}> = ({ label, selectedValue, onChange, options }) => (
   <>
     <label className="text-sm mb-1 text-gray-900 block dark:text-gray-200">
       {label}
     </label>
     <select
-      placeholder={placeholder}
       defaultValue={selectedValue}
       className="bg-gray-50 p-2 rounded-lg dark:bg-gray-800"
       onChange={onChange}

@@ -4,16 +4,12 @@ import { trpc } from "~/utils/trpc";
 import { toast } from "react-toastify";
 import { Card, LoadingIndicator } from "~/components/Elements";
 import { Input } from "~/components/Form";
-import { matchAddValidation } from "~/utils/validation";
+import {
+  matchAddValidation,
+  MatchAddInput,
+  MatchAddOutput,
+} from "~/utils/validation";
 import { useStore } from "~/utils/store";
-
-interface FormValues {
-  team1: string;
-  team2: string;
-  score1: number | string;
-  score2: number | string;
-  comment: string;
-}
 
 export const MatchCreationForm = () => {
   const {
@@ -22,7 +18,7 @@ export const MatchCreationForm = () => {
     register,
     formState: { isValid },
     setFocus,
-  } = useForm<FormValues>({
+  } = useForm<MatchAddInput, unknown, MatchAddOutput>({
     defaultValues: {
       team1: "",
       team2: "",
@@ -38,7 +34,7 @@ export const MatchCreationForm = () => {
   const seasons = trpc.seasons.list.useQuery(undefined, {
     refetchOnWindowFocus: false,
   });
-  const utils = trpc.useContext();
+  const utils = trpc.useUtils();
   const mutation = trpc.matches.add.useMutation({
     onSuccess: async () => {
       await utils.matches.invalidate();
@@ -64,15 +60,7 @@ export const MatchCreationForm = () => {
   }
 
   return (
-    <form
-      onSubmit={handleSubmit(values =>
-        mutation.mutate({
-          ...values,
-          score1: +values.score1,
-          score2: +values.score2,
-        }),
-      )}
-    >
+    <form onSubmit={handleSubmit(values => mutation.mutate(values))}>
       <Card>
         <div className="p-6">
           <div className="grid grid-cols-12">
@@ -132,7 +120,7 @@ export const MatchCreationForm = () => {
               className="px-6 py-1 bg-blue-500 hover:bg-blue-600 rounded-lg font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={!isValid}
             >
-              {mutation.isLoading ? <LoadingIndicator /> : "Save"}
+              {mutation.isPending ? <LoadingIndicator /> : "Save"}
             </button>
           ) : (
             <span className="text-sm text-red-500">Season is over!</span>

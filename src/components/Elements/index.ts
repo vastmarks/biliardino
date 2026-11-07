@@ -1,4 +1,5 @@
 export * from "./Card";
+export * from "./PageTitle";
 export * from "./LoadingIndicator";
 export * from "./TeamTable";
 export * from "./MatchTable";
@@ -9,3 +10,6 @@ export * from "./AchievementList";
 export * from "./LeaderboardsTable";
 export * from "./SeasonSelector";
 export * from "./SeasonList";
+export * from "./PlayerLink";
+export * from "./PlayerTable";
+export * from "./PlayerProfile";

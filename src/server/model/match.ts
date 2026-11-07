@@ -10,11 +10,12 @@ import { getSeasonMeta, getTeamSize } from "~/model";
 import { differenceInMinutes } from "date-fns";
 import { TRPCError } from "@trpc/server";
 
-export const matchWithAchievements = Prisma.validator<Prisma.MatchArgs>()({
-  include: {
-    achievements: true,
-  },
-});
+export const matchWithAchievements =
+  Prisma.validator<Prisma.MatchDefaultArgs>()({
+    include: {
+      achievements: true,
+    },
+  });
 
 export type MatchWithAchievements = Prisma.MatchGetPayload<
   typeof matchWithAchievements

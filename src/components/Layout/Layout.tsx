@@ -57,6 +57,9 @@ export const Layout: FunctionComponent<{ children: ReactNode }> = ({
               <li className="inline mr-4">
                 <NavLink label={"Teams"} href={"/teams"} />
               </li>
+              <li className="inline mr-4">
+                <NavLink label={"Players"} href={"/players"} />
+              </li>
               <li className="inline">
                 <NavLink label={"Leaderboards"} href={"/leaderboards"} />
               </li>

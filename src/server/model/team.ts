@@ -6,7 +6,7 @@ import { calculateRating, defaultRating, getExpectedRating } from "~/utils/elo";
 import { format, isSameDay } from "date-fns";
 import { getCurrentSeason } from "~/server/model/season";
 
-export const teamWithMeta = Prisma.validator<Prisma.TeamArgs>()({
+export const teamWithMeta = Prisma.validator<Prisma.TeamDefaultArgs>()({
   include: {
     meta: true,
   },
@@ -14,7 +14,7 @@ export const teamWithMeta = Prisma.validator<Prisma.TeamArgs>()({
 
 export type TeamWithMeta = Prisma.TeamGetPayload<typeof teamWithMeta>;
 
-export const teamWithAchievements = Prisma.validator<Prisma.TeamArgs>()({
+export const teamWithAchievements = Prisma.validator<Prisma.TeamDefaultArgs>()({
   include: {
     achievements: true,
   },
@@ -28,6 +28,10 @@ export type TeamWithMetaAndAchievements = TeamWithMeta & TeamWithAchievements;
 
 export async function getOrCreateTeam(name: string) {
   const currentSeason = await getCurrentSeason();
+  // the placeholder id (0) must not be inserted: MySQL turned it into an
+  // auto-increment id, SQLite would store it literally and collide
+  const { id, ...defaultMeta } = getDefaultTeamMeta(currentSeason);
+  void id;
   return await prisma.team.upsert({
     where: {
       name,
@@ -43,7 +47,7 @@ export async function getOrCreateTeam(name: string) {
       teamsize: getTeamSize(name),
       meta: {
         create: {
-          ...getDefaultTeamMeta(currentSeason),
+          ...defaultMeta,
           season: currentSeason,
         },
       },

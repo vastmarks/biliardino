@@ -1,16 +1,17 @@
-version: '3'
-
+# Copy .env.example to .env, set ADMIN_PASSWORD and NEXTAUTH_SECRET, then: docker compose up -d
 services:
-  database:
-    container_name: hilde_db
-    image: mysql:8.0
-    environment:
-      - MYSQL_DATABASE=hilde
-      - MYSQL_ROOT_PASSWORD=hildepw
+  hilde:
+    build: .
+    # image: ghcr.io/<your-github-user>/hilde:latest   # once the CI workflow has published one
+    restart: unless-stopped
     ports:
-      - "127.0.0.1:3309:3306"
+      - "3000:3000"
+    environment:
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?set ADMIN_PASSWORD in .env}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?set NEXTAUTH_SECRET in .env}
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
     volumes:
-      - db:/var/lib/mysql
+      - hilde-data:/data # the SQLite database lives here, back this up
 
 volumes:
-  db:
+  hilde-data:

@@ -9,16 +9,23 @@ import { BiCommentDetail } from "react-icons/bi";
 import { TeamLink } from "~/components/Elements/TeamLink";
 import { MatchWithAchievements } from "~/server/model/match";
 import { achievements } from "~/utils/achievements";
+import { useIsAdmin } from "~/utils/useIsAdmin";
 
-const ReactTooltip = dynamic(() => import("react-tooltip"), { ssr: false });
+const ReactTooltip = dynamic(
+  () => import("react-tooltip").then(m => m.Tooltip),
+  {
+    ssr: false,
+  },
+);
 
 export const MatchTable: FunctionComponent<{
   matches: MatchWithAchievements[];
   animated?: boolean;
 }> = ({ matches, animated = true }) => {
+  const isAdmin = useIsAdmin();
   const [parent, enable] = useAutoAnimate<HTMLTableSectionElement>();
   useEffect(() => enable(animated), [animated, enable]);
-  const utils = trpc.useContext();
+  const utils = trpc.useUtils();
   const deleteMutation = trpc.matches.delete.useMutation({
     onSuccess: async () => {
       await utils.matches.invalidate();
@@ -57,7 +64,7 @@ export const MatchTable: FunctionComponent<{
                 .length > 0 && (
                 <>
                   <span
-                    data-tip={achievements
+                    data-tooltip-content={achievements
                       .filter(a =>
                         match.achievements
                           .filter(a => a.teamName === match.team1)
@@ -65,14 +72,11 @@ export const MatchTable: FunctionComponent<{
                       )
                       .map(a => a.title)
                       .join(", ")}
-                    data-for={`match-achievements-team1-${match.id}`}
+                    data-tooltip-id={`match-achievements-team1-${match.id}`}
                   >
                     🏅
                   </span>
-                  <ReactTooltip
-                    id={`match-achievements-team1-${match.id}`}
-                    globalEventOff="click"
-                  />
+                  <ReactTooltip id={`match-achievements-team1-${match.id}`} />
                 </>
               )}{" "}
               {match.score1 === 0 ? "✂️" : ""}{" "}
@@ -85,7 +89,7 @@ export const MatchTable: FunctionComponent<{
                 .length > 0 && (
                 <>
                   <span
-                    data-tip={achievements
+                    data-tooltip-content={achievements
                       .filter(a =>
                         match.achievements
                           .filter(a => a.teamName === match.team2)
@@ -93,14 +97,11 @@ export const MatchTable: FunctionComponent<{
                       )
                       .map(a => a.title)
                       .join(", ")}
-                    data-for={`match-achievements-team2-${match.id}`}
+                    data-tooltip-id={`match-achievements-team2-${match.id}`}
                   >
                     🏅
                   </span>
-                  <ReactTooltip
-                    id={`match-achievements-team2-${match.id}`}
-                    globalEventOff="click"
-                  />
+                  <ReactTooltip id={`match-achievements-team2-${match.id}`} />
                 </>
               )}{" "}
               {match.score2 === 0 ? "✂️" : ""}{" "}
@@ -112,34 +113,33 @@ export const MatchTable: FunctionComponent<{
                 <>
                   <button
                     className="opacity-75 hover:opacity-100 transition"
-                    data-tip={match.comment}
-                    data-for={`comment-${match.id}`}
+                    data-tooltip-content={match.comment}
+                    data-tooltip-id={`comment-${match.id}`}
                   >
                     <BiCommentDetail />
                   </button>
-                  <ReactTooltip
-                    id={`comment-${match.id}`}
-                    globalEventOff="click"
-                  />
+                  <ReactTooltip id={`comment-${match.id}`} />
                 </>
               )}
             </td>
             <td className="p-3">
               <TimeDistance date={new Date(match.createdAt)} />
-              <button
-                className="group-hover:opacity-100 opacity-0 transition-opacity mx-3 text-red-500"
-                onClick={() => {
-                  if (
-                    window.confirm(
-                      `Match ${match.team1} vs ${match.team2} resulting ${match.score1}:${match.score2} will be eradicated from existence - sure about that?`,
-                    )
-                  ) {
-                    deleteMutation.mutate({ id: match.id });
-                  }
-                }}
-              >
-                <TiDeleteOutline />
-              </button>
+              {isAdmin && (
+                <button
+                  className="group-hover:opacity-100 opacity-0 transition-opacity mx-3 text-red-500"
+                  onClick={() => {
+                    if (
+                      window.confirm(
+                        `Match ${match.team1} vs ${match.team2} resulting ${match.score1}:${match.score2} will be eradicated from existence - sure about that?`,
+                      )
+                    ) {
+                      deleteMutation.mutate({ id: match.id });
+                    }
+                  }}
+                >
+                  <TiDeleteOutline />
+                </button>
+              )}
             </td>
           </tr>
         ))}
