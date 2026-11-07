@@ -1,3 +1,4 @@
+import { usePlayerNames } from "~/utils/usePlayerNames";
 import { FunctionComponent, useMemo } from "react";
 import { Card } from "~/components/Elements/Card";
 import { EloHistory } from "~/components/Elements/EloHistory";
@@ -14,6 +15,7 @@ export const Profile: FunctionComponent<{
   onVersusSelect: (teamName: string) => void;
   versusOptions: Team[];
 }> = ({ team, versus, matches, onVersusSelect, versusOptions }) => {
+  const players = usePlayerNames();
   const selectedSeason = useStore(state => state.season);
   const meta = getSeasonMeta(team, selectedSeason);
   const vsMeta = versus ? getSeasonMeta(versus, selectedSeason) : undefined;
@@ -70,7 +72,7 @@ export const Profile: FunctionComponent<{
       <div className="grid grid-cols-6 relative">
         <div className="col-span-6 bg-gray-100 dark:bg-gray-600 flex items-center justify-between rounded-t px-3 sticky top-0 z-50">
           <h2 className="bg-white px-2 font-semibold text-2xl my-5 text-gray-800 rounded-lg block">
-            {team.name}
+            <span className="capitalize">{players.team(team.name)}</span>
           </h2>
           <div>
             {versus && "vs."}
@@ -84,7 +86,7 @@ export const Profile: FunctionComponent<{
                 .filter(t => t.name !== team.name)
                 .map(t => (
                   <option key={t.id} value={t.name}>
-                    {t.name}
+                    {players.team(t.name)}
                   </option>
                 ))}
             </select>

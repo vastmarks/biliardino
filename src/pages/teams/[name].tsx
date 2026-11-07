@@ -6,9 +6,11 @@ import { keepPreviousData } from "@tanstack/react-query";
 import { Profile } from "~/components/Elements/Profile";
 import { useStore } from "~/utils/store";
 import { parsePlayers } from "~/utils/playerStats";
+import { usePlayerNames } from "~/utils/usePlayerNames";
 import { PlayerLink } from "~/components/Elements";
 
 const Team = () => {
+  const players = usePlayerNames();
   const teamName = useRouter().query.name as string;
   const [versus, setVersus] = useState<string | null>(null);
   const { data: team, isLoading } = trpc.teams.byId.useQuery({
@@ -48,11 +50,14 @@ const Team = () => {
 
   return (
     <>
-      <PageTitle title={team ? team.name : "Team"} />
+      <PageTitle title={team ? players.team(team.name) : "Team"} />
       <div className="text-sm opacity-70 mb-2 flex gap-2 flex-wrap">
         Players:
-        {parsePlayers(team.name).map(p => (
-          <PlayerLink key={p} name={p} />
+        {parsePlayers(team.name).map((p, i) => (
+          <span key={p}>
+            {i > 0 && <span className="opacity-50 mr-2">·</span>}
+            <PlayerLink name={p} />
+          </span>
         ))}
       </div>
       <Profile

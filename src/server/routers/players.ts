@@ -1,7 +1,14 @@
-import { publicProcedure, router } from "~/server/trpc";
+import { TRPCError } from "@trpc/server";
+import { protectedProcedure, publicProcedure, router } from "~/server/trpc";
 import { z } from "zod";
 import { prisma } from "~/server/prisma";
 import { getCurrentSeason } from "~/server/model/season";
+import {
+  cleanPlayerName,
+  playerKey,
+  validatePlayerName,
+} from "~/utils/players";
+import { playerAddValidation } from "~/utils/validation";
 import {
   computePlayerStats,
   parsePlayers,
@@ -31,6 +38,55 @@ async function loadMatches(scope: number | "all" | undefined) {
 type PlayerSummary = Omit<PlayerStats, "partners" | "opponents" | "history">;
 
 export const playersRouter = router({
+  /** All known players (for the player pickers), alphabetical. */
+  all: publicProcedure.query(async () => {
+    const players = await prisma.player.findMany({
+      select: { id: true, name: true, key: true },
+    });
+    return players.sort((a, b) => a.name.localeCompare(b.name));
+  }),
+
+  /** Defines a new player. Names are unique case-insensitively. */
+  create: publicProcedure
+    .input(playerAddValidation)
+    .mutation(async ({ input }) => {
+      const problem = validatePlayerName(input.name);
+      if (problem) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: problem });
+      }
+      const name = cleanPlayerName(input.name);
+      const key = playerKey(name);
+      const existing = await prisma.player.findUnique({ where: { key } });
+      if (existing) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: `${existing.name} already exists`,
+        });
+      }
+      return await prisma.player.create({ data: { name, key } });
+    }),
+
+  /** Only players who haven't played yet can be removed (admin). */
+  delete: protectedProcedure
+    .input(z.object({ id: z.number().int() }))
+    .mutation(async ({ input }) => {
+      const player = await prisma.player.findUnique({
+        where: { id: input.id },
+      });
+      if (!player) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Unknown player" });
+      }
+      const teams = await prisma.team.findMany({ select: { name: true } });
+      if (teams.some(t => parsePlayers(t.name).includes(player.key))) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: `${player.name} has already played matches and can't be deleted`,
+        });
+      }
+      await prisma.player.delete({ where: { id: input.id } });
+      return { id: input.id };
+    }),
+
   /** Leaderboard: every player with their stats, best rating first. */
   list: publicProcedure
     .input(z.object({ season: scopeInput }))

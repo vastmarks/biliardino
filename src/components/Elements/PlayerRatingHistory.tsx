@@ -34,6 +34,8 @@ export const PlayerRatingHistory: FunctionComponent<{
       axisTop={null}
       axisRight={null}
       axisBottom={{
+        format: (v: number | string | Date) =>
+          Number.isInteger(v) ? String(v) : "",
         legend: "matches",
         legendOffset: 18,
         legendPosition: "middle",

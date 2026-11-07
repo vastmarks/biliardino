@@ -4,6 +4,8 @@ import { z } from "zod";
 import { deleteMatchFromTeam, getOrCreateTeam } from "~/server/model/team";
 import { createMatch } from "~/server/model/match";
 import { matchAddValidation } from "~/utils/validation";
+import { teamNameFromKeys } from "~/utils/players";
+import { TRPCError } from "@trpc/server";
 
 export const matchesRouter = router({
   list: publicProcedure
@@ -134,8 +136,27 @@ export const matchesRouter = router({
     }),
 
   add: publicProcedure.input(matchAddValidation).mutation(async ({ input }) => {
-    const team1 = await getOrCreateTeam(input.team1);
-    const team2 = await getOrCreateTeam(input.team2);
+    // Teams are built from the picked players, so the order of the picks (or anything else
+    // that isn't the set of players) can never create a second team.
+    const ids = [...input.players1, ...input.players2];
+    const players = await prisma.player.findMany({
+      where: { id: { in: ids } },
+    });
+    if (players.length !== ids.length) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "Unknown player, please reload the page",
+      });
+    }
+    const keysOf = (side: number[]) =>
+      side.map(id => players.find(p => p.id === id)!.key);
+
+    const team1 = await getOrCreateTeam(
+      teamNameFromKeys(keysOf(input.players1)),
+    );
+    const team2 = await getOrCreateTeam(
+      teamNameFromKeys(keysOf(input.players2)),
+    );
 
     return await createMatch(
       team1,

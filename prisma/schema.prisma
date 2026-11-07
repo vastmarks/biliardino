@@ -101,3 +101,17 @@ model Season {
   @@index(number)
   @@map("season")
 }
+
+/// A person who can be picked when entering a match. Teams are built from players:
+/// the team name is the sorted list of the players' `key`s, so the order in which
+/// players are picked never matters.
+model Player {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  /// display name as typed, e.g. "Elena"
+  name      String
+  /// lower-cased name, used inside team names and URLs
+  key       String   @unique
+
+  @@map("player")
+}

@@ -31,7 +31,8 @@ A public **demo** is available at [demo.hilde.gg](https://demo.hilde.gg).
 - Detailed team statistics (win streaks, win rate, elo history chart, ...)
 - **Achievements** (e.g. "Win 100 Matches", "Win 10 Matches in a row", ...)
 - Compare teams against each other
-- Teams of any size, simply separated by a comma in the team name
+- Matches are entered by picking **1v1 or 2v2** and the players from a list of defined players
+- A team is just a set of players: Elena+Chiara and Chiara+Elena are always the same team, so recurring pairs get their own stats, rating and achievements
 - **Light/Dark theme**
 - Match comments
 - **Leaderboards**
@@ -39,7 +40,12 @@ A public **demo** is available at [demo.hilde.gg](https://demo.hilde.gg).
 
 ## ⭐ Getting Started
 
-After installing you need to add a season via the admin UI (`/admin`), using the password from `ADMIN_PASSWORD`.
+Season 1 is created automatically. Then:
+
+1. Open **Players** and add everybody who plays (a player is defined once, with a unique name).
+2. On the start page choose **1v1** or **2v2**, pick the players of both sides from the list and enter the score.
+
+New seasons and deletions are managed in the admin UI (`/admin`, password from `ADMIN_PASSWORD`).
 
 ### Docker Compose (recommended)
 
@@ -82,8 +88,9 @@ player of a side the same expected result and the same win/loss outcome, each pl
 own rating. Because everything is recomputed from the matches, deleting a match simply corrects all player stats.
 Players with fewer than 5 matches are marked as provisional (`*`).
 
-Player names are the comma separated names in the team name (lower-cased), so `Anna` and `anna` are the same person.
-Use one consistent name per person.
+Players are defined once on the **Players** page (names are unique, case-insensitively). The team of a match is built
+from the picked players (sorted, lower-cased), so order, spelling or separators can never create a second team.
+A player who has no matches yet can be deleted by the admin; renaming players isn't supported.
 
 ## 🔧 Configuration
 
@@ -104,6 +111,8 @@ Based on [nehalist/hilde](https://github.com/nehalist/hilde) (last upstream comm
 - Secure by default: no built-in admin password or session secret (the app refuses to start without them);
   deleting matches/teams/achievements now requires the admin login (it was open to everyone), delete buttons are only shown to admins
 - New per-player statistics (see above)
+- **New match entry**: a separate Players page and a form with a 1v1/2v2 switch and player pickers instead of free-text team names
+- A fresh install starts with season 1 active (before, the form was unusable until a season was created in `/admin`)
 - Docker image rebuilt (multi-stage, non-root, healthcheck, migrations on start), CI updated, publishes to GHCR
 - Fixed a MySQL-only assumption (placeholder `id: 0` on team creation) that breaks on SQLite
 - Not changed on purpose: Tailwind 3, ESLint 8 / `next lint`, next-auth 4 (their successors are bigger migrations)
