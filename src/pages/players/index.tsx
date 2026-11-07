@@ -10,7 +10,7 @@ import { trpc } from "~/utils/trpc";
 import { AddPlayerForm } from "~/components/Form";
 import { PlayerLink } from "~/components/Elements";
 import { useIsAdmin } from "~/utils/useIsAdmin";
-import { toast } from "react-toastify";
+import { toast } from "~/utils/toast";
 import { useStore } from "~/utils/store";
 
 const Players = () => {

@@ -10,6 +10,7 @@ services:
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:?set ADMIN_PASSWORD in .env}
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?set NEXTAUTH_SECRET in .env}
       NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+      TZ: ${TZ:-Europe/Rome} # decides what "Today" means on the leaderboard
     volumes:
       - hilde-data:/data # the SQLite database lives here, back this up
 

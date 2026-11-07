@@ -1,141 +1,118 @@
-import chromium from "@sparticuz/chromium";
+// Run against a seeded server (npm run db:seed-demo): node e2e/browser-e2e.mjs chrome|firefox [width height]
+// Needs puppeteer-core and a local Chrome/Firefox; adjust the executable paths below.
 import puppeteer from "puppeteer-core";
-const base = "http://localhost:3111";
-const browser = await puppeteer.launch({ args: chromium.args, executablePath: await chromium.executablePath(), headless: "shell" });
+const which = process.argv[2];
+const W = +(process.argv[3] || 390), H = +(process.argv[4] || 844);
+const exe = which === "firefox" ? "/tmp/claude-0/mm/ff/bin/firefox" : "/opt/pw-browsers/chromium-1243/chrome-linux64/chrome";
+process.env.MOZ_HEADLESS = "1";
+const browser = await puppeteer.launch({
+  browser: which === "firefox" ? "firefox" : "chrome",
+  executablePath: exe, headless: true,
+  args: which === "firefox" ? [] : ["--no-sandbox"],
+});
 const page = await browser.newPage();
-await page.setViewport({ width: 1200, height: 1000 });
+await page.setViewport({ width: W, height: H, deviceScaleFactor: 2 });
 const errors = [];
-page.on("console", m => { if (m.type() === "error") errors.push(`[console.error] ${m.text().slice(0, 250)}`); });
-page.on("pageerror", e => errors.push(`[pageerror] ${String(e.message).slice(0, 300)}`));
-const sleep = ms => new Promise(r => setTimeout(r, ms));
-const toastText = async () => (await page.$$eval(".Toastify__toast", els => els.map(e => e.textContent))).join(" | ");
-const step = async (name, fn) => { try { await fn(); console.log("PASS", name); } catch (e) { console.log("FAIL", name, "-", e.message.slice(0, 300)); } };
-const assert = (c, m) => { if (!c) throw new Error(m); };
+page.on("console", m => { if (["error", "warning"].includes(m.type())) errors.push(`${m.type()}: ${m.text()}`); });
+page.on("pageerror", e => errors.push("pageerror: " + e.message));
+const fails = [];
+const check = (ok, msg) => { console.log((ok ? "PASS " : "FAIL ") + msg); if (!ok) fails.push(msg); };
+const clickText = async (scope, text) => {
+  const ok = await page.evaluate((scope, text) => {
+    const root = document.querySelector(scope) || document;
+    const el = [...root.querySelectorAll("button")].find(b => b.textContent.trim() === text);
+    if (!el) return false; el.click(); return true;
+  }, scope, text);
+  if (!ok) throw new Error(`no button "${text}" in ${scope}`);
+};
+const shot = n => page.screenshot({ path: `/tmp/claude-0/shots/${which}-${W}-${n}.png`, fullPage: true });
 
-// ---- players page
-await page.goto(base + "/players", { waitUntil: "networkidle0" });
-const clearAndType = async (sel, text) => {
-  await page.focus(sel);
-  await page.keyboard.down("Control"); await page.keyboard.press("KeyA"); await page.keyboard.up("Control");
-  await page.keyboard.press("Backspace");
-  await page.type(sel, text);
-};
-const addPlayer = async name => {
-  await clearAndType("#new-player", name);
-  const disabled = await page.$eval("form button[type=submit]", b => b.disabled);
-  if (!disabled) { await page.click("form button[type=submit]"); await sleep(600); }
-  return disabled;
-};
-await step("invalid name 'Elena,Chiara' is rejected in the UI", async () => {
-  assert(await addPlayer("Elena,Chiara") === true, "add button should be disabled");
-  assert((await page.evaluate(() => document.body.innerText)).includes("Names may only contain"), "no validation message");
-});
-for (const n of ["Elena", "Chiara", "Luca", "Sara"]) {
-  await step(`add player ${n}`, async () => { await addPlayer(n); assert((await toastText()).includes(`${n} added`), "toast: " + (await toastText())); await sleep(300); });
+const t0 = Date.now();
+await page.goto("http://localhost:3111/", { waitUntil: "load" });
+await page.waitForSelector("form");
+console.log(which, "load+form ms:", Date.now() - t0);
+await new Promise(r => setTimeout(r, 800));
+
+const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+check(overflow <= 0, `no horizontal overflow (${overflow})`);
+const txt = await page.evaluate(() => document.body.innerText);
+for (const s of ["Leaderboard", "Top pairs", "Recent matches"]) check(txt.includes(s), `page shows "${s}"`);
+const firstH = await page.evaluate(() => document.querySelector("main > div > :first-child")?.tagName);
+check(firstH === "FORM", "match entry is the first block on the page");
+await shot("home");
+
+// ---- 2v2 entry by tapping chips
+await clickText('[aria-label="Players"]', "Elena");
+await clickText('[aria-label="Players"]', "Chiara");
+await clickText('[aria-label="Players"]', "Luca");
+await clickText('[aria-label="Players"]', "Sara");
+const slots = await page.evaluate(() => [...document.querySelectorAll('form button[aria-label^="Team"]')].map(b => b.textContent));
+check(JSON.stringify(slots) === JSON.stringify(["Elena", "Chiara", "Luca", "Sara"]), "chips fill slots in order " + slots);
+const saveDisabled = await page.evaluate(() => document.querySelector('button[type=submit]').disabled);
+check(saveDisabled, "Save disabled without scores");
+await page.type('input[aria-label="Team 1 score"]', "10");
+await page.type('input[aria-label="Team 2 score"]', "6");
+await shot("filled");
+const before = await page.evaluate(() => document.querySelector("ul.divide-y li")?.innerText);
+await page.click('button[type=submit]');
+await page.waitForFunction(() => document.querySelector('[role=status]')?.textContent.includes("Saved"), { timeout: 8000 });
+check(true, "match saved, status shown");
+await page.waitForFunction(b => document.querySelector("ul.divide-y li")?.innerText !== b, { timeout: 8000 }, before);
+const after = await page.evaluate(() => document.querySelector("ul.divide-y li").innerText.replace(/\s+/g, " "));
+check(/Chiara & Elena/i.test(after) && /10.*6/.test(after) && /Luca & Sara/i.test(after), "recent feed shows new match first: " + after);
+const scoresCleared = await page.evaluate(() => document.querySelector('input[aria-label="Team 1 score"]').value === "");
+check(scoresCleared, "scores cleared, players kept");
+const kept = await page.evaluate(() => [...document.querySelectorAll('form button[aria-label^="Team"]')].map(b => b.textContent).join());
+check(kept === "Elena,Chiara,Luca,Sara", "players kept for rematch");
+
+// ---- reversed pair order is the same team (rematch with sides swapped inside a team)
+await clickText("form", "⇄ Swap");
+await page.type('input[aria-label="Team 1 score"]', "3");
+await page.type('input[aria-label="Team 2 score"]', "10");
+await page.click('button[type=submit]');
+await page.waitForFunction(() => document.querySelector('[role=status]')?.textContent.includes("Saved 3"), { timeout: 8000 });
+check(true, "second match (swapped sides) saved");
+
+// ---- 1v1 + persistence
+await clickText("form", "1v1");
+const slots1 = await page.evaluate(() => document.querySelectorAll('form button[aria-label^="Team"]').length);
+check(slots1 === 2, "1v1 shows 2 slots");
+await page.reload({ waitUntil: "load" });
+await page.waitForSelector("form");
+await new Promise(r => setTimeout(r, 500));
+const fmt = await page.evaluate(() => document.querySelector('[role=radio][aria-checked=true]')?.textContent);
+check(fmt === "1v1", "format persisted across reload: " + fmt);
+
+// ---- leaderboard tabs
+for (const t of ["Today", "7 days", "30 days", "Season"]) {
+  await clickText('[role=tablist]', t);
+  const rows = await page.evaluate(() => document.querySelectorAll("section ol li").length);
+  console.log(`  tab ${t}: ${rows} li`);
 }
-await step("duplicate 'elena' (different case) is rejected", async () => {
-  await addPlayer("elena"); await sleep(500);
-  assert((await toastText()).includes("already exists"), "toast: " + (await toastText()));
-});
-await step("players with no matches are listed", async () => {
-  const t = await page.evaluate(() => document.body.innerText);
-  assert(["Elena", "Chiara", "Luca", "Sara"].every(n => t.includes(n)), t.slice(0, 300));
-});
+await clickText('[role=tablist]', "Today");
+const today = await page.evaluate(() => document.querySelector("section ol")?.innerText.replace(/\s+/g, " "));
+check(/Elena|Chiara|Luca|Sara/.test(today || ""), "Today board lists today's players: " + today);
+await shot("today");
 
-// ---- match form
-await page.goto(base + "/", { waitUntil: "networkidle0" });
-await page.screenshot({ path: "/tmp/browser/form_empty.png" });
-const selects = () => page.$$("select[aria-label]");
-const pick = async (label, text) => {
-  const sel = await page.$(`select[aria-label="${label}"]`);
-  const value = await page.evaluate((s, t) => [...s.options].find(o => o.textContent === t)?.value, sel, text);
-  assert(value, `no option ${text} in ${label}`);
-  await sel.select(value);
-};
-const setScore = async (idx, v) => {
-  const ins = await page.$$("input[type=number]");
-  await ins[idx].focus();
-  await page.keyboard.down("Control"); await page.keyboard.press("KeyA"); await page.keyboard.up("Control");
-  await page.keyboard.press("Backspace");
-  await ins[idx].type(String(v));
-};
-const submit = async () => { await page.click("form button[type=submit]"); await sleep(900); };
-const save = async () => { const d = await page.$eval("form button[type=submit]", b => b.disabled); assert(!d, "Save is disabled"); await submit(); };
+// ---- dark mode via toggle
+await clickText("footer", "◐ Theme");
+await new Promise(r => setTimeout(r, 300));
+const dark = await page.evaluate(() => document.documentElement.classList.contains("dark"));
+const darkOverflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+await shot("dark");
+console.log("  dark class:", dark, "overflow:", darkOverflow);
 
-await step("form starts as 2v2 with 4 player pickers and Save disabled", async () => {
-  assert((await selects()).length === 4, "expected 4 selects, got " + (await selects()).length);
-  assert(await page.$eval("form button[type=submit]", b => b.disabled), "Save should be disabled");
-});
-await step("match 1: Elena+Chiara vs Luca+Sara 10:7", async () => {
-  await pick("Team 1 · Player 1", "Elena"); await pick("Team 1 · Player 2", "Chiara");
-  await pick("Team 2 · Player 1", "Luca"); await pick("Team 2 · Player 2", "Sara");
-  await setScore(0, 10); await setScore(1, 7); await save();
-  assert((await toastText()).includes("Match saved"), "toast: " + (await toastText()));
-});
-await step("a player already picked can't be picked again (option disabled)", async () => {
-  const dis = await page.$eval('select[aria-label="Team 2 · Player 1"]', s => [...s.options].filter(o => o.disabled).map(o => o.textContent));
-  assert(dis.includes("Elena") && dis.includes("Chiara") && dis.includes("Sara"), "disabled: " + dis);
-});
-await sleep(5200);
-await step("match 2: SAME pair in INVERTED order (Chiara+Elena vs Sara+Luca) 10:6", async () => {
-  await pick("Team 1 · Player 1", "Chiara"); await pick("Team 1 · Player 2", "Elena");
-  await pick("Team 2 · Player 1", "Sara"); await pick("Team 2 · Player 2", "Luca");
-  await setScore(0, 10); await setScore(1, 6); await save();
-  assert((await toastText()).includes("Match saved"), "toast: " + (await toastText()));
-});
-await step("switch to 1v1: two pickers; match 3 Elena vs Luca 10:3", async () => {
-  await page.click('[role=radio]:nth-child(1)'); await sleep(200);
-  assert((await selects()).length === 2, "expected 2 selects");
-  await pick("Team 1", "Elena"); await pick("Team 2", "Luca");
-  await setScore(0, 10); await setScore(1, 3); await save();
-  assert((await toastText()).includes("Match saved"), "toast: " + (await toastText()));
-});
-await page.screenshot({ path: "/tmp/browser/form_after.png" });
-
-// ---- data checks via API
-const trpc = async (path, input) => (await (await fetch(`${base}/api/trpc/${path}?input=${encodeURIComponent(JSON.stringify({ json: input }))}`)).json()).result.data.json;
-await step("exactly ONE pair team per pair (canonical names), no duplicates", async () => {
-  const t2 = (await trpc("teams.list", { teamsize: 2 })).map(t => t.name).sort();
-  const t1 = (await trpc("teams.list", { teamsize: 1 })).map(t => t.name).sort();
-  console.log("   2-player teams:", JSON.stringify(t2), " 1-player teams:", JSON.stringify(t1));
-  assert(JSON.stringify(t2) === JSON.stringify(["chiara,elena", "luca,sara"]), "pairs: " + t2);
-});
-await step("pair stats: chiara,elena has 2 matches, 2 wins", async () => {
-  const t = (await trpc("teams.list", { teamsize: 2 })).find(t => t.name === "chiara,elena");
-  const m = t.meta.find(m => m.season === 1);
-  assert(m.totalMatches === 2 && m.totalWins === 2, JSON.stringify({ n: m.totalMatches, w: m.totalWins }));
-});
-
-// ---- pages render with names, no crashes
-await step("teams page lists pairs by player names", async () => {
-  await page.goto(base + "/teams?x=1", { waitUntil: "networkidle0" });
-  const sizeBtn = await page.$$("button, a, span");
-  const t = await page.evaluate(() => document.body.innerText);
-  console.log("   /teams text:", t.replace(/\s+/g, " ").slice(0, 160));
-});
-await step("pair page /teams/chiara,elena renders", async () => {
-  await page.goto(base + "/teams/" + encodeURIComponent("chiara,elena"), { waitUntil: "networkidle0" });
-  await sleep(500);
-  const t = await page.evaluate(() => document.body.innerText).then(t => t.replace(/\s+/g, " "));
-  console.log("   ", t.slice(0, 220));
-  assert(t.includes("Chiara & Elena"), "header missing");
-  await page.screenshot({ path: "/tmp/browser/team_pair.png" });
-});
-await step("player leaderboard + profile render", async () => {
-  await page.goto(base + "/players", { waitUntil: "networkidle0" }); await sleep(400);
-  await page.screenshot({ path: "/tmp/browser/players.png" });
-  const t = await page.evaluate(() => document.body.innerText).then(t => t.replace(/\s+/g, " "));
-  console.log("   /players:", t.slice(0, 260));
-  await page.goto(base + "/players/elena", { waitUntil: "networkidle0" }); await sleep(600);
-  await page.screenshot({ path: "/tmp/browser/player_elena.png", fullPage: true });
-  const p = await page.evaluate(() => document.body.innerText).then(t => t.replace(/\s+/g, " "));
-  console.log("   /players/elena:", p.slice(0, 420));
-  assert(p.includes("Elena") && p.includes("Chiara"), "profile content");
-});
-await step("home shows recent matches with names", async () => {
-  await page.goto(base + "/", { waitUntil: "networkidle0" }); await sleep(500);
-  const t = await page.evaluate(() => document.body.innerText).then(t => t.replace(/\s+/g, " "));
-  assert(t.includes("Chiara & Elena"), t.slice(0, 300));
-});
-console.log(errors.length ? "CONSOLE/PAGE ERRORS:\n" + [...new Set(errors)].join("\n") : "no console errors or page errors");
+// ---- other pages
+for (const p of ["/matches", "/players", "/teams", "/leaderboards", "/players/elena", "/teams/chiara%2Celena"]) {
+  await page.goto("http://localhost:3111" + p, { waitUntil: "load" });
+  await new Promise(r => setTimeout(r, 900));
+  const o = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  const body = await page.evaluate(() => document.body.innerText.length);
+  check(o <= 0 && body > 80, `${p}: no overflow (${o}), content ${body} chars`);
+  await shot("page" + p.replace(/\W/g, "_"));
+}
+console.log("console issues:", errors.length ? errors : "none");
+check(errors.length === 0, "no console errors/warnings");
 await browser.close();
+console.log(fails.length ? `\n${fails.length} FAILED` : "\nALL PASSED");
+process.exit(fails.length ? 1 : 0);

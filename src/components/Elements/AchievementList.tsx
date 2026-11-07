@@ -2,9 +2,8 @@ import { Fragment, FunctionComponent } from "react";
 import { Achievement, achievements } from "~/utils/achievements";
 import { TimeDistance } from "~/components/Elements/TeamDistance";
 import { TeamWithMetaAndAchievements } from "~/server/model/team";
-import { TiDeleteOutline } from "react-icons/ti";
 import { trpc } from "~/utils/trpc";
-import { toast } from "react-toastify";
+import { toast } from "~/utils/toast";
 import { useStore } from "~/utils/store";
 import { useIsAdmin } from "~/utils/useIsAdmin";
 
@@ -72,7 +71,7 @@ const AchievementCard: FunctionComponent<{
                     }
                   }}
                 >
-                  <TiDeleteOutline />
+                  <span aria-hidden>✕</span>
                 </button>
               )}
             </>

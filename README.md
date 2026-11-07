@@ -73,6 +73,18 @@ npm start
 
 Development: `npm run dev`. Checks: `npm run lint && npm test`.
 
+## 🏠 Home page
+
+Built for entering a result on a phone right after the game:
+
+1. **Match entry** first: pick 1v1/2v2, tap the players (recent players first), type the scores, Save. Players stay selected for rematches; the format is remembered.
+2. **Leaderboard** with Today / 7 days / 30 days / Season, last-5 form, rank arrows vs. last week.
+3. **Top pairs** (2-player teams with 3+ matches).
+4. **Highlights**: hot streak, rising player, biggest upset, most active.
+5. **Recent matches**.
+
+Try it with fake data on an empty database: `npm run db:seed-demo`.
+
 ## 👤 Player statistics
 
 Matches are recorded between _teams_ (`anna,marco` vs `luca,sara`), and the team ratings work as before. In addition,
@@ -99,6 +111,7 @@ A player who has no matches yet can be deleted by the admin; renaming players is
 | `ADMIN_PASSWORD`  | Password for `/admin` (min. 8 chars). Required, there is no default.                    |
 | `NEXTAUTH_SECRET` | Random string to sign sessions (min. 16 chars). Required.                               |
 | `NEXTAUTH_URL`    | Public URL of the app.                                                                  |
+| `TZ`              | Your time zone (e.g. `Europe/Rome`); decides when "Today" starts on the leaderboard.    |
 | `DATABASE_URL`    | SQLite file, `file:/data/hilde.db` in Docker. Relative paths are relative to `prisma/`. |
 
 ## 🆕 Changes in this fork

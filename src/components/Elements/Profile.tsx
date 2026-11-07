@@ -176,11 +176,15 @@ export const Profile: FunctionComponent<{
             </div>
           </div>
         </div>
-        <div className="col-span-6 h-52 border-t border-b dark:border-gray-600">
+        <div className="col-span-6 border-t border-b dark:border-gray-600 p-2">
           {matches && matches.length > 0 ? (
             <EloHistory
               matches={matches}
               teams={[team.name, ...(versus ? [versus.name] : [])]}
+              labels={[
+                players.team(team.name),
+                ...(versus ? [players.team(versus.name)] : []),
+              ]}
             />
           ) : (
             <div className="h-52 flex justify-center items-center italic opacity-50">

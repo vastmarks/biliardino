@@ -1,9 +1,8 @@
 import { FunctionComponent } from "react";
 import { Season } from "@prisma/client";
-import { TiDeleteOutline, TiMediaPlayOutline } from "react-icons/ti";
 import { TimeDistance } from "~/components/Elements/TeamDistance";
 import { trpc } from "~/utils/trpc";
-import { toast } from "react-toastify";
+import { toast } from "~/utils/toast";
 
 export const SeasonList: FunctionComponent<{ seasons: Season[] }> = ({
   seasons,
@@ -65,7 +64,7 @@ export const SeasonList: FunctionComponent<{ seasons: Season[] }> = ({
                           }
                         }}
                       >
-                        <TiDeleteOutline />
+                        <span aria-hidden>✕</span>
                       </button>
                       <button
                         className="mx-3 text-green-500"
@@ -79,7 +78,7 @@ export const SeasonList: FunctionComponent<{ seasons: Season[] }> = ({
                           }
                         }}
                       >
-                        <TiMediaPlayOutline />
+                        <span aria-hidden>▶</span>
                       </button>
                     </>
                   )}

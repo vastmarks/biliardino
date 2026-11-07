@@ -4,6 +4,8 @@ require("./src/server/env");
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  poweredByHeader: false,
+  env: { NEXT_PUBLIC_APP_VERSION: require("./package.json").version },
   output: "standalone",
   // native module, must not be bundled
   serverExternalPackages: ["better-sqlite3"],

@@ -1,74 +1,26 @@
 import type { FunctionComponent } from "react";
 import { useMemo } from "react";
-import { ResponsiveLine, LineSeries } from "@nivo/line";
 import { Match } from "@prisma/client";
-import { useTheme } from "next-themes";
+import { LineChart } from "~/components/Elements/LineChart";
+
+const COLORS = ["#65a30d", "#0891b2"]; // lime-600, cyan-600
 
 export const EloHistory: FunctionComponent<{
   matches: Match[];
   teams: string[];
-}> = ({ teams, matches }) => {
-  const data: LineSeries[] = useMemo(
-    () =>
-      teams.map(t => ({
-        id: t,
-        data: matches
-          .sort((a, b) => (a.createdAt > b.createdAt ? 1 : -1))
-          .map(m => ({
-            x: m.id,
-            y: m.team1 === t ? m.team1Rating : m.team2Rating,
-          })),
-      })),
-    [teams, matches],
-  );
-  const { theme } = useTheme();
+  labels?: string[];
+}> = ({ teams, matches, labels }) => {
+  const series = useMemo(() => {
+    const ordered = [...matches].sort(
+      (a, b) => +new Date(a.createdAt) - +new Date(b.createdAt) || a.id - b.id,
+    );
+    return teams.map((t, i) => ({
+      id: t,
+      label: labels?.[i] ?? t,
+      color: COLORS[i % COLORS.length],
+      values: ordered.map(m => (m.team1 === t ? m.team1Rating : m.team2Rating)),
+    }));
+  }, [teams, matches, labels]);
 
-  return (
-    <div className="h-full">
-      <ResponsiveLine
-        data={data}
-        margin={{ top: 1, right: 5, bottom: 1, left: 50 }}
-        yScale={{
-          type: "linear",
-          min: "auto",
-        }}
-        tooltip={({ point }) => {
-          return (
-            <div className="bg-gray-200 dark:bg-gray-800 p-2 text-sm shadow rounded">
-              <b>{point.seriesId}</b>: {(point.data.y as number).toFixed(2)}
-            </div>
-          );
-        }}
-        // TODO: animating charts leads to a bug where the line becomes buggy when versus is set
-        animate={false}
-        colors={["#65a30d", "#0891b2"]} // equals lime-600 and cyan-600
-        theme={
-          theme === "dark"
-            ? {
-                axis: {
-                  ticks: {
-                    text: {
-                      fill: "#9ca3af",
-                    },
-                  },
-                },
-                grid: {
-                  line: {
-                    stroke: "#4b5563",
-                    strokeWidth: 1,
-                  },
-                },
-              }
-            : {}
-        }
-        curve="linear"
-        axisTop={null}
-        axisRight={null}
-        enablePoints={matches.length < 100}
-        axisBottom={null}
-        useMesh={true}
-        enableGridX={matches.length < 100}
-      />
-    </div>
-  );
+  return <LineChart series={series} />;
 };

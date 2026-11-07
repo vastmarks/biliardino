@@ -2,8 +2,38 @@
 @tailwind components;
 @tailwind utilities;
 
-body,
-html,
-#__next {
-  @apply h-full dark:bg-gray-900;
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+body {
+  @apply bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-gray-100;
+  min-height: 100dvh;
+}
+
+/* iOS zooms into inputs below 16px */
+input,
+select,
+textarea {
+  font-size: max(16px, 1em);
+}
+
+button,
+a,
+[role="tab"] {
+  touch-action: manipulation;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

@@ -193,7 +193,7 @@ export const PlayerProfile: FunctionComponent<{
             <h3 className="text-sm uppercase text-gray-400 p-3">
               Recent matches
             </h3>
-            <MatchTable matches={recentMatches} animated={false} />
+            <MatchTable matches={recentMatches} />
           </div>
         )}
       </div>

@@ -5,6 +5,7 @@ import { deleteMatchFromTeam, getOrCreateTeam } from "~/server/model/team";
 import { createMatch } from "~/server/model/match";
 import { matchAddValidation } from "~/utils/validation";
 import { teamNameFromKeys } from "~/utils/players";
+import { getCurrentSeason } from "~/server/model/season";
 import { TRPCError } from "@trpc/server";
 
 export const matchesRouter = router({
@@ -47,7 +48,7 @@ export const matchesRouter = router({
         },
         where: {
           ...where,
-          season: input.season ? input.season : 1,
+          season: input.season ?? (await getCurrentSeason()),
         },
       });
     }),
@@ -112,7 +113,7 @@ export const matchesRouter = router({
         take: input.limit + 1,
         where: {
           ...where,
-          season: input.season ? input.season : 1,
+          season: input.season ?? (await getCurrentSeason()),
         },
         include: {
           achievements: true,

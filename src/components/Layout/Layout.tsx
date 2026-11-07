@@ -1,21 +1,28 @@
 import Link from "next/link";
 import { FunctionComponent, ReactNode } from "react";
 import { useRouter } from "next/router";
-import packageJson from "../../../package.json";
-import { MdDarkMode, MdLightMode } from "react-icons/md";
 import { useTheme } from "next-themes";
-import { SeasonSelector } from "~/components/Elements";
+import { SeasonSelector } from "~/components/Elements/SeasonSelector";
+
+const NAV = [
+  { label: "Matches", href: "/matches" },
+  { label: "Teams", href: "/teams" },
+  { label: "Players", href: "/players" },
+  { label: "Leaderboards", href: "/leaderboards" },
+];
 
 const NavLink: FunctionComponent<{ label: string; href: string }> = ({
   label,
   href,
 }) => {
   const router = useRouter();
+  const active = router.pathname.startsWith(href);
   return (
     <Link
       href={href}
-      className={`opacity-50 transition-opacity hover:opacity-100 font-semibold ${
-        router.pathname === href ? "opacity-100" : ""
+      aria-current={active ? "page" : undefined}
+      className={`px-2 py-2 font-semibold text-sm whitespace-nowrap transition-opacity hover:opacity-100 ${
+        active ? "opacity-100" : "opacity-50"
       }`}
     >
       {label}
@@ -26,70 +33,50 @@ const NavLink: FunctionComponent<{ label: string; href: string }> = ({
 export const Layout: FunctionComponent<{ children: ReactNode }> = ({
   children,
 }) => {
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
 
   return (
-    <div className="container max-w-3xl mx-auto mt-20  flex flex-col py-4 px-4">
-      <div>
-        <div className="flex justify-between items-center mb-1">
-          <div className="flex items-end gap-2">
-            <Link href="/" className="flex items-end gap-1">
-              <h1
-                className="text-3xl font-bold hover:animate-pulse"
-                style={{
-                  backgroundImage:
-                    "linear-gradient(90deg, #0094d8 -20%, #9fc20a 50%)",
-                  backgroundClip: "text",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                }}
-              >
-                Hilde
-              </h1>
-            </Link>
-            <SeasonSelector />
-          </div>
-          <div>
-            <ul>
-              <li className="inline mr-4">
-                <NavLink label={"Matches"} href={"/matches"} />
-              </li>
-              <li className="inline mr-4">
-                <NavLink label={"Teams"} href={"/teams"} />
-              </li>
-              <li className="inline mr-4">
-                <NavLink label={"Players"} href={"/players"} />
-              </li>
-              <li className="inline">
-                <NavLink label={"Leaderboards"} href={"/leaderboards"} />
-              </li>
-            </ul>
-          </div>
+    <div className="max-w-3xl mx-auto min-h-dvh flex flex-col px-3 sm:px-4 pt-2 sm:pt-10 pb-[max(1rem,env(safe-area-inset-bottom))]">
+      <header className="flex flex-wrap items-center justify-between gap-x-4">
+        <div className="flex items-end gap-2">
+          <Link
+            href="/"
+            className="text-3xl font-bold py-1"
+            style={{
+              backgroundImage:
+                "linear-gradient(90deg, #0094d8 -20%, #9fc20a 50%)",
+              backgroundClip: "text",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+            }}
+          >
+            Hilde
+          </Link>
+          <SeasonSelector />
         </div>
-        {children}
-      </div>
-      <div className="text-center text-gray-500 text-xs my-8 flex justify-between border-t pt-3 items-center">
+        <nav className="-mx-2 flex overflow-x-auto" aria-label="Main">
+          {NAV.map(n => (
+            <NavLink key={n.href} {...n} />
+          ))}
+        </nav>
+      </header>
+      <main className="flex-1">{children}</main>
+      <footer className="text-gray-500 text-xs mt-8 flex justify-between border-t dark:border-gray-700 pt-3 items-center">
+        <button
+          type="button"
+          onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+          className="h-9 px-3 rounded-lg border dark:border-gray-700"
+          aria-label="Toggle dark mode"
+        >
+          ◐ Theme
+        </button>
         <div>
-          <label className="inline-flex relative items-center cursor-pointer">
-            <input
-              type="checkbox"
-              onClick={() => setTheme(theme !== "dark" ? "dark" : "light")}
-              className="sr-only peer"
-              defaultChecked={theme === "light"}
-            />
-            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 flex items-center justify-between px-1 text-base">
-              <MdLightMode />
-              <MdDarkMode />
-            </div>
-          </label>
-        </div>
-        <div>
-          <b>Hilde v{packageJson.version}</b> - by{" "}
+          <b>Hilde v{process.env.NEXT_PUBLIC_APP_VERSION}</b> - by{" "}
           <a href="https://nehalist.io" className="hover:underline">
             nehalist.io
           </a>
         </div>
-      </div>
+      </footer>
     </div>
   );
 };

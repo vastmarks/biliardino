@@ -92,7 +92,6 @@ const Matches = () => {
               .map(i => i.items)
               .flat() || []
           }
-          animated={false}
         />
         {hasNextPage && (
           <div className="border-t text-center p-2">

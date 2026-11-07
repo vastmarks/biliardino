@@ -23,7 +23,7 @@ RUN DATABASE_URL=file:/tmp/build.db \
 
 # ---- run ----
 FROM node:22-alpine AS runner
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache libc6-compat tzdata
 WORKDIR /app
 
 ENV NODE_ENV=production \

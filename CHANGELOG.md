@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-11-05
+
+### Added
+
+- Home page dashboard: mobile-first match entry (player chips, numeric keypad), leaderboard with period tabs / form / rank movement, top pairs, highlight tiles, recent matches; server-rendered
+- Web app manifest and icons, `TZ` setting, `npm run db:seed-demo`
+
+### Changed
+
+- First Load JS of the home page 285 kB -> 146 kB (gzip): removed Nivo, react-toastify, react-tooltip, auto-animate, react-hook-form, react-icons and the next-auth client; own SVG chart and toast
+- Responsive match list replaces the table; `/matches` defaults to the current season
+
+### Fixed
+
+- Season-less pages defaulting to season 1
+
 ## [0.4.0] - 2026-10-31
 
 ### Added

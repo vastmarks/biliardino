@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { toast } from "react-toastify";
+import { toast } from "~/utils/toast";
 import { trpc } from "~/utils/trpc";
 import { Card, LoadingIndicator } from "~/components/Elements";
 import { Input } from "~/components/Form";

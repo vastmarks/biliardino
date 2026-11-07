@@ -2,7 +2,6 @@ import { Match, Team } from "@prisma/client";
 import { getSeasonMeta, getTeamSize } from "~/model";
 import { TeamWithMeta, TeamWithMetaAndAchievements } from "~/server/model/team";
 import { defaultRating } from "~/utils/elo";
-import { differenceInDays } from "date-fns";
 
 export interface Achievement {
   id: string;
@@ -545,7 +544,11 @@ export const achievements: Achievement[] = [
     id: "vacation",
     condition: (team, opponent, match) => {
       const meta = getSeasonMeta(team, match.season);
-      return differenceInDays(new Date(), new Date(meta.updatedAt)) > 14;
+      return (
+        Math.trunc(
+          (Date.now() - new Date(meta.updatedAt).getTime()) / 86_400_000,
+        ) > 14
+      );
     },
     title: "Take a vacation",
     description: "Don't play for 14 days",

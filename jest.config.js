@@ -6,5 +6,5 @@ module.exports = {
     "~/(.*)": "<rootDir>/src/$1",
   },
   rootDir: "./",
-  verbose: true
+  verbose: true,
 };
