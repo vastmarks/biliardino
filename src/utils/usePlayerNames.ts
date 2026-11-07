@@ -4,7 +4,7 @@ import { parsePlayers } from "~/utils/playerStats";
 
 /** Maps a player key ("elena") to its display name ("Elena"); falls back to the key. */
 export function usePlayerNames() {
-  const { data } = trpc.players.all.useQuery(undefined, {
+  const { data } = trpc.players.names.useQuery(undefined, {
     staleTime: 60_000,
     refetchOnWindowFocus: false,
   });

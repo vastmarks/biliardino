@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - 2026-11-07
+
+### Added
+
+- Edit and delete matches: anyone within 24 hours of entry, the admin always (**✎ Edit** on every match)
+- Rename, archive and delete players (**Players** page); deleting a player who has matches is admin-only with a typed-name confirmation
+- Type-ahead player search on the home page (keyboard friendly on mobile), with "add new player" for unknown names
+- **Home** tab in the navigation, and an *Admin* link in the footer
+- Database migration adding `player.archived` (applied automatically on start)
+
+### Changed
+
+- Teams page: **Singles (1v1) / Pairs (2v2)** tabs replace the confusing team-size filter
+
+### Fixed
+
+- The match note could not be closed once opened; it now has a remove button, is trimmed and saved with the match
+
 ## [0.6.0] - 2026-11-05
 
 ### Fixed

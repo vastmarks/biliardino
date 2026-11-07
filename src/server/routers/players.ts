@@ -1,12 +1,14 @@
 import { TRPCError } from "@trpc/server";
-import { protectedProcedure, publicProcedure, router } from "~/server/trpc";
+import { publicProcedure, roleAwareProcedure, router } from "~/server/trpc";
 import { z } from "zod";
 import { prisma } from "~/server/prisma";
 import { getCurrentSeason } from "~/server/model/season";
 import { writeTransaction } from "~/server/db";
+import { deleteTeamCascade } from "~/server/model/team";
 import {
   cleanPlayerName,
   playerKey,
+  teamNameFromKeys,
   validatePlayerName,
 } from "~/utils/players";
 import { playerAddValidation } from "~/utils/validation";
@@ -39,13 +41,35 @@ async function loadMatches(scope: number | "all" | undefined) {
 type PlayerSummary = Omit<PlayerStats, "partners" | "opponents" | "history">;
 
 export const playersRouter = router({
-  /** All known players (for the player pickers), alphabetical. */
+  /**
+   * All known players, alphabetical, with the number of matches they played (all seasons)
+   * and whether they are archived. Pickers hide the archived ones.
+   */
   all: publicProcedure.query(async () => {
-    const players = await prisma.player.findMany({
-      select: { id: true, name: true, key: true },
-    });
-    return players.sort((a, b) => a.name.localeCompare(b.name));
+    const [players, teams] = await Promise.all([
+      prisma.player.findMany({
+        select: { id: true, name: true, key: true, archived: true },
+      }),
+      prisma.team.findMany({
+        select: { name: true, meta: { select: { totalMatches: true } } },
+      }),
+    ]);
+    const matchCount = new Map<string, number>();
+    for (const team of teams) {
+      const played = team.meta.reduce((sum, m) => sum + m.totalMatches, 0);
+      for (const key of parsePlayers(team.name)) {
+        matchCount.set(key, (matchCount.get(key) ?? 0) + played);
+      }
+    }
+    return players
+      .map(p => ({ ...p, matches: matchCount.get(p.key) ?? 0 }))
+      .sort((a, b) => a.name.localeCompare(b.name));
   }),
+
+  /** Just key and display name of everybody: what links and match lists need. */
+  names: publicProcedure.query(() =>
+    prisma.player.findMany({ select: { key: true, name: true } }),
+  ),
 
   /** Defines a new player. Names are unique case-insensitively. */
   create: publicProcedure
@@ -69,24 +93,120 @@ export const playersRouter = router({
       });
     }),
 
-  /** Only players who haven't played yet can be removed (admin). */
-  delete: protectedProcedure
-    .input(z.object({ id: z.number().int() }))
-    .mutation(({ input }) =>
+  /**
+   * Changes a player's name (typo, nickname). The key is part of every team name, so all
+   * teams, matches and achievements of the player are renamed with it.
+   */
+  rename: publicProcedure
+    .input(z.object({ id: z.number().int(), name: z.string().max(100) }))
+    .mutation(({ input }) => {
+      const problem = validatePlayerName(input.name);
+      if (problem) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: problem });
+      }
+      const name = cleanPlayerName(input.name);
+      const newKey = playerKey(name);
+      return writeTransaction(async db => {
+        const player = await db.player.findUnique({ where: { id: input.id } });
+        if (!player) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Unknown player" });
+        }
+        const clash = await db.player.findUnique({ where: { key: newKey } });
+        if (clash && clash.id !== player.id) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: `${clash.name} already exists`,
+          });
+        }
+        if (newKey !== player.key) {
+          const teams = await db.team.findMany({
+            select: { id: true, name: true },
+          });
+          for (const team of teams) {
+            const keys = parsePlayers(team.name);
+            if (!keys.includes(player.key)) continue;
+            const renamed = teamNameFromKeys(
+              keys.map(k => (k === player.key ? newKey : k)),
+            );
+            await db.team.update({
+              where: { id: team.id },
+              data: { name: renamed },
+            });
+            await db.match.updateMany({
+              where: { team1: team.name },
+              data: { team1: renamed },
+            });
+            await db.match.updateMany({
+              where: { team2: team.name },
+              data: { team2: renamed },
+            });
+            await db.teamAchievement.updateMany({
+              where: { teamId: team.id },
+              data: { teamName: renamed },
+            });
+          }
+        }
+        return db.player.update({
+          where: { id: player.id },
+          data: { name, key: newKey },
+        });
+      });
+    }),
+
+  /** Hides a player from the match entry (or brings them back). History is kept. */
+  archive: publicProcedure
+    .input(z.object({ id: z.number().int(), archived: z.boolean() }))
+    .mutation(async ({ input }) => {
+      try {
+        return await prisma.player.update({
+          where: { id: input.id },
+          data: { archived: input.archived },
+        });
+      } catch {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Unknown player" });
+      }
+    }),
+
+  /**
+   * Deletes a player. Without matches anybody may (a name added by mistake). A player with
+   * matches takes all those matches with them and changes the ratings of everyone they
+   * played with, so only the admin may, and the caller must repeat the player's name.
+   */
+  delete: roleAwareProcedure
+    .input(z.object({ id: z.number().int(), confirmName: z.string().max(100) }))
+    .mutation(({ input, ctx }) =>
       writeTransaction(async db => {
         const player = await db.player.findUnique({ where: { id: input.id } });
         if (!player) {
           throw new TRPCError({ code: "NOT_FOUND", message: "Unknown player" });
         }
-        const teams = await db.team.findMany({ select: { name: true } });
-        if (teams.some(t => parsePlayers(t.name).includes(player.key))) {
-          throw new TRPCError({
-            code: "CONFLICT",
-            message: `${player.name} has already played matches and can't be deleted`,
-          });
+        const teams = (
+          await db.team.findMany({ select: { id: true, name: true } })
+        ).filter(t => parsePlayers(t.name).includes(player.key));
+        const played = await db.match.count({
+          where: {
+            OR: teams.flatMap(t => [{ team1: t.name }, { team2: t.name }]),
+          },
+        });
+        if (played > 0) {
+          if (!ctx.isAdmin) {
+            throw new TRPCError({
+              code: "FORBIDDEN",
+              message: `${player.name} has played ${played} matches. Only the admin can delete such a player (log in at /admin), or archive them instead.`,
+            });
+          }
+          if (playerKey(input.confirmName) !== player.key) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: "The name typed for confirmation doesn't match",
+            });
+          }
         }
-        await db.player.delete({ where: { id: input.id } });
-        return { id: input.id };
+        for (const team of teams) {
+          await deleteTeamCascade(db, team);
+        }
+        await db.player.delete({ where: { id: player.id } });
+        return { id: player.id, deletedMatches: played };
       }),
     ),
 

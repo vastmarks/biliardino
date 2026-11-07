@@ -33,10 +33,8 @@ const Home = ({ initial }: { initial: DashboardData }) => {
   );
 
   // the name lookups used by PlayerLink / TeamLink come for free with the page
-  trpc.players.all.useQuery(undefined, {
-    initialData: [...initial.roster].sort((a, b) =>
-      a.name.localeCompare(b.name),
-    ),
+  trpc.players.names.useQuery(undefined, {
+    initialData: initial.roster.map(({ key, name }) => ({ key, name })),
     staleTime: 60_000,
     refetchOnWindowFocus: false,
   });

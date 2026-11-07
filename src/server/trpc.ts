@@ -18,6 +18,15 @@ export const router = t.router;
 /** Open to everybody (reading data, adding players and matches). */
 export const publicProcedure = t.procedure;
 
+/**
+ * Open to everybody, but the procedure learns whether the caller is the admin
+ * (`ctx.isAdmin`), for actions with different rules for admin and everybody else.
+ */
+export const roleAwareProcedure = t.procedure.use(async ({ next, ctx }) => {
+  const session = await getServerSession(ctx.req, ctx.res, authOptions);
+  return next({ ctx: { ...ctx, isAdmin: session !== null } });
+});
+
 /** Only for the logged-in admin (deleting things, managing seasons). */
 export const protectedProcedure = t.procedure.use(async ({ next, ctx }) => {
   const session = await getServerSession(ctx.req, ctx.res, authOptions);

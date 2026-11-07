@@ -24,7 +24,8 @@ export interface DashboardRecentMatch {
 export interface DashboardData extends DashboardStats {
   season: number;
   /** all defined players, most recently active first, then alphabetical */
-  roster: Array<{ id: number; key: string; name: string }>;
+  /** archived players are only here so that names resolve; pickers skip them */
+  roster: Array<{ id: number; key: string; name: string; archived: boolean }>;
   pairs: PairRow[];
   recent: DashboardRecentMatch[];
   totalMatches: number;
@@ -54,7 +55,9 @@ export async function loadDashboard(
       },
       orderBy: [{ createdAt: "asc" }, { id: "asc" }],
     }),
-    prisma.player.findMany({ select: { id: true, key: true, name: true } }),
+    prisma.player.findMany({
+      select: { id: true, key: true, name: true, archived: true },
+    }),
     prisma.team.findMany({
       where: { teamsize: 2 },
       select: {
@@ -97,11 +100,23 @@ export async function loadDashboard(
       a.name.localeCompare(b.name),
   );
 
+  // somebody who left shouldn't hold a place on today's boards
+  const archived = new Set(players.filter(p => p.archived).map(p => p.key));
+  const boards = Object.fromEntries(
+    Object.entries(stats.boards).map(([period, rows]) => [
+      period,
+      rows.filter(r => !archived.has(r.name)),
+    ]),
+  ) as typeof stats.boards;
+
   return {
     season,
     ...stats,
+    boards,
     roster,
-    pairs: topPairs(teams, season),
+    pairs: topPairs(teams, season).filter(
+      pair => !pair.players.some(key => archived.has(key)),
+    ),
     totalMatches: matches.length,
     recent: recent.map(m => ({
       id: m.id,

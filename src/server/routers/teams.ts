@@ -3,7 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { protectedProcedure, publicProcedure, router } from "~/server/trpc";
 import { prisma } from "~/server/prisma";
 import { writeTransaction } from "~/server/db";
-import { rebuildSeason } from "~/server/model/team";
+import { deleteTeamCascade, rebuildSeason } from "~/server/model/team";
 
 export const teamsRouter = router({
   list: publicProcedure
@@ -34,17 +34,7 @@ export const teamsRouter = router({
         if (!team) {
           throw new TRPCError({ code: "NOT_FOUND", message: "Team not found" });
         }
-        const where = { OR: [{ team1: team.name }, { team2: team.name }] };
-        const seasons = await db.match.findMany({
-          where,
-          select: { season: true },
-          distinct: ["season"],
-        });
-        await db.match.deleteMany({ where });
-        await db.team.delete({ where: { id: team.id } });
-        for (const { season } of seasons) {
-          await rebuildSeason(db, season);
-        }
+        await deleteTeamCascade(db, team);
         return team;
       }),
     ),

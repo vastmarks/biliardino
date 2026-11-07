@@ -52,6 +52,34 @@ export const matchAddValidation = z
     }
   });
 
+/** Correcting a saved match: same fields as entering one, minus the format (it can't change). */
+export const matchUpdateValidation = z
+  .object({
+    id: z.number().int().positive(),
+    players1: side,
+    players2: side,
+    score1: wholeNumber(0, 99),
+    score2: wholeNumber(0, 99),
+    comment: z.string().max(500).optional().default(""),
+  })
+  .superRefine((value, ctx) => {
+    if (value.players1.length !== value.players2.length) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["players2"],
+        message: "Both sides need the same number of players",
+      });
+    }
+    const all = [...value.players1, ...value.players2];
+    if (new Set(all).size !== all.length) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["players1"],
+        message: "A player can only be picked once",
+      });
+    }
+  });
+
 export const playerAddValidation = z.object({
   name: z.string().min(1).max(100), // the real rules are in validatePlayerName
 });
@@ -60,6 +88,7 @@ export const seasonAddValidation = z.object({
   number: wholeNumber(1, 9999),
 });
 
+export type MatchUpdateInput = z.input<typeof matchUpdateValidation>;
 export type MatchAddInput = z.input<typeof matchAddValidation>;
 export type MatchAddOutput = z.output<typeof matchAddValidation>;
 export type SeasonAddInput = z.input<typeof seasonAddValidation>;

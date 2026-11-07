@@ -112,6 +112,8 @@ model Player {
   name      String
   /// lower-cased name, used inside team names and URLs
   key       String   @unique
+  /// hidden from the match entry (e.g. left the company); their history stays
+  archived  Boolean  @default(false)
 
   @@map("player")
 }

@@ -5,18 +5,22 @@ import { useTheme } from "next-themes";
 import { SeasonSelector } from "~/components/Elements/SeasonSelector";
 
 const NAV = [
+  { label: "Home", href: "/", exact: true },
   { label: "Matches", href: "/matches" },
   { label: "Teams", href: "/teams" },
   { label: "Players", href: "/players" },
   { label: "Leaderboards", href: "/leaderboards" },
 ];
 
-const NavLink: FunctionComponent<{ label: string; href: string }> = ({
-  label,
-  href,
-}) => {
+const NavLink: FunctionComponent<{
+  label: string;
+  href: string;
+  exact?: boolean;
+}> = ({ label, href, exact }) => {
   const router = useRouter();
-  const active = router.pathname.startsWith(href);
+  const active = exact
+    ? router.pathname === href
+    : router.pathname.startsWith(href);
   return (
     <Link
       href={href}
@@ -71,6 +75,9 @@ export const Layout: FunctionComponent<{ children: ReactNode }> = ({
           ◐ Theme
         </button>
         <div>
+          <Link href="/admin" className="hover:underline mr-3">
+            Admin
+          </Link>
           <b>Hilde v{process.env.NEXT_PUBLIC_APP_VERSION}</b> - by{" "}
           <a href="https://nehalist.io" className="hover:underline">
             nehalist.io

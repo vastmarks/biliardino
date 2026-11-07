@@ -1,6 +1,6 @@
-import { FunctionComponent } from "react";
-import { toast } from "~/utils/toast";
-import { trpc } from "~/utils/trpc";
+import { FunctionComponent, useState } from "react";
+import { MatchEditDialog } from "~/components/Elements/MatchEditDialog";
+import { canModifyMatch } from "~/utils/editRules";
 import { TimeDistance } from "~/components/Elements/TimeDistance";
 import { TeamLink } from "~/components/Elements/TeamLink";
 import { RatingChange } from "~/components/Elements/RatingChange";
@@ -60,9 +60,10 @@ const Side: FunctionComponent<{
 
 export const MatchRow: FunctionComponent<{
   match: MatchRowData;
-  admin?: boolean;
-  onDelete?: (match: MatchRowData) => void;
-}> = ({ match, admin, onDelete }) => (
+  /** show the "correct" button */
+  editable?: boolean;
+  onEdit?: (match: MatchRowData) => void;
+}> = ({ match, editable, onEdit }) => (
   <li className="px-3 py-2 sm:px-4">
     <div className="flex items-center gap-2 text-sm">
       <Side
@@ -97,14 +98,14 @@ export const MatchRow: FunctionComponent<{
           💬 {match.comment}
         </span>
       )}
-      {admin && (
+      {editable && (
         <button
           type="button"
-          className="text-red-500 px-2 py-1 -my-1"
-          onClick={() => onDelete?.(match)}
-          aria-label="Delete match"
+          className="text-blue-500 px-2 py-1 -my-1"
+          onClick={() => onEdit?.(match)}
+          aria-label="Correct or delete this match"
         >
-          ✕
+          ✎ Edit
         </button>
       )}
     </div>
@@ -115,41 +116,25 @@ export const MatchTable: FunctionComponent<{ matches: MatchRowData[] }> = ({
   matches,
 }) => {
   const isAdmin = useIsAdmin();
-  const utils = trpc.useUtils();
-  const deleteMutation = trpc.matches.delete.useMutation({
-    onSuccess: async () => {
-      await Promise.all([
-        utils.matches.invalidate(),
-        utils.dashboard.invalidate(),
-        utils.players.invalidate(),
-      ]);
-      toast("Match deleted.", { type: "success" });
-    },
-    onError: err => toast(`Error: ${err.message}`, { type: "error" }),
-  });
+  const [editing, setEditing] = useState<MatchRowData | null>(null);
 
   if (matches.length === 0) {
     return null;
   }
 
   return (
-    <ul className="divide-y dark:divide-gray-700 rounded-lg bg-white dark:bg-gray-800 shadow">
-      {matches.map(match => (
-        <MatchRow
-          key={match.id}
-          match={match}
-          admin={isAdmin}
-          onDelete={m => {
-            if (
-              window.confirm(
-                `Delete ${m.team1} vs ${m.team2} (${m.score1}:${m.score2})?`,
-              )
-            ) {
-              deleteMutation.mutate({ id: m.id });
-            }
-          }}
-        />
-      ))}
-    </ul>
+    <>
+      <ul className="divide-y dark:divide-gray-700 rounded-lg bg-white dark:bg-gray-800 shadow">
+        {matches.map(match => (
+          <MatchRow
+            key={match.id}
+            match={match}
+            editable={canModifyMatch(match.createdAt, isAdmin)}
+            onEdit={setEditing}
+          />
+        ))}
+      </ul>
+      <MatchEditDialog match={editing} onClose={() => setEditing(null)} />
+    </>
   );
 };

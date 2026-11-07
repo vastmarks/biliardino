@@ -7,10 +7,8 @@ import {
   PlayerTable,
 } from "~/components/Elements";
 import { trpc } from "~/utils/trpc";
+import { PlayerManager } from "~/components/Elements/PlayerManager";
 import { AddPlayerForm } from "~/components/Form";
-import { PlayerLink } from "~/components/Elements";
-import { useIsAdmin } from "~/utils/useIsAdmin";
-import { toast } from "~/utils/toast";
 import { useStore } from "~/utils/store";
 
 const Players = () => {
@@ -22,16 +20,6 @@ const Players = () => {
   );
 
   const roster = trpc.players.all.useQuery();
-  const isAdmin = useIsAdmin();
-  const utils = trpc.useUtils();
-  const remove = trpc.players.delete.useMutation({
-    onSuccess: async () => {
-      await utils.players.invalidate();
-    },
-    onError: err => toast(`Error: ${err.message}`, { type: "error" }),
-  });
-  const withMatches = new Set((data ?? []).map(p => p.name));
-  const noMatchesYet = (roster.data ?? []).filter(p => !withMatches.has(p.key));
 
   const tab = (active: boolean) =>
     `px-3 py-1 rounded-lg text-sm font-semibold ${
@@ -67,30 +55,7 @@ const Players = () => {
           <PlayerTable players={data} />
         )}
       </Card>
-      {noMatchesYet.length > 0 && (
-        <p className="text-sm mt-3">
-          <span className="opacity-60">Not played yet: </span>
-          {noMatchesYet.map((p, i) => (
-            <span key={p.id}>
-              {i > 0 && ", "}
-              <PlayerLink name={p.key} />
-              {isAdmin && (
-                <button
-                  className="ml-1 text-red-500"
-                  title={`Delete ${p.name}`}
-                  onClick={() => {
-                    if (window.confirm(`Delete ${p.name}?`)) {
-                      remove.mutate({ id: p.id });
-                    }
-                  }}
-                >
-                  ×
-                </button>
-              )}
-            </span>
-          ))}
-        </p>
-      )}
+      {roster.data && <PlayerManager players={roster.data} />}
       <p className="text-xs opacity-60 mt-2">
         Player ratings are Elo ratings calculated from every match a player took
         part in: a team counts with the average rating of its players. * =

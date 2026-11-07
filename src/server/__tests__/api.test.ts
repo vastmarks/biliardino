@@ -120,19 +120,10 @@ describe("matches", () => {
     expect(after.rating).toBeCloseTo(1000 + sum);
   });
 
-  it("only lets the admin delete, and recalculates the season", async () => {
+  it("lets anybody delete a fresh match and recalculates the season", async () => {
     const first = await add(["Dario"], ["Ben"], 10, 7);
     await add(["Dario"], ["Ben"], 3, 10);
-    await expect(api.matches.delete({ id: first.id })).rejects.toThrow(
-      "UNAUTHORIZED",
-    );
-
-    admin = true;
-    try {
-      await api.matches.delete({ id: first.id });
-    } finally {
-      admin = false;
-    }
+    await api.matches.delete({ id: first.id });
 
     // what's left must look exactly as if the deleted match never happened
     const remaining = await prisma.match.findMany({ orderBy: { id: "asc" } });
@@ -148,6 +139,20 @@ describe("matches", () => {
     const last = remaining[remaining.length - 1];
     expect(last.team2).toBe("ben");
     expect(last.team2Rating).toBeCloseTo(benMeta.rating);
+  });
+
+  it("saves the note", async () => {
+    const m = await api.matches.add({
+      format: "1v1",
+      players1: [ids.Carla],
+      players2: [ids.Dario],
+      score1: 10,
+      score2: 0,
+      comment: "  Final of the Friday cup ",
+    });
+    expect(m.comment).toBe("  Final of the Friday cup ");
+    const listed = await api.matches.list({ team1: "carla", team2: "dario" });
+    expect(listed.find(x => x.id === m.id)?.comment).toContain("Friday cup");
   });
 });
 
@@ -191,5 +196,196 @@ describe("dashboard", () => {
         .slice(0, 2)
         .sort(),
     ).toEqual(["Anna", "Dario"]);
+  });
+});
+
+describe("corrections", () => {
+  const oldMatch = async (
+    team1: string,
+    team2: string,
+    s1: number,
+    s2: number,
+  ) => {
+    const { writeTransaction } = await import("~/server/db");
+    const { createMatch } = await import("~/server/model/match");
+    const month = new Date(Date.now() - 30 * 24 * 3600_000);
+    return writeTransaction(db =>
+      createMatch(db, { team1, team2, score1: s1, score2: s2, date: month }),
+    );
+  };
+
+  it("edits players and score, and the season is recalculated", async () => {
+    const m = await add(["Ben"], ["Carla"], 10, 1);
+    const fixed = await api.matches.update({
+      id: m.id,
+      players1: [ids.Ben],
+      players2: [ids.Dario], // wrong opponent was picked
+      score1: 5,
+      score2: 10,
+      comment: "fixed",
+    });
+    expect(fixed).toMatchObject({
+      team2: "dario",
+      score1: 5,
+      score2: 10,
+      comment: "fixed",
+    });
+    // the result is now a win for dario: his rating change must be positive
+    expect(fixed.team2RatingChange).toBeGreaterThan(0);
+    const stored = await prisma.match.findUniqueOrThrow({
+      where: { id: m.id },
+    });
+    expect(stored.team1RatingChange).toBeCloseTo(fixed.team1RatingChange);
+    // every team's rating still equals 1000 + the sum of its match changes
+    for (const t of await prisma.team.findMany({ where: { teamsize: 1 } })) {
+      const rows = await prisma.match.findMany({
+        where: {
+          season: stored.season,
+          OR: [{ team1: t.name }, { team2: t.name }],
+        },
+      });
+      const sum = rows.reduce(
+        (a, r) =>
+          a + (r.team1 === t.name ? r.team1RatingChange : r.team2RatingChange),
+        0,
+      );
+      const tm = await prisma.teamMeta.findFirst({
+        where: { teamId: t.id, season: stored.season },
+      });
+      if (tm) expect(tm.rating).toBeCloseTo(1000 + sum);
+    }
+  });
+
+  it("keeps a 1v1 a 1v1", async () => {
+    const m = await add(["Anna"], ["Carla"], 10, 6);
+    await expect(
+      api.matches.update({
+        id: m.id,
+        players1: [ids.Anna, ids.Ben],
+        players2: [ids.Carla, ids.Dario],
+        score1: 10,
+        score2: 6,
+      }),
+    ).rejects.toThrow("1v1");
+  });
+
+  it("locks matches older than 24 hours for everybody but the admin", async () => {
+    const old = await oldMatch("anna", "dario", 10, 2);
+    await expect(api.matches.delete({ id: old.id })).rejects.toThrow(
+      "older than 24 hours",
+    );
+    await expect(
+      api.matches.update({
+        id: old.id,
+        players1: [ids.Anna],
+        players2: [ids.Dario],
+        score1: 10,
+        score2: 3,
+      }),
+    ).rejects.toThrow("older than 24 hours");
+    admin = true;
+    try {
+      const done = await api.matches.update({
+        id: old.id,
+        players1: [ids.Anna],
+        players2: [ids.Dario],
+        score1: 10,
+        score2: 3,
+      });
+      expect(done.score2).toBe(3);
+      await api.matches.delete({ id: old.id });
+    } finally {
+      admin = false;
+    }
+  });
+});
+
+describe("player management", () => {
+  it("renames a player everywhere, including pair names", async () => {
+    const zed = await api.players.create({ name: "Zed" });
+    ids.Zed = zed.id;
+    await add(["Zed", "Anna"], ["Ben", "Carla"], 10, 3);
+    expect(
+      (await prisma.team.findMany({ where: { name: "anna,zed" } })).length,
+    ).toBe(1);
+
+    await api.players.rename({ id: zed.id, name: "Aaron" });
+    // "aaron,anna" sorts differently from "anna,zed": names are rebuilt, not just replaced
+    expect(
+      await prisma.team.findUnique({ where: { name: "anna,zed" } }),
+    ).toBeNull();
+    expect(
+      await prisma.team.findUnique({ where: { name: "aaron,anna" } }),
+    ).not.toBeNull();
+    const m = await prisma.match.findFirstOrThrow({
+      where: { team1: "aaron,anna" },
+    });
+    expect(m.team1).toBe("aaron,anna");
+    expect((await api.players.all()).find(p => p.id === zed.id)).toMatchObject({
+      name: "Aaron",
+      key: "aaron",
+      matches: 1,
+    });
+    // the same name in another case is still the same player (just a recapitalisation)
+    await api.players.rename({ id: zed.id, name: "AARON" });
+    await expect(
+      api.players.rename({ id: zed.id, name: "ben" }),
+    ).rejects.toThrow("Ben already exists");
+  });
+
+  it("archives and restores a player without touching history", async () => {
+    await api.players.archive({ id: ids.Aaron ?? ids.Zed, archived: true });
+    const d = await api.dashboard.get({});
+    const row = d.roster.find(p => p.id === ids.Zed)!;
+    expect(row.archived).toBe(true); // still in the roster so names resolve
+    expect(d.boards.season.some(r => r.name === "aaron")).toBe(false);
+    expect(await prisma.match.count({ where: { team1: "aaron,anna" } })).toBe(
+      1,
+    );
+    await api.players.archive({ id: ids.Zed, archived: false });
+  });
+
+  it("lets anybody delete a player who never played, nobody else without being admin", async () => {
+    const ghost = await api.players.create({ name: "Ghost" });
+    await api.players.delete({ id: ghost.id, confirmName: "" });
+    expect(
+      await prisma.player.findUnique({ where: { id: ghost.id } }),
+    ).toBeNull();
+
+    await expect(
+      api.players.delete({ id: ids.Zed, confirmName: "Aaron" }),
+    ).rejects.toThrow("Only the admin");
+  });
+
+  it("deletes a player with their matches only with the right name, and fixes the others' ratings", async () => {
+    admin = true;
+    try {
+      await expect(
+        api.players.delete({ id: ids.Zed, confirmName: "nope" }),
+      ).rejects.toThrow("doesn't match");
+      const result = await api.players.delete({
+        id: ids.Zed,
+        confirmName: "aaron",
+      });
+      expect(result.deletedMatches).toBeGreaterThan(0);
+    } finally {
+      admin = false;
+    }
+    expect(
+      await prisma.player.findUnique({ where: { id: ids.Zed } }),
+    ).toBeNull();
+    expect(
+      await prisma.team.findUnique({ where: { name: "aaron,anna" } }),
+    ).toBeNull();
+    // the other teams' stats were rebuilt without those matches
+    for (const t of await prisma.team.findMany()) {
+      const total = await prisma.match.count({
+        where: { OR: [{ team1: t.name }, { team2: t.name }] },
+      });
+      const metaTotal = (
+        await prisma.teamMeta.findMany({ where: { teamId: t.id } })
+      ).reduce((a, m) => a + m.totalMatches, 0);
+      expect(metaTotal).toBe(total);
+    }
   });
 });

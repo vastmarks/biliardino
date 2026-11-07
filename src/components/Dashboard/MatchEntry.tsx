@@ -1,10 +1,11 @@
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { toast } from "~/utils/toast";
 import { trpc } from "~/utils/trpc";
 import { formatSize, MATCH_FORMATS, MatchFormat } from "~/utils/players";
+import { PlayerSearch } from "~/components/Dashboard/PlayerSearch";
 
-type Roster = Array<{ id: number; key: string; name: string }>;
+type Player = { id: number; key: string; name: string; archived: boolean };
 const FORMAT_KEY = "hilde:format";
 
 const sideColor = [
@@ -13,21 +14,24 @@ const sideColor = [
 ];
 
 /**
- * Match entry, built for use right after a game on a phone: the format toggle, big tap targets
- * (player chips instead of native selects), numeric keypad for the scores, and the picked
- * players stay selected after saving because rematches are the norm.
+ * Match entry, built for use right after a game on a phone:
+ * - the format toggle (remembered), then the players of both sides: type a name (or tap one
+ *   of the recent players), the picker narrows the list as you type and Enter takes it
+ * - big numeric score fields, an optional note
+ * - the players stay selected after saving, because rematches are the norm
  */
 export const MatchEntry = ({
   roster,
   season,
   isCurrentSeason,
 }: {
-  roster: Roster;
+  /** everybody, most recently active first */
+  roster: Player[];
   season: number;
   isCurrentSeason: boolean;
 }) => {
   const [format, setFormat] = useState<MatchFormat>("2v2");
-  // flat list: side 1 slots followed by side 2 slots (always 2 + 2 long, only `size` shown)
+  // flat list: side 1 slots followed by side 2 slots (only `size` per side are shown)
   const [slots, setSlots] = useState<Array<number | null>>([
     null,
     null,
@@ -40,6 +44,10 @@ export const MatchEntry = ({
   const [comment, setComment] = useState("");
   const [showNote, setShowNote] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
+  // players created from the picker, until the refreshed roster contains them
+  const [created, setCreated] = useState<Player[]>([]);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const score1Ref = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     try {
@@ -50,7 +58,19 @@ export const MatchEntry = ({
     }
   }, []);
 
+  const everybody = useMemo(
+    () => [...roster, ...created.filter(c => !roster.some(r => r.id === c.id))],
+    [roster, created],
+  );
+  const byId = useMemo(
+    () => new Map(everybody.map(p => [p.id, p])),
+    [everybody],
+  );
+
   const utils = trpc.useUtils();
+  const createPlayer = trpc.players.create.useMutation({
+    onError: err => toast(err.message, { type: "error" }),
+  });
   const mutation = trpc.matches.add.useMutation({
     onSuccess: async (_, vars) => {
       await Promise.all([
@@ -62,8 +82,7 @@ export const MatchEntry = ({
       toast("Match saved", { type: "success" });
       setScore1("");
       setScore2("");
-      setComment("");
-      setShowNote(false);
+      closeNote();
     },
     onError: err => {
       setStatus(null);
@@ -72,13 +91,16 @@ export const MatchEntry = ({
   });
 
   const size = formatSize(format);
-  // index of the slot that takes the next tapped player
   const visible = (i: number) => (i < 2 ? i < size : i - 2 < size);
   const indexes = [0, 1, 2, 3].filter(visible);
   const firstEmpty = indexes.find(i => slots[i] === null);
+  // the slot the next picked player goes to
   const active = cursor !== null && visible(cursor) ? cursor : firstEmpty;
-  const byId = new Map(roster.map(p => [p.id, p]));
-  const placed = (id: number) => indexes.find(i => slots[i] === id);
+
+  const pickedIds = new Set(
+    indexes.map(i => slots[i]).filter(id => id !== null),
+  );
+  const available = everybody.filter(p => !p.archived && !pickedIds.has(p.id));
 
   const chooseFormat = (f: MatchFormat) => {
     setFormat(f);
@@ -91,20 +113,45 @@ export const MatchEntry = ({
     }
   };
 
-  const tapPlayer = (id: number) => {
+  const place = (id: number) => {
     setStatus(null);
-    const at = placed(id);
-    const next = [...slots];
-    if (at !== undefined) {
-      next[at] = null; // tapping a picked player removes them
-      setSlots(next);
-      setCursor(at);
-      return;
-    }
     if (active === undefined) return; // every slot is filled
+    const next = [...slots];
     next[active] = id;
     setSlots(next);
     setCursor(null);
+    // keep typing for the next player, or move on to the score once everybody is in
+    const stillEmpty = indexes.some(i => next[i] === null);
+    if (stillEmpty) {
+      searchRef.current?.focus();
+    } else {
+      searchRef.current?.blur();
+      score1Ref.current?.focus();
+    }
+  };
+
+  const addAndPlace = async (name: string) => {
+    try {
+      const player = await createPlayer.mutateAsync({ name });
+      setCreated(list => [...list, { ...player, archived: false }]);
+      void utils.dashboard.invalidate();
+      void utils.players.invalidate();
+      place(player.id);
+    } catch {
+      /* the error toast was shown by onError */
+    }
+  };
+
+  const tapSlot = (i: number) => {
+    setStatus(null);
+    if (slots[i] !== null) {
+      // tapping a picked player takes them out again
+      const next = [...slots];
+      next[i] = null;
+      setSlots(next);
+    }
+    setCursor(i);
+    searchRef.current?.focus();
   };
 
   const swap = () => {
@@ -112,6 +159,11 @@ export const MatchEntry = ({
     setScore1(score2);
     setScore2(score1);
     setCursor(null);
+  };
+
+  const closeNote = () => {
+    setShowNote(false);
+    setComment("");
   };
 
   const digits = (v: string) => v.replace(/\D/g, "").slice(0, 2);
@@ -129,18 +181,22 @@ export const MatchEntry = ({
       players2: picked2 as number[],
       score1,
       score2,
-      comment,
+      comment: comment.trim(),
     });
   };
 
-  if (roster.length < size * 2) {
+  const needed = size * 2;
+  if (
+    everybody.filter(p => !p.archived).length < needed &&
+    created.length === 0
+  ) {
     return (
       <section className="rounded-lg bg-white dark:bg-gray-800 shadow p-5 text-center text-sm text-gray-500">
-        A {format} needs at least {size * 2} players. Add players on the{" "}
+        A {format} needs at least {needed} players. Add players on the{" "}
         <Link href="/players" className="text-blue-500 underline">
           Players page
         </Link>{" "}
-        first ({roster.length} so far).
+        first ({everybody.filter(p => !p.archived).length} so far).
       </section>
     );
   }
@@ -148,25 +204,21 @@ export const MatchEntry = ({
   const slotButton = (i: number) => {
     const p = slots[i] !== null ? byId.get(slots[i]!) : undefined;
     const side = i < 2 ? 0 : 1;
-    const isActive = active === i;
     return (
       <button
         key={i}
         type="button"
-        onClick={() => {
-          setCursor(i);
-          setStatus(null);
-        }}
+        onClick={() => tapSlot(i)}
         aria-label={`${side === 0 ? "Team 1" : "Team 2"} player ${(i % 2) + 1}${
-          p ? `: ${p.name}` : ""
+          p ? `: ${p.name} (tap to remove)` : ""
         }`}
         className={`min-h-11 w-full px-3 rounded-lg border-2 text-base text-left truncate ${
           p
             ? sideColor[side]
             : "border-dashed border-gray-300 dark:border-gray-600 text-gray-400"
-        } ${isActive ? "ring-2 ring-blue-500" : ""}`}
+        } ${active === i ? "ring-2 ring-blue-500" : ""}`}
       >
-        {p ? p.name : isActive ? "Tap a player…" : "Player"}
+        {p ? p.name : active === i ? "Pick a player…" : "Player"}
       </button>
     );
   };
@@ -175,8 +227,10 @@ export const MatchEntry = ({
     value: string,
     set: (v: string) => void,
     label: string,
+    ref?: React.Ref<HTMLInputElement>,
   ) => (
     <input
+      ref={ref}
       type="text"
       inputMode="numeric"
       pattern="[0-9]*"
@@ -240,47 +294,52 @@ export const MatchEntry = ({
         </div>
       </div>
 
+      <div className="mt-3">
+        <PlayerSearch
+          players={available}
+          existingNames={everybody.map(p => p.name)}
+          inputRef={searchRef}
+          disabled={active === undefined || createPlayer.isPending}
+          placeholder={
+            active === undefined
+              ? "All players picked"
+              : `Type a name for ${active < 2 ? "team 1" : "team 2"}…`
+          }
+          onPick={p => place(p.id)}
+          onCreate={name => void addAndPlace(name)}
+        />
+      </div>
+
       <div className="my-3 flex items-center justify-center gap-3">
-        {scoreInput(score1, setScore1, "Team 1 score")}
+        {scoreInput(score1, setScore1, "Team 1 score", score1Ref)}
         <span className="text-2xl text-gray-400">:</span>
         {scoreInput(score2, setScore2, "Team 2 score")}
       </div>
 
-      <div className="flex flex-wrap gap-1.5" role="group" aria-label="Players">
-        {roster.map(p => {
-          const at = placed(p.id);
-          const side = at === undefined ? null : at < 2 ? 0 : 1;
-          return (
-            <button
-              key={p.id}
-              type="button"
-              onClick={() => tapPlayer(p.id)}
-              aria-pressed={at !== undefined}
-              className={`min-h-10 px-3 rounded-full text-sm border ${
-                side === null
-                  ? "border-gray-300 dark:border-gray-600"
-                  : `${sideColor[side]} border-2 font-semibold`
-              }`}
-            >
-              {p.name}
-            </button>
-          );
-        })}
-      </div>
-
       {showNote && (
-        <input
-          type="text"
-          maxLength={500}
-          value={comment}
-          onChange={e => setComment(e.target.value)}
-          placeholder="Note (optional)"
-          aria-label="Note"
-          className="mt-3 w-full h-11 px-3 text-base rounded-lg bg-gray-100 dark:bg-gray-900 border-0 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-        />
+        <div className="mb-3 flex items-center gap-2">
+          <input
+            type="text"
+            maxLength={500}
+            value={comment}
+            onChange={e => setComment(e.target.value)}
+            placeholder="Note (optional)"
+            aria-label="Note"
+            autoFocus
+            className="flex-1 h-11 px-3 text-base rounded-lg bg-gray-100 dark:bg-gray-900 border-0 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+          />
+          <button
+            type="button"
+            onClick={closeNote}
+            aria-label="Remove note"
+            className="h-11 w-11 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700"
+          >
+            ✕
+          </button>
+        </div>
       )}
 
-      <div className="mt-3 flex items-center gap-3">
+      <div className="flex items-center gap-3">
         {!showNote && (
           <button
             type="button"

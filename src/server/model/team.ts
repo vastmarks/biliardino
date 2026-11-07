@@ -64,6 +64,27 @@ const pointsOf = (achievementId: string) =>
   allAchievements.find(a => a.id === achievementId)?.points ?? 0;
 
 /**
+ * Deletes a team with all its matches and achievements, then recalculates every season it
+ * played in (its opponents' ratings change too).
+ */
+export async function deleteTeamCascade(
+  db: Db,
+  team: { id: number; name: string },
+) {
+  const where = { OR: [{ team1: team.name }, { team2: team.name }] };
+  const seasons = await db.match.findMany({
+    where,
+    select: { season: true },
+    distinct: ["season"],
+  });
+  await db.match.deleteMany({ where });
+  await db.team.delete({ where: { id: team.id } });
+  for (const { season } of seasons) {
+    await rebuildSeason(db, season);
+  }
+}
+
+/**
  * Recomputes every team's numbers and every match's ratings of a season from its matches.
  * Used after deleting matches, teams or achievements, so nothing can drift out of sync.
  */
@@ -105,6 +126,22 @@ export async function rebuildSeason(db: Db, season: number) {
   const points = new Map<number, number>();
   for (const a of earned) {
     points.set(a.teamId, (points.get(a.teamId) ?? 0) + pointsOf(a.achievement));
+  }
+
+  // an edited match can put a team into a season where it has no stats row yet
+  const existing = new Set(
+    (
+      await db.teamMeta.findMany({
+        where: { season },
+        select: { team: { select: { name: true } } },
+      })
+    ).map(m => m.team.name),
+  );
+  for (const name of replay.teams.keys()) {
+    if (!existing.has(name)) {
+      const team = await getOrCreateTeam(db, name);
+      await saveTeamNumbers(db, team, season, emptyTeamNumbers());
+    }
   }
 
   const metas = await db.teamMeta.findMany({
