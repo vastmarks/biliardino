@@ -59,6 +59,17 @@ back that up. Migrations are applied automatically on every start.
 
 Behind a reverse proxy set `NEXTAUTH_URL` to the public URL (e.g. `https://foosball.example.com`).
 
+### Dockge / Portainer
+
+`dockge/compose.yaml` and `dockge/.env.example` are a ready-to-paste stack:
+
+1. Push this repo to GitHub, then push a tag (`git tag v0.5.0 && git push --tags`). The workflow builds the image and publishes it to `ghcr.io/<github-user>/hilde`. If the package is private, make it public (GitHub -> Packages -> Package settings) or log your server in with `docker login ghcr.io`. Alternatively use the `build:` option in the compose file, which builds straight from the repo.
+2. In Dockge click **+ Compose**, name the stack `hilde`, paste `dockge/compose.yaml`, paste `dockge/.env.example` into the `.env` box and change `ADMIN_PASSWORD`, `NEXTAUTH_SECRET` and `NEXTAUTH_URL`.
+3. **Deploy**, then open `NEXTAUTH_URL`.
+
+Updating: push a new tag, then **Update** in Dockge (pulls the image and restarts; migrations run on start). Backup: the `hilde-data` volume holds a single SQLite file (`/data/hilde.db`).
+Troubleshooting: if login or the admin page misbehaves, `NEXTAUTH_URL` does not match the address in your browser.
+
 ### Manual
 
 Requirements: Node.js 20.9+ (22 recommended).

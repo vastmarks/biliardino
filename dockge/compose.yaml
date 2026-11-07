@@ -1,0 +1,43 @@
+# Hilde - office foosball tracker. Ready for Dockge (or plain `docker compose up -d`).
+#
+# In Dockge: "+ Compose" -> name the stack "hilde" -> paste this file as the compose
+# and the content of .env.example into the .env box -> edit the 3 marked values -> Deploy.
+#
+# Pick ONE way to get the image (see "image" / "build" below).
+
+services:
+  hilde:
+    # Option A (recommended): prebuilt image published by this repo's GitHub workflow
+    # when you push a tag (e.g. `git tag v0.5.0 && git push --tags`).
+    # Replace <github-user> with the account that owns the repo, lower-case.
+    image: ghcr.io/<github-user>/hilde:latest
+
+    # Option B: let Docker build it straight from the repo (no registry needed, first
+    # deploy takes a few minutes). Comment out "image" above and uncomment:
+    # build: https://github.com/<github-user>/hilde.git#main
+    # image: hilde:local
+
+    container_name: hilde
+    restart: unless-stopped
+    ports:
+      - "${HILDE_PORT:-3000}:3000"
+    environment:
+      # --- required (set them in .env) ---
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?set ADMIN_PASSWORD in .env (min. 8 chars)}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?set NEXTAUTH_SECRET in .env (min. 16 chars)}
+      # Address you type in the browser, e.g. http://nas.lan:3000 or https://foosball.example.com
+      NEXTAUTH_URL: ${NEXTAUTH_URL:?set NEXTAUTH_URL in .env}
+      # --- optional ---
+      TZ: ${TZ:-Europe/Rome} # decides when "Today" starts on the leaderboard
+    volumes:
+      # The SQLite database. Back this volume up; migrations run automatically on start.
+      - hilde-data:/data
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/api/auth/csrf"]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+
+volumes:
+  hilde-data:
