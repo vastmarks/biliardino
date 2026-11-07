@@ -1,319 +1,126 @@
-import { prisma } from "~/server/prisma";
-import { Match, Prisma, Team, TeamMeta } from "@prisma/client";
-import { getDefaultTeamMeta, getSeasonMeta, getTeamSize } from "~/model";
-import { Achievement, checkAchievements } from "~/utils/achievements";
-import { calculateRating, defaultRating, getExpectedRating } from "~/utils/elo";
-import { format, isSameDay } from "date-fns";
-import { getCurrentSeason } from "~/server/model/season";
+import { Prisma } from "@prisma/client";
+import type { Db } from "~/server/db";
+import { getTeamSize } from "~/model";
+import { achievements as allAchievements } from "~/utils/achievements";
+import {
+  emptyTeamNumbers,
+  fromMeta,
+  replaySeason,
+  TeamNumbers,
+  toMetaData,
+} from "~/utils/teamStats";
 
 export const teamWithMeta = Prisma.validator<Prisma.TeamDefaultArgs>()({
-  include: {
-    meta: true,
-  },
+  include: { meta: true },
 });
-
 export type TeamWithMeta = Prisma.TeamGetPayload<typeof teamWithMeta>;
 
 export const teamWithAchievements = Prisma.validator<Prisma.TeamDefaultArgs>()({
-  include: {
-    achievements: true,
-  },
+  include: { achievements: true },
 });
-
 export type TeamWithAchievements = Prisma.TeamGetPayload<
   typeof teamWithAchievements
 >;
 
 export type TeamWithMetaAndAchievements = TeamWithMeta & TeamWithAchievements;
 
-export async function getOrCreateTeam(name: string) {
-  const currentSeason = await getCurrentSeason();
-  // the placeholder id (0) must not be inserted: MySQL turned it into an
-  // auto-increment id, SQLite would store it literally and collide
-  const { id, ...defaultMeta } = getDefaultTeamMeta(currentSeason);
-  void id;
-  return await prisma.team.upsert({
-    where: {
-      name,
-    },
-    include: {
-      meta: true,
-      achievements: true,
-    },
+/** The team with this canonical name (see `teamNameFromKeys`); created on first use. */
+export async function getOrCreateTeam(
+  db: Db,
+  name: string,
+): Promise<TeamWithMetaAndAchievements> {
+  return db.team.upsert({
+    where: { name },
+    include: { meta: true, achievements: true },
     update: {},
-    create: {
-      name,
-      createdAt: new Date(),
-      teamsize: getTeamSize(name),
-      meta: {
-        create: {
-          ...defaultMeta,
-          season: currentSeason,
-        },
-      },
-    },
+    create: { name, teamsize: getTeamSize(name) },
   });
 }
 
-export async function addMatchToTeam(
-  team: TeamWithMetaAndAchievements,
-  opponent: TeamWithMetaAndAchievements,
-  currentRating: number,
-  opponentRating: number,
-  win: boolean,
-  score: number,
-  date: Date,
-  season: number | null = null,
-) {
-  if (!season) {
-    season = await getCurrentSeason();
-  }
-  const teamSeasonMeta = getSeasonMeta(team, season);
-  const newDaily =
-    !teamSeasonMeta.updatedAt ||
-    format(date, "yyyy-MM-dd") >
-      format(new Date(teamSeasonMeta.updatedAt), "yyyy-MM-dd");
-
-  const expectedRating = getExpectedRating(currentRating, opponentRating);
-  const rating = calculateRating(expectedRating, win ? 1 : 0, currentRating);
-
-  const meta = {
-    updatedAt: date,
-    rating,
-    totalMatches: teamSeasonMeta.totalMatches + 1,
-    totalWins: teamSeasonMeta.totalWins + (win ? 1 : 0),
-    totalWinRate:
-      (teamSeasonMeta.totalWins + (win ? 1 : 0)) /
-      (teamSeasonMeta.totalMatches + 1),
-    totalHighestWinStreak: win
-      ? Math.max(
-          teamSeasonMeta.totalHighestWinStreak,
-          teamSeasonMeta.currentWinStreak + 1,
-        )
-      : teamSeasonMeta.totalHighestWinStreak,
-    totalLosses: teamSeasonMeta.totalLosses + (win ? 0 : 1),
-    totalHighestLosingStreak: !win
-      ? Math.max(
-          teamSeasonMeta.totalHighestLosingStreak,
-          teamSeasonMeta.currentLosingStreak + 1,
-        )
-      : teamSeasonMeta.totalHighestLosingStreak,
-    totalScore: teamSeasonMeta.totalScore + score,
-    totalAvgScore:
-      (teamSeasonMeta.totalScore + score) / (teamSeasonMeta.totalMatches + 1),
-    totalHighestRating: Math.max(teamSeasonMeta.totalHighestRating, rating),
-    totalLowestRating: Math.min(teamSeasonMeta.totalLowestRating, rating),
-    ...(newDaily
-      ? {
-          dailyMatches: 1,
-          dailyWins: win ? 1 : 0,
-          dailyWinRate: win ? 1 : 0,
-          dailyLosses: win ? 0 : 1,
-          dailyScore: score,
-          dailyAvgScore: score,
-        }
-      : {
-          dailyMatches: teamSeasonMeta.dailyMatches + 1,
-          dailyWins: teamSeasonMeta.dailyWins + (win ? 1 : 0),
-          dailyWinRate:
-            (teamSeasonMeta.dailyWins + (win ? 1 : 0)) /
-            (teamSeasonMeta.dailyMatches + 1),
-          dailyLosses: teamSeasonMeta.dailyLosses + (win ? 0 : 1),
-          dailyScore: teamSeasonMeta.dailyScore + score,
-          dailyAvgScore:
-            (teamSeasonMeta.dailyScore + score) /
-            (teamSeasonMeta.dailyMatches + 1),
-        }),
-    currentWinStreak: win ? teamSeasonMeta.currentWinStreak + 1 : 0,
-    currentLosingStreak: !win ? teamSeasonMeta.currentLosingStreak + 1 : 0,
-  };
-  const updatedMeta = await prisma.teamMeta.upsert({
-    create: {
-      ...meta,
-      teamId: team.id,
-      season,
-    },
-    update: {
-      ...meta,
-    },
-    where: {
-      id: teamSeasonMeta.id,
-    },
-  });
-  if (team.meta.find(m => m.id === updatedMeta.id)) {
-    team.meta = team.meta.map(m => (m.id === updatedMeta.id ? updatedMeta : m));
-  } else {
-    team.meta.push(updatedMeta);
-  }
-
-  return {
-    team,
-    rating,
-    diff: currentRating - rating,
-  };
+/** Current numbers of a team in a season (fresh numbers if it hasn't played yet). */
+export function teamNumbers(team: TeamWithMeta, season: number): TeamNumbers {
+  const meta = team.meta.find(m => m.season === season);
+  return meta ? fromMeta(meta, meta.totalMatches > 0) : emptyTeamNumbers();
 }
 
-export async function deleteMatchFromTeam(team: TeamWithMeta, match: Match) {
-  const teamSeasonMeta = getSeasonMeta(team, match.season);
-  const matches = teamSeasonMeta.totalMatches - 1;
-
-  if (matches === 0) {
-    const { id, ...meta } = getDefaultTeamMeta(match.season);
-    return await prisma.teamMeta.update({
-      data: {
-        ...meta,
-      },
-      where: {
-        id: teamSeasonMeta.id,
-      },
-    });
-  }
-
-  const ratingChange =
-    match.team1 === team.name
-      ? match.team1RatingChange
-      : match.team2RatingChange;
-  const win =
-    match.team1 === team.name
-      ? match.score1 > match.score2
-      : match.score2 > match.score1;
-  const score = match.team1 === team.name ? match.score1 : match.score2;
-
-  const data: Partial<TeamMeta> = {
-    updatedAt: new Date(),
-    rating: win
-      ? teamSeasonMeta.rating - ratingChange
-      : teamSeasonMeta.rating + ratingChange,
-    totalMatches: matches,
-    totalWins: teamSeasonMeta.totalWins - (win ? 1 : 0),
-    totalHighestRating: Math.max(
-      teamSeasonMeta.totalHighestRating,
-      teamSeasonMeta.rating - ratingChange,
-    ),
-    totalWinRate:
-      matches >= 1
-        ? (teamSeasonMeta.totalWins - (win ? 1 : 0)) /
-          (teamSeasonMeta.totalMatches - 1)
-        : 0,
-    totalLosses: teamSeasonMeta.totalLosses - (win ? 0 : 1),
-    totalScore: teamSeasonMeta.totalScore - score,
-    totalAvgScore:
-      matches >= 1
-        ? (teamSeasonMeta.totalScore - score) /
-          (teamSeasonMeta.totalMatches - 1)
-        : 0,
-  };
-
-  if (isSameDay(new Date(), new Date(match.createdAt))) {
-    const dailyMatches = teamSeasonMeta.dailyMatches - 1;
-    data.dailyMatches = dailyMatches;
-    data.dailyWins = teamSeasonMeta.dailyWins - (win ? 1 : 0);
-    data.dailyWinRate =
-      dailyMatches >= 1
-        ? (teamSeasonMeta.dailyWins - (win ? 1 : 0)) / data.dailyMatches
-        : 0;
-    data.dailyLosses = teamSeasonMeta.dailyLosses - (win ? 0 : 1);
-    data.dailyScore = teamSeasonMeta.dailyScore - score;
-    data.dailyAvgScore =
-      dailyMatches >= 1 ? data.dailyScore / data.dailyMatches : 0;
-  }
-
-  return await prisma.teamMeta.update({
-    data,
-    where: {
-      id: teamSeasonMeta.id,
-    },
-  });
-}
-
-export async function createTeamMeta(team: Team, season: number | null = null) {
-  if (!season) {
-    season = await getCurrentSeason();
-  }
-  const { id, ...defaultMeta } = getDefaultTeamMeta(season);
-  return prisma.teamMeta.upsert({
-    where: {
-      season_teamId: {
-        season,
-        teamId: team.id,
-      },
-    },
-    update: {},
-    create: {
-      ...defaultMeta,
-      season,
-      rating: defaultRating,
-      team: {
-        connect: {
-          id: team.id,
-        },
-      },
-    },
-  });
-}
-
-export async function grantAchievements(
+/** Stores new numbers and keeps the in-memory `team.meta` in sync (achievements read it). */
+export async function saveTeamNumbers(
+  db: Db,
   team: TeamWithMeta,
-  achievements: Achievement[],
-  match: Match,
-  season: number | null = null,
+  season: number,
+  numbers: TeamNumbers,
 ) {
-  if (achievements.length === 0) {
-    return {
-      team,
-      match,
-    };
-  }
-
-  if (!season) {
-    season = await getCurrentSeason();
-  }
-  const meta = getSeasonMeta(team, season);
-
-  let points = 0;
-  for await (const achievement of achievements) {
-    await prisma.teamAchievement.create({
-      data: {
-        season,
-        createdAt: match.createdAt,
-        team: {
-          connect: {
-            id: team.id,
-          },
-        },
-        teamName: team.name,
-        achievement: achievement.id,
-        match: {
-          connect: {
-            id: match.id,
-          },
-        },
-      },
-    });
-    points += achievement.points;
-  }
-
-  await prisma.teamMeta.update({
-    data: {
-      achievementPoints: meta.achievementPoints + points,
-    },
-    where: {
-      id: meta.id,
-    },
+  const data = toMetaData(numbers);
+  const meta = await db.teamMeta.upsert({
+    where: { season_teamId: { season, teamId: team.id } },
+    create: { ...data, season, teamId: team.id },
+    update: data,
   });
+  team.meta = [...team.meta.filter(m => m.season !== season), meta];
+  return meta;
 }
 
-export async function setMatchAchievements(
-  team1: TeamWithMetaAndAchievements,
-  team2: TeamWithMetaAndAchievements,
-  match: Match,
-  season: number | null = null,
-) {
-  if (!season) {
-    season = await getCurrentSeason();
+const pointsOf = (achievementId: string) =>
+  allAchievements.find(a => a.id === achievementId)?.points ?? 0;
+
+/**
+ * Recomputes every team's numbers and every match's ratings of a season from its matches.
+ * Used after deleting matches, teams or achievements, so nothing can drift out of sync.
+ */
+export async function rebuildSeason(db: Db, season: number) {
+  const matches = await db.match.findMany({
+    where: { season },
+    select: {
+      id: true,
+      createdAt: true,
+      team1: true,
+      team2: true,
+      score1: true,
+      score2: true,
+      team1Rating: true,
+      team2Rating: true,
+      team1RatingChange: true,
+      team2RatingChange: true,
+    },
+  });
+  const replay = replaySeason(matches);
+
+  const differs = (a: number, b: number) => Math.abs(a - b) > 1e-9;
+  for (const m of matches) {
+    const r = replay.matches.get(m.id)!;
+    if (
+      differs(m.team1Rating, r.team1Rating) ||
+      differs(m.team2Rating, r.team2Rating) ||
+      differs(m.team1RatingChange, r.team1RatingChange) ||
+      differs(m.team2RatingChange, r.team2RatingChange)
+    ) {
+      await db.match.update({ where: { id: m.id }, data: r });
+    }
   }
-  const achievements1 = checkAchievements(team1, team2, match);
-  const achievements2 = checkAchievements(team2, team1, match);
-  await grantAchievements(team1, achievements1, match, season);
-  await grantAchievements(team2, achievements2, match, season);
+
+  const earned = await db.teamAchievement.findMany({
+    where: { season },
+    select: { teamId: true, achievement: true },
+  });
+  const points = new Map<number, number>();
+  for (const a of earned) {
+    points.set(a.teamId, (points.get(a.teamId) ?? 0) + pointsOf(a.achievement));
+  }
+
+  const metas = await db.teamMeta.findMany({
+    where: { season },
+    include: { team: { select: { name: true } } },
+  });
+  for (const meta of metas) {
+    const numbers = replay.teams.get(meta.team.name) ?? emptyTeamNumbers();
+    await db.teamMeta.update({
+      where: { id: meta.id },
+      data: {
+        ...toMetaData(numbers),
+        // a team without matches keeps its old date instead of "now"
+        ...(numbers.lastMatchAt ? {} : { updatedAt: meta.createdAt }),
+        achievementPoints: points.get(meta.teamId) ?? 0,
+      },
+    });
+  }
 }

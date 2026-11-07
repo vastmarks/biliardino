@@ -3,6 +3,7 @@ import { protectedProcedure, publicProcedure, router } from "~/server/trpc";
 import { z } from "zod";
 import { prisma } from "~/server/prisma";
 import { getCurrentSeason } from "~/server/model/season";
+import { writeTransaction } from "~/server/db";
 import {
   cleanPlayerName,
   playerKey,
@@ -56,36 +57,38 @@ export const playersRouter = router({
       }
       const name = cleanPlayerName(input.name);
       const key = playerKey(name);
-      const existing = await prisma.player.findUnique({ where: { key } });
-      if (existing) {
-        throw new TRPCError({
-          code: "CONFLICT",
-          message: `${existing.name} already exists`,
-        });
-      }
-      return await prisma.player.create({ data: { name, key } });
+      return writeTransaction(async db => {
+        const existing = await db.player.findUnique({ where: { key } });
+        if (existing) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: `${existing.name} already exists`,
+          });
+        }
+        return db.player.create({ data: { name, key } });
+      });
     }),
 
   /** Only players who haven't played yet can be removed (admin). */
   delete: protectedProcedure
     .input(z.object({ id: z.number().int() }))
-    .mutation(async ({ input }) => {
-      const player = await prisma.player.findUnique({
-        where: { id: input.id },
-      });
-      if (!player) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Unknown player" });
-      }
-      const teams = await prisma.team.findMany({ select: { name: true } });
-      if (teams.some(t => parsePlayers(t.name).includes(player.key))) {
-        throw new TRPCError({
-          code: "CONFLICT",
-          message: `${player.name} has already played matches and can't be deleted`,
-        });
-      }
-      await prisma.player.delete({ where: { id: input.id } });
-      return { id: input.id };
-    }),
+    .mutation(({ input }) =>
+      writeTransaction(async db => {
+        const player = await db.player.findUnique({ where: { id: input.id } });
+        if (!player) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Unknown player" });
+        }
+        const teams = await db.team.findMany({ select: { name: true } });
+        if (teams.some(t => parsePlayers(t.name).includes(player.key))) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: `${player.name} has already played matches and can't be deleted`,
+          });
+        }
+        await db.player.delete({ where: { id: input.id } });
+        return { id: input.id };
+      }),
+    ),
 
   /** Leaderboard: every player with their stats, best rating first. */
   list: publicProcedure
@@ -109,13 +112,13 @@ export const playersRouter = router({
       const name = input.name.trim().toLowerCase();
       const matches = await loadMatches(input.season);
       // ratings depend on everybody's matches, so replay all of them
-      const player = computePlayerStats(matches).find(p => p.name === name);
-      if (!player) {
+      const everybody = computePlayerStats(matches);
+      const index = everybody.findIndex(p => p.name === name);
+      if (index === -1) {
         return null;
       }
-
-      const rank =
-        computePlayerStats(matches).findIndex(p => p.name === name) + 1;
+      const player = everybody[index];
+      const rank = index + 1;
 
       const recentIds = matches
         .filter(

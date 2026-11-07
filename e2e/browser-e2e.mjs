@@ -1,5 +1,3 @@
-// Run against a seeded server (npm run db:seed-demo): node e2e/browser-e2e.mjs chrome|firefox [width height]
-// Needs puppeteer-core and a local Chrome/Firefox; adjust the executable paths below.
 import puppeteer from "puppeteer-core";
 const which = process.argv[2];
 const W = +(process.argv[3] || 390), H = +(process.argv[4] || 844);
@@ -51,7 +49,8 @@ check(JSON.stringify(slots) === JSON.stringify(["Elena", "Chiara", "Luca", "Sara
 const saveDisabled = await page.evaluate(() => document.querySelector('button[type=submit]').disabled);
 check(saveDisabled, "Save disabled without scores");
 await page.type('input[aria-label="Team 1 score"]', "10");
-await page.type('input[aria-label="Team 2 score"]', "6");
+const lose = String(Date.now() % 9); // a different result every run (double entries are refused)
+await page.type('input[aria-label="Team 2 score"]', lose);
 await shot("filled");
 const before = await page.evaluate(() => document.querySelector("ul.divide-y li")?.innerText);
 await page.click('button[type=submit]');
@@ -59,18 +58,27 @@ await page.waitForFunction(() => document.querySelector('[role=status]')?.textCo
 check(true, "match saved, status shown");
 await page.waitForFunction(b => document.querySelector("ul.divide-y li")?.innerText !== b, { timeout: 8000 }, before);
 const after = await page.evaluate(() => document.querySelector("ul.divide-y li").innerText.replace(/\s+/g, " "));
-check(/Chiara & Elena/i.test(after) && /10.*6/.test(after) && /Luca & Sara/i.test(after), "recent feed shows new match first: " + after);
+check(/Chiara & Elena/i.test(after) && new RegExp("10\\s*:\\s*" + lose).test(after) && /Luca & Sara/i.test(after), "recent feed shows new match first: " + after);
 const scoresCleared = await page.evaluate(() => document.querySelector('input[aria-label="Team 1 score"]').value === "");
 check(scoresCleared, "scores cleared, players kept");
 const kept = await page.evaluate(() => [...document.querySelectorAll('form button[aria-label^="Team"]')].map(b => b.textContent).join());
 check(kept === "Elena,Chiara,Luca,Sara", "players kept for rematch");
 
+// ---- the same result again right away is refused with a clear message
+await page.type('input[aria-label="Team 1 score"]', "10");
+await page.type('input[aria-label="Team 2 score"]', lose);
+await page.click('button[type=submit]');
+await page.waitForFunction(() => document.body.innerText.includes("just saved"), { timeout: 8000 });
+check(true, "double entry refused with a message");
+await page.evaluate(() => { for (const id of ["Team 1 score", "Team 2 score"]) { const el = document.querySelector(`input[aria-label="${id}"]`); el.focus(); el.select(); } });
+for (const id of ["Team 1 score", "Team 2 score"]) { await page.click(`input[aria-label="${id}"]`, { clickCount: 3 }); await page.keyboard.press("Backspace"); }
+
 // ---- reversed pair order is the same team (rematch with sides swapped inside a team)
 await clickText("form", "⇄ Swap");
-await page.type('input[aria-label="Team 1 score"]', "3");
+await page.type('input[aria-label="Team 1 score"]', String((+lose + 1) % 9));
 await page.type('input[aria-label="Team 2 score"]', "10");
 await page.click('button[type=submit]');
-await page.waitForFunction(() => document.querySelector('[role=status]')?.textContent.includes("Saved 3"), { timeout: 8000 });
+await page.waitForFunction(() => document.querySelector('[role=status]')?.textContent.includes(" : 10"), { timeout: 8000 });
 check(true, "second match (swapped sides) saved");
 
 // ---- 1v1 + persistence
@@ -112,7 +120,8 @@ for (const p of ["/matches", "/players", "/teams", "/leaderboards", "/players/el
   await shot("page" + p.replace(/\W/g, "_"));
 }
 console.log("console issues:", errors.length ? errors : "none");
-check(errors.length === 0, "no console errors/warnings");
+const unexpected = errors.filter(e => !e.includes("409 (Conflict)")); // the deliberate double entry
+check(unexpected.length === 0, "no unexpected console errors/warnings");
 await browser.close();
 console.log(fails.length ? `\n${fails.length} FAILED` : "\nALL PASSED");
 process.exit(fails.length ? 1 : 0);

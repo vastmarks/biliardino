@@ -1,15 +1,12 @@
 # Hilde 🏆
 
-![Build](https://img.shields.io/github/actions/workflow/status/nehalist/hilde/build.yml?branch=main)
-![License](https://img.shields.io/github/license/nehalist/hilde)
-![Docker Pulls](https://img.shields.io/docker/pulls/nehalist/hilde)
+> A modernised fork of [nehalist/hilde](https://github.com/nehalist/hilde): SQLite, 1v1/2v2 with player pickers,
+> per-player stats and a mobile-first home page. **Deploying on a home server: see [docs/DEPLOY.md](docs/DEPLOY.md).**
 
 You've got a foosball table or similar in your office and want to track your matches, player progress and compare yourself to your
 colleagues and see who's the best? You've come to the right place.
 **Hilde** is a match tracking app for games like foosball, table tennis, air hockey, etc. with achievements, elo ratings, statistics and
 more. **Hilde** is easy to setup and can be used by everyone.
-
-A public **demo** is available at [demo.hilde.gg](https://demo.hilde.gg).
 
 ![Hilde](hilde.png)
 
@@ -17,10 +14,11 @@ A public **demo** is available at [demo.hilde.gg](https://demo.hilde.gg).
 
 1. [Features](#features) - Hilde's features
 2. [Getting Started](#getting-started) - How to get Hilde up and running
-3. [Player statistics](#player-statistics) - Per-player ratings and stats
-4. [Configuration](#configuration) - Environment variables
-5. [Changes in this fork](#changes-in-this-fork) - What was modernized
-6. [License](#license)
+3. [Development](#development) - Working on the code
+4. [Player statistics](#player-statistics) - Per-player ratings and stats
+5. [Configuration](#configuration) - Environment variables
+6. [Changes in this fork](#changes-in-this-fork) - What was modernized
+7. [License](#license)
 
 ## ⚡️ Features
 
@@ -47,28 +45,21 @@ Season 1 is created automatically. Then:
 
 New seasons and deletions are managed in the admin UI (`/admin`, password from `ADMIN_PASSWORD`).
 
-### Docker Compose (recommended)
+### Home server (Dockge, Portainer, TrueNAS) - recommended
+
+GitHub builds the Docker image whenever you publish a release (a `v…` tag); your server pulls it like any
+other app. The stack is in [`dockge/compose.yaml`](dockge/compose.yaml), the full beginner-friendly walkthrough
+(GitHub, first release, NAS folder, Dockge, updates, troubleshooting) in **[docs/DEPLOY.md](docs/DEPLOY.md)**.
+
+### Docker Compose from a checkout
 
 ```bash
-cp .env.example .env     # then edit ADMIN_PASSWORD and NEXTAUTH_SECRET
-docker compose up -d
+cp .env.example .env     # then set ADMIN_PASSWORD and NEXTAUTH_SECRET
+docker compose up -d --build
 ```
 
-The app is then available on <http://localhost:3000>. The SQLite database lives in the `hilde-data` volume;
-back that up. Migrations are applied automatically on every start.
-
-Behind a reverse proxy set `NEXTAUTH_URL` to the public URL (e.g. `https://foosball.example.com`).
-
-### Dockge / Portainer
-
-`dockge/compose.yaml` and `dockge/.env.example` are a ready-to-paste stack:
-
-1. Push this repo to GitHub, then push a tag (`git tag v0.5.0 && git push --tags`). The workflow builds the image and publishes it to `ghcr.io/<github-user>/hilde`. If the package is private, make it public (GitHub -> Packages -> Package settings) or log your server in with `docker login ghcr.io`. Alternatively use the `build:` option in the compose file, which builds straight from the repo.
-2. In Dockge click **+ Compose**, name the stack `hilde`, paste `dockge/compose.yaml`, paste `dockge/.env.example` into the `.env` box and change `ADMIN_PASSWORD`, `NEXTAUTH_SECRET` and `NEXTAUTH_URL`.
-3. **Deploy**, then open `NEXTAUTH_URL`.
-
-Updating: push a new tag, then **Update** in Dockge (pulls the image and restarts; migrations run on start). Backup: the `hilde-data` volume holds a single SQLite file (`/data/hilde.db`).
-Troubleshooting: if login or the admin page misbehaves, `NEXTAUTH_URL` does not match the address in your browser.
+The app is then available on <http://localhost:3000>; the database lives in the `hilde-data` volume.
+Migrations are applied automatically on every start.
 
 ### Manual
 
@@ -82,7 +73,32 @@ npm run build
 npm start
 ```
 
-Development: `npm run dev`. Checks: `npm run lint && npm test`.
+## 🧑‍💻 Development
+
+```bash
+npm run dev              # dev server on http://localhost:3000 (needs a .env, see above)
+npm run db:seed-demo     # fake players and matches for an empty database
+npm run check            # lint + formatting, type check, all tests - run before every commit
+```
+
+Where things are:
+
+| Path | What |
+| --- | --- |
+| `src/pages/` | pages (Next.js Pages Router); `index.tsx` is the home page |
+| `src/components/Dashboard/` | home page: match entry, leaderboard, pairs, highlight tiles |
+| `src/server/routers/` | the API (tRPC procedures), one file per area |
+| `src/server/model/` | database logic: saving matches, recalculating a season |
+| `src/server/db.ts` | `writeTransaction`: every write that reads first goes through it |
+| `src/utils/teamStats.ts` | team ratings and stats (pure functions, tested) |
+| `src/utils/playerStats.ts` | per-player ratings and stats (pure functions, tested) |
+| `src/utils/dashboard.ts` | home page numbers: period boards, form, highlights (pure, tested) |
+| `prisma/` | database schema and migrations |
+| `src/**/__tests__/` | unit tests; `src/server/__tests__/` runs the API on a temporary database |
+| `e2e/` | browser tests (Chrome/Firefox, see `e2e/README.md`) |
+
+Database changes: edit `prisma/schema.prisma`, then `npm run db:migrate:dev -- --name what-changed` creates a
+migration; it's applied automatically on the next container start.
 
 ## 🏠 Home page
 
@@ -121,7 +137,7 @@ A player who has no matches yet can be deleted by the admin; renaming players is
 | ----------------- | --------------------------------------------------------------------------------------- |
 | `ADMIN_PASSWORD`  | Password for `/admin` (min. 8 chars). Required, there is no default.                    |
 | `NEXTAUTH_SECRET` | Random string to sign sessions (min. 16 chars). Required.                               |
-| `NEXTAUTH_URL`    | Public URL of the app.                                                                  |
+| `NEXTAUTH_URL`    | Public URL. Optional in Docker (the address from the browser is used); set it outside Docker, or if a reverse proxy breaks the admin login. |
 | `TZ`              | Your time zone (e.g. `Europe/Rome`); decides when "Today" starts on the leaderboard.    |
 | `DATABASE_URL`    | SQLite file, `file:/data/hilde.db` in Docker. Relative paths are relative to `prisma/`. |
 
@@ -137,7 +153,10 @@ Based on [nehalist/hilde](https://github.com/nehalist/hilde) (last upstream comm
 - New per-player statistics (see above)
 - **New match entry**: a separate Players page and a form with a 1v1/2v2 switch and player pickers instead of free-text team names
 - A fresh install starts with season 1 active (before, the form was unusable until a season was created in `/admin`)
-- Docker image rebuilt (multi-stage, non-root, healthcheck, migrations on start), CI updated, publishes to GHCR
+- Docker image rebuilt (multi-stage, non-root, healthcheck, migrations on start), CI checks every push and publishes releases to GHCR
+- Team ratings are recalculated from the remaining matches when a match, team or achievement is deleted
+  (before, deleting a lost match lowered the loser's rating further; opponents of deleted teams kept stale ratings)
+- Saving is transactional: two phones saving at the same moment can't overwrite each other's ratings
 - Fixed a MySQL-only assumption (placeholder `id: 0` on team creation) that breaks on SQLite
 - Not changed on purpose: Tailwind 3, ESLint 8 / `next lint`, next-auth 4 (their successors are bigger migrations)
 

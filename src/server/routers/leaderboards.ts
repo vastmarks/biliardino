@@ -1,174 +1,76 @@
-import { publicProcedure, router } from "~/server/trpc";
 import { z } from "zod";
+import type { TeamMeta } from "@prisma/client";
+import { publicProcedure, router } from "~/server/trpc";
 import { prisma } from "~/server/prisma";
 import { Leaderboards } from "~/model";
-import { TeamWithMeta } from "~/server/model/team";
+
+type Category = Leaderboards["places"][number]["category"];
+
+/** Which `TeamMeta` value each leaderboard category ranks by. */
+const CATEGORIES: Array<[Category, keyof TeamMeta]> = [
+  ["wins", "totalWins"],
+  ["score", "totalScore"],
+  ["matches", "totalMatches"],
+  ["winRate", "totalWinRate"],
+  ["rating", "rating"],
+];
+
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 export const leaderboardsRouter = router({
+  /** Top 3 single players (1v1 teams) per category, plus how much was played. */
   forSeason: publicProcedure
-    .input(
-      z.object({
-        season: z.number(),
-      }),
-    )
-    .query(async ({ input }) => {
-      const matches = await prisma.match.findMany({
-        where: {
-          season: input.season,
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-      });
+    .input(z.object({ season: z.number().int() }))
+    .query(async ({ input }): Promise<Leaderboards> => {
+      const [first, last, total] = await Promise.all([
+        prisma.match.findFirst({
+          where: { season: input.season },
+          orderBy: { createdAt: "asc" },
+        }),
+        prisma.match.findFirst({
+          where: { season: input.season },
+          orderBy: { createdAt: "desc" },
+        }),
+        prisma.match.count({ where: { season: input.season } }),
+      ]);
 
       const leaderboards: Leaderboards = {
         season: input.season,
-        totalMatches: {
-          total: matches.length,
-          perDay: 0,
-          days: 0,
-        },
+        totalMatches: { total, perDay: 0, days: 0 },
         places: [],
       };
-
-      if (matches.length === 0) {
+      if (!first || !last) {
         return leaderboards;
       }
 
-      const firstMatch = matches[matches.length - 1];
-      const lastMatch = matches[0];
-      const days =
-        (lastMatch.createdAt.getTime() - firstMatch.createdAt.getTime()) /
-        1000 /
-        60 /
-        60 /
-        24;
-
-      leaderboards.totalMatches.perDay = Math.round(matches.length / days);
+      // a season that started today still counts as one day
+      const days = Math.max(
+        1,
+        (last.createdAt.getTime() - first.createdAt.getTime()) / DAY_MS,
+      );
       leaderboards.totalMatches.days = days;
+      leaderboards.totalMatches.perDay = Math.round(total / days);
 
-      const teams = await prisma.team.findMany({
-        include: {
-          meta: true,
-        },
+      const metas = await prisma.teamMeta.findMany({
         where: {
-          teamsize: 1,
+          season: input.season,
+          totalMatches: { gt: 0 },
+          team: { teamsize: 1 },
         },
+        include: { team: { select: { name: true } } },
       });
 
-      const unsortedTeamMeta: TeamWithMeta[] = [];
-      for (const team of teams) {
-        const seasonMeta = team.meta.find(meta => meta.season === input.season);
-        if (!seasonMeta) {
-          continue;
-        }
-        if (unsortedTeamMeta.find(t => t.name === team.name)) {
-          continue;
-        }
-        unsortedTeamMeta.push(team);
-      }
-
-      leaderboards.places = [
-        // Most wins
-        ...unsortedTeamMeta
-          .sort((a, b) => {
-            const metaA = a.meta.find(meta => meta.season === input.season);
-            const metaB = b.meta.find(meta => meta.season === input.season);
-            if (!metaA || !metaB) {
-              return 0;
-            }
-            return metaB.totalWins - metaA.totalWins;
-          })
+      leaderboards.places = CATEGORIES.flatMap(([category, field]) =>
+        [...metas]
+          .sort((a, b) => (b[field] as number) - (a[field] as number))
           .slice(0, 3)
-          .map((team, index) => ({
-            team: team.name,
-            value:
-              team.meta.find(meta => meta.season === input.season)?.totalWins ??
-              0,
+          .map((meta, index) => ({
+            category,
+            team: meta.team.name,
+            value: meta[field] as number,
             place: index + 1,
-            category: "wins" as const,
           })),
-
-        // Highest score
-        ...unsortedTeamMeta
-          .sort((a, b) => {
-            const metaA = a.meta.find(meta => meta.season === input.season);
-            const metaB = b.meta.find(meta => meta.season === input.season);
-            if (!metaA || !metaB) {
-              return 0;
-            }
-            return metaB.totalScore - metaA.totalScore;
-          })
-          .slice(0, 3)
-          .map((team, index) => ({
-            team: team.name,
-            value:
-              team.meta.find(meta => meta.season === input.season)
-                ?.totalScore ?? 0,
-            place: index + 1,
-            category: "score" as const,
-          })),
-
-        // Most matches
-        ...unsortedTeamMeta
-          .sort((a, b) => {
-            const metaA = a.meta.find(meta => meta.season === input.season);
-            const metaB = b.meta.find(meta => meta.season === input.season);
-            if (!metaA || !metaB) {
-              return 0;
-            }
-            return metaB.totalMatches - metaA.totalMatches;
-          })
-          .slice(0, 3)
-          .map((team, index) => ({
-            team: team.name,
-            value:
-              team.meta.find(meta => meta.season === input.season)
-                ?.totalMatches ?? 0,
-            place: index + 1,
-            category: "matches" as const,
-          })),
-
-        // Highest win rate
-        ...unsortedTeamMeta
-          .sort((a, b) => {
-            const metaA = a.meta.find(meta => meta.season === input.season);
-            const metaB = b.meta.find(meta => meta.season === input.season);
-            if (!metaA || !metaB) {
-              return 0;
-            }
-            return metaB.totalWinRate - metaA.totalWinRate;
-          })
-          .slice(0, 3)
-          .map((team, index) => ({
-            team: team.name,
-            value:
-              team.meta.find(meta => meta.season === input.season)
-                ?.totalWinRate ?? 0,
-            place: index + 1,
-            category: "winRate" as const,
-          })),
-
-        // Highest rating
-        ...unsortedTeamMeta
-          .sort((a, b) => {
-            const metaA = a.meta.find(meta => meta.season === input.season);
-            const metaB = b.meta.find(meta => meta.season === input.season);
-            if (!metaA || !metaB) {
-              return 0;
-            }
-            return metaB.rating - metaA.rating;
-          })
-          .slice(0, 3)
-          .map((team, index) => ({
-            team: team.name,
-            value:
-              team.meta.find(meta => meta.season === input.season)?.rating ?? 0,
-            place: index + 1,
-            category: "rating" as const,
-          })),
-      ];
-
+      );
       return leaderboards;
     }),
 });

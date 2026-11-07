@@ -1,13 +1,22 @@
 import { z } from "zod";
 import { MATCH_FORMATS, formatSize } from "~/utils/players";
 
-const nonNegativeInt = z
-  .union([z.string(), z.number()])
-  .refine(
-    v => v !== "" && Number.isInteger(Number(v)) && Number(v) >= 0,
-    "Must be a non-negative whole number",
-  )
-  .transform(Number);
+/** A whole number from a form field (string) or JSON (number), within limits. */
+const wholeNumber = (min: number, max: number) =>
+  z
+    .union([z.string().max(10), z.number()])
+    .refine(
+      v =>
+        v !== "" &&
+        Number.isInteger(Number(v)) &&
+        Number(v) >= min &&
+        Number(v) <= max,
+      `Must be a whole number between ${min} and ${max}`,
+    )
+    .transform(Number);
+
+/** Ids of the players of one side (1v1 or 2v2, so at most 2). */
+const side = z.array(z.number().int().positive()).min(1).max(2);
 
 /**
  * A match is entered by picking the format and the players of both sides from the list of
@@ -16,10 +25,10 @@ const nonNegativeInt = z
 export const matchAddValidation = z
   .object({
     format: z.enum(MATCH_FORMATS),
-    players1: z.array(z.number().int().positive()),
-    players2: z.array(z.number().int().positive()),
-    score1: nonNegativeInt,
-    score2: nonNegativeInt,
+    players1: side,
+    players2: side,
+    score1: wholeNumber(0, 99),
+    score2: wholeNumber(0, 99),
     comment: z.string().max(500).optional().default(""),
   })
   .superRefine((value, ctx) => {
@@ -44,11 +53,11 @@ export const matchAddValidation = z
   });
 
 export const playerAddValidation = z.object({
-  name: z.string().min(1).max(100),
+  name: z.string().min(1).max(100), // the real rules are in validatePlayerName
 });
 
 export const seasonAddValidation = z.object({
-  number: nonNegativeInt,
+  number: wholeNumber(1, 9999),
 });
 
 export type MatchAddInput = z.input<typeof matchAddValidation>;

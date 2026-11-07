@@ -1,19 +1,20 @@
 {
-  "name": "@nehalist/hilde",
-  "version": "0.5.0",
+  "name": "hilde",
+  "version": "0.6.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint && prettier --check src",
+    "lint": "next lint && prettier --check src scripts",
     "test": "jest",
     "postinstall": "prisma generate",
     "db:migrate": "prisma migrate deploy",
     "db:migrate:dev": "prisma migrate dev",
-    "db:seed-demo": "tsx scripts/seed-demo.ts"
+    "db:seed-demo": "tsx scripts/seed-demo.ts",
+    "typecheck": "tsc --noEmit",
+    "check": "npm run lint && npm run typecheck && npm test"
   },
-  "homepage": "https://hilde.gg",
   "repository": {
     "type": "git",
     "url": "https://github.com/nehalist/hilde"
@@ -29,14 +30,13 @@
     "@trpc/react-query": "^11.19.0",
     "@trpc/server": "^11.19.0",
     "better-sqlite3": "^11.10.0",
-    "date-fns": "^4.4.0",
     "next": "^15.5.28",
     "next-auth": "^4.24.15",
     "next-themes": "^0.4.6",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "superjson": "^2.2.6",
-    "zod": "^3.25.76",
+    "zod": "^4.6.7",
     "zustand": "^5.0.16"
   },
   "devDependencies": {
@@ -54,7 +54,6 @@
     "prisma": "^6.19.3",
     "tailwindcss": "^3.4.19",
     "ts-jest": "^29.4.15",
-    "ts-node": "^10.7.0",
     "tsx": "^4.23.15",
     "typescript": "5.9"
   },
@@ -63,5 +62,6 @@
   },
   "sideEffects": [
     "*.css"
-  ]
+  ],
+  "description": "Self-hosted office foosball tracker (1v1/2v2, Elo, per-player stats). Fork of nehalist/hilde."
 }

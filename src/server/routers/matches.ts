@@ -1,144 +1,95 @@
+import { z } from "zod";
+import { TRPCError } from "@trpc/server";
+import { Prisma } from "@prisma/client";
 import { protectedProcedure, publicProcedure, router } from "~/server/trpc";
 import { prisma } from "~/server/prisma";
-import { z } from "zod";
-import { deleteMatchFromTeam, getOrCreateTeam } from "~/server/model/team";
+import { writeTransaction } from "~/server/db";
 import { createMatch } from "~/server/model/match";
+import { getCurrentSeason } from "~/server/model/season";
+import { rebuildSeason } from "~/server/model/team";
 import { matchAddValidation } from "~/utils/validation";
 import { teamNameFromKeys } from "~/utils/players";
-import { getCurrentSeason } from "~/server/model/season";
-import { TRPCError } from "@trpc/server";
+
+/**
+ * Filter for matches of one team, or between two teams. `exact: false` also finds teams the
+ * name is part of (e.g. all pairs of a player).
+ */
+function teamFilter(
+  team1?: string,
+  team2?: string,
+  exact = true,
+): Prisma.MatchWhereInput {
+  if (!team1) {
+    return {};
+  }
+  const name = (n: string) => (exact ? n : { contains: n });
+  if (!team2) {
+    return { OR: [{ team1: name(team1) }, { team2: name(team1) }] };
+  }
+  return {
+    OR: [
+      { team1: name(team1), team2: name(team2) },
+      { team1: name(team2), team2: name(team1) },
+    ],
+  };
+}
 
 export const matchesRouter = router({
+  /** Latest matches (of a team, or between two teams) of a season. */
   list: publicProcedure
     .input(
       z.object({
-        limit: z.number().min(0).max(100).default(50),
-        team1: z.string().optional(),
-        team2: z.string().optional(),
-        season: z.number().optional(),
+        limit: z.number().int().min(1).max(100).default(50),
+        team1: z.string().max(200).optional(),
+        team2: z.string().max(200).optional(),
+        season: z.number().int().optional(),
       }),
     )
-    .query(async ({ input }) => {
-      let where = {};
-
-      if (input.team1) {
-        where = !input.team2
-          ? { OR: [{ team1: input.team1 }, { team2: input.team1 }] }
-          : {
-              OR: [
-                {
-                  team1: input.team1,
-                  team2: input.team2,
-                },
-                {
-                  team1: input.team2,
-                  team2: input.team1,
-                },
-              ],
-            };
-      }
-
-      return await prisma.match.findMany({
-        take: input.limit > 0 ? input.limit : undefined,
-        orderBy: {
-          createdAt: "desc",
-        },
-        include: {
-          achievements: true,
-        },
+    .query(async ({ input }) =>
+      prisma.match.findMany({
+        take: input.limit,
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+        include: { achievements: true },
         where: {
-          ...where,
+          ...teamFilter(input.team1, input.team2),
           season: input.season ?? (await getCurrentSeason()),
         },
-      });
-    }),
+      }),
+    ),
 
+  /** Paginated version of `list` for the matches page ("Load more"). */
   infiniteList: publicProcedure
     .input(
       z.object({
-        limit: z.number().min(1).max(100).default(50),
-        cursor: z.number().nullish(),
-        team1: z.string().optional(),
-        team2: z.string().optional(),
+        limit: z.number().int().min(1).max(100).default(50),
+        cursor: z.number().int().nullish(),
+        team1: z.string().max(200).optional(),
+        team2: z.string().max(200).optional(),
         exact: z.boolean().optional(),
-        season: z.number().optional(),
+        season: z.number().int().optional(),
       }),
     )
     .query(async ({ input }) => {
-      let where = {};
-      if (input.team1 && !input.team2) {
-        where = {
-          OR: [
-            {
-              team1: input.exact ? input.team1 : { contains: input.team1 },
-            },
-            {
-              team2: input.exact ? input.team1 : { contains: input.team1 },
-            },
-          ],
-        };
-      }
-      if (input.team1 && input.team2) {
-        where = {
-          OR: [
-            {
-              team1: input.exact
-                ? input.team1
-                : {
-                    contains: input.team1,
-                  },
-              team2: input.exact
-                ? input.team2
-                : {
-                    contains: input.team2,
-                  },
-            },
-            {
-              team1: input.exact
-                ? input.team2
-                : {
-                    contains: input.team2,
-                  },
-              team2: input.exact
-                ? input.team1
-                : {
-                    contains: input.team1,
-                  },
-            },
-          ],
-        };
-      }
-
       const items = await prisma.match.findMany({
         take: input.limit + 1,
         where: {
-          ...where,
+          ...teamFilter(input.team1, input.team2, input.exact),
           season: input.season ?? (await getCurrentSeason()),
         },
-        include: {
-          achievements: true,
-        },
+        include: { achievements: true },
         cursor: input.cursor ? { id: input.cursor } : undefined,
-        orderBy: {
-          createdAt: "desc",
-        },
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       });
-
-      let nextCursor: typeof input.cursor | undefined = undefined;
-      if (items.length > input.limit) {
-        const nextItem = items.pop();
-        nextCursor = nextItem!.id;
-      }
-
-      return {
-        items,
-        nextCursor,
-      };
+      const nextCursor =
+        items.length > input.limit ? items.pop()!.id : undefined;
+      return { items, nextCursor };
     }),
 
+  /**
+   * Records a match. Teams are built from the picked players, so the order of the picks
+   * can never create a second team.
+   */
   add: publicProcedure.input(matchAddValidation).mutation(async ({ input }) => {
-    // Teams are built from the picked players, so the order of the picks (or anything else
-    // that isn't the set of players) can never create a second team.
     const ids = [...input.players1, ...input.players2];
     const players = await prisma.player.findMany({
       where: { id: { in: ids } },
@@ -149,43 +100,35 @@ export const matchesRouter = router({
         message: "Unknown player, please reload the page",
       });
     }
-    const keysOf = (side: number[]) =>
-      side.map(id => players.find(p => p.id === id)!.key);
+    const team = (side: number[]) =>
+      teamNameFromKeys(side.map(id => players.find(p => p.id === id)!.key));
 
-    const team1 = await getOrCreateTeam(
-      teamNameFromKeys(keysOf(input.players1)),
-    );
-    const team2 = await getOrCreateTeam(
-      teamNameFromKeys(keysOf(input.players2)),
-    );
-
-    return await createMatch(
-      team1,
-      team2,
-      input.score1,
-      input.score2,
-      input.comment,
+    return writeTransaction(db =>
+      createMatch(db, {
+        team1: team(input.players1),
+        team2: team(input.players2),
+        score1: input.score1,
+        score2: input.score2,
+        comment: input.comment,
+      }),
     );
   }),
 
+  /** Deletes a match and recalculates its season (admin). */
   delete: protectedProcedure
-    .input(
-      z.object({
-        id: z.number(),
+    .input(z.object({ id: z.number().int() }))
+    .mutation(({ input }) =>
+      writeTransaction(async db => {
+        const match = await db.match.findUnique({ where: { id: input.id } });
+        if (!match) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Match not found",
+          });
+        }
+        await db.match.delete({ where: { id: input.id } });
+        await rebuildSeason(db, match.season);
+        return match;
       }),
-    )
-    .mutation(async ({ input }) => {
-      const match = await prisma.match.delete({
-        where: {
-          id: input.id,
-        },
-      });
-
-      const team1 = await getOrCreateTeam(match.team1);
-      const team2 = await getOrCreateTeam(match.team2);
-      await deleteMatchFromTeam(team1, match);
-      await deleteMatchFromTeam(team2, match);
-
-      return match;
-    }),
+    ),
 });

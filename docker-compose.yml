@@ -1,18 +1,19 @@
-# Copy .env.example to .env, set ADMIN_PASSWORD and NEXTAUTH_SECRET, then: docker compose up -d
+# For running from a checkout of this repository: `cp .env.example .env`, edit, then
+#   docker compose up -d --build
+# For Dockge / a home server use dockge/compose.yaml instead (see docs/DEPLOY.md).
 services:
   hilde:
     build: .
-    # image: ghcr.io/<your-github-user>/hilde:latest   # once the CI workflow has published one
+    image: hilde:local
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "${HILDE_PORT:-3000}:3000"
     environment:
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:?set ADMIN_PASSWORD in .env}
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?set NEXTAUTH_SECRET in .env}
-      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
-      TZ: ${TZ:-Europe/Rome} # decides what "Today" means on the leaderboard
+      TZ: ${TZ:-Europe/Rome}
     volumes:
-      - hilde-data:/data # the SQLite database lives here, back this up
+      - hilde-data:/data # the SQLite database lives here, back it up
 
 volumes:
   hilde-data:

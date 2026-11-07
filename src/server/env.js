@@ -16,15 +16,14 @@ const envSchema = z.object({
   NEXTAUTH_SECRET: z
     .string()
     .min(16, "NEXTAUTH_SECRET must be at least 16 characters"),
+  // Optional: without it the address from the browser is used (AUTH_TRUST_HOST=true)
+  NEXTAUTH_URL: z.url().optional(),
 });
 
 const env = envSchema.safeParse(process.env);
 
 if (!env.success) {
-  console.error(
-    "Invalid environment variables:",
-    JSON.stringify(env.error.format(), null, 2),
-  );
+  console.error("Invalid environment variables:", z.prettifyError(env.error));
   process.exit(1);
 }
 module.exports.env = env.data;

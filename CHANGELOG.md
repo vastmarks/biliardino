@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-11-05
+
+### Fixed
+
+- Deleting a match no longer corrupts team ratings (the loser's rating was lowered instead of restored);
+  deleting a match, team or achievement now recalculates the whole season from the remaining matches
+- Deleting a team corrected nobody else's rating; removing an achievement took the points from the wrong season
+- Two matches saved at the same moment could overwrite each other's team ratings: all writes are now transactional
+- Team ratings now treat a draw as half a win (like the player ratings) instead of a loss for both
+- Leaderboards page showed "Infinity" matches per day on a season's first day
+- The current season (or one with matches) could be deleted; a duplicate season number gave a server error
+- Docker build failed: `npm ci` ran `prisma generate` before the schema was copied; runtime image lacked OpenSSL for the Prisma CLI
+
+### Changed
+
+- `NEXTAUTH_URL` is optional in Docker (`AUTH_TRUST_HOST`); the image can run as any user (e.g. TrueNAS `568:568`)
+  and explains clearly when the data folder isn't writable; `/api/health` for the healthcheck
+- Admin password check is constant-time and slows down wrong guesses
+- Input limits on every API call (e.g. max. 2 players per side, scores 0-99); Zod 4
+- Dockge stack uses the image GitHub publishes on release; CI builds the Docker image on every push
+- Removed unused code and dependencies (`date-fns`, `ts-node`, the old match form)
+
+### Added
+
+- `docs/DEPLOY.md`: step-by-step guide (GitHub, releases, TrueNAS + Dockge, updates, troubleshooting)
+- API integration tests on a temporary database, team-stats tests, browser tests in `e2e/`; `npm run check`
+
 ## [0.5.0] - 2026-11-05
 
 ### Added

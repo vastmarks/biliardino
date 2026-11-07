@@ -5,7 +5,7 @@
  */
 import { prisma } from "~/server/prisma";
 import { createMatch } from "~/server/model/match";
-import { getOrCreateTeam } from "~/server/model/team";
+import { writeTransaction } from "~/server/db";
 import { getCurrentSeason } from "~/server/model/season";
 import { playerKey, teamNameFromKeys } from "~/utils/players";
 
@@ -70,9 +70,16 @@ async function main() {
     const aWins = rand() < pA;
     const loser = Math.min(9, Math.floor(rand() * 10));
     const [score1, score2] = aWins ? [10, loser] : [loser, 10];
-    const t1 = await getOrCreateTeam(teamNameFromKeys(m.a.map(playerKey)));
-    const t2 = await getOrCreateTeam(teamNameFromKeys(m.b.map(playerKey)));
-    await createMatch(t1, t2, score1, score2, "", m.date, season);
+    await writeTransaction(db =>
+      createMatch(db, {
+        team1: teamNameFromKeys(m.a.map(playerKey)),
+        team2: teamNameFromKeys(m.b.map(playerKey)),
+        score1,
+        score2,
+        date: m.date,
+        season,
+      }),
+    );
   }
   console.log(`Added ${names.length} players and ${matches.length} matches.`);
 }

@@ -1,6 +1,6 @@
 import { Fragment, FunctionComponent } from "react";
 import { Achievement, achievements } from "~/utils/achievements";
-import { TimeDistance } from "~/components/Elements/TeamDistance";
+import { TimeDistance } from "~/components/Elements/TimeDistance";
 import { TeamWithMetaAndAchievements } from "~/server/model/team";
 import { trpc } from "~/utils/trpc";
 import { toast } from "~/utils/toast";

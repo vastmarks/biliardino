@@ -1,7 +1,7 @@
 import { FunctionComponent } from "react";
 import { toast } from "~/utils/toast";
 import { trpc } from "~/utils/trpc";
-import { TimeDistance } from "~/components/Elements/TeamDistance";
+import { TimeDistance } from "~/components/Elements/TimeDistance";
 import { TeamLink } from "~/components/Elements/TeamLink";
 import { RatingChange } from "~/components/Elements/RatingChange";
 import { achievements as allAchievements } from "~/utils/achievements";
