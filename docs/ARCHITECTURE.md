@@ -112,15 +112,17 @@ biliardino/
 │   │   ├── validation.ts       what valid input looks like
 │   │   └── editRules.ts        the 24-hour rule
 │   ├── model/                small helpers usable in browser and server
-│   ├── styles/globals.css    the few global styles
+│   ├── styles/globals.css    the few global styles, theme colour variables
+│   ├── fonts/                Outfit, the brand typeface (bundled)
 │   └── middleware.ts         sends /admin visitors to the login first
 ├── prisma/
 │   ├── schema.prisma         the database tables
 │   └── migrations/           every change to the tables, in order
-├── public/                   files served as they are (icons, manifest for "Add to Home Screen")
+├── public/                   files served as they are (logo, icons, manifest for "Add to Home Screen")
 ├── scripts/seed-demo.ts      fills an empty database with fake players and matches
 ├── e2e/                      browser tests (Chrome, Firefox)
-├── docs/                     these guides
+├── docs/                     these guides (BRAND.md: logo, colours, typeface)
+├── design/logo/              the logo as code, regenerates all logo files and icons
 ├── Dockerfile                how to build the image
 ├── entrypoint.sh             what the container does when it starts
 ├── docker-compose.yml        run it from this folder (your Mac)

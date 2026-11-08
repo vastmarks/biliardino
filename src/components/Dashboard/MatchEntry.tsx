@@ -193,7 +193,10 @@ export const MatchEntry = ({
     return (
       <section className="rounded-lg bg-white dark:bg-gray-800 shadow p-5 text-center text-sm text-gray-500">
         A {format} needs at least {needed} players. Add players on the{" "}
-        <Link href="/players" className="text-blue-500 underline">
+        <Link
+          href="/players"
+          className="text-blue-500 dark:text-blue-300 underline"
+        >
           Players page
         </Link>{" "}
         first ({everybody.filter(p => !p.archived).length} so far).
@@ -350,7 +353,7 @@ export const MatchEntry = ({
           </button>
         )}
         <div className="flex-1 text-sm text-center" role="status">
-          {status && <span className="text-green-600">{status} ✓</span>}
+          {status && <span className="text-green-500">{status} ✓</span>}
           {!isCurrentSeason && (
             <span className="text-red-500">
               Season {season} is over - switch to the current season to add

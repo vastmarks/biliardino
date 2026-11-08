@@ -11,8 +11,8 @@ const LABELS: Record<PeriodKey, string> = {
 };
 
 const formStyle = {
-  W: "bg-green-500 text-white",
-  L: "bg-red-500 text-white",
+  W: "bg-green-600 text-white",
+  L: "bg-red-600 text-white",
   D: "bg-gray-400 text-white",
 } as const;
 
@@ -40,12 +40,16 @@ const Form = ({ form }: { form: BoardRow["form"] }) => (
 
 const Movement = ({ row }: { row: BoardRow }) => {
   if (row.isNew)
-    return <span className="text-[10px] font-bold text-blue-500">NEW</span>;
+    return (
+      <span className="text-[10px] font-bold text-blue-500 dark:text-blue-300">
+        NEW
+      </span>
+    );
   if (!row.rankChange) return <span className="text-gray-300">–</span>;
   const up = row.rankChange > 0;
   return (
     <span
-      className={`text-xs ${up ? "text-green-600" : "text-red-500"}`}
+      className={`text-xs ${up ? "text-green-500" : "text-red-500"}`}
       title={`${up ? "Up" : "Down"} ${Math.abs(row.rankChange)} since last week`}
     >
       {up ? "▲" : "▼"}
@@ -132,7 +136,7 @@ export const Leaderboard = ({
                       <b
                         className={
                           r.delta > 0
-                            ? "text-green-600"
+                            ? "text-green-500"
                             : r.delta < 0
                               ? "text-red-500"
                               : ""

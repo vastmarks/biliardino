@@ -101,7 +101,7 @@ export const MatchRow: FunctionComponent<{
       {editable && (
         <button
           type="button"
-          className="text-blue-500 px-2 py-1 -my-1"
+          className="text-blue-500 dark:text-blue-300 px-2 py-1 -my-1"
           onClick={() => onEdit?.(match)}
           aria-label="Correct or delete this match"
         >

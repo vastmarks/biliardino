@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0] - 2026-11-08
+
+### Added
+
+- New identity: the biliarDino logo (a baby dinosaur hatching from a football) in the header, the
+  browser tab and on the phone home screen, with light and dark versions
+- `docs/BRAND.md`, the brand guide; `design/logo/`, the logo as code with a script that regenerates
+  every logo file and app icon
+
+### Changed
+
+- Celeste colour palette for light and dark themes; muted text, wins, losses and links now meet
+  WCAG AA contrast in both themes
+- Headings use the Outfit typeface, bundled with the app (no request to Google)
+- Android maskable icon is now a separate file with the mark inside the safe zone
+
 ## [0.7.1] - 2026-11-08
 
 ### Changed

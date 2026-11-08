@@ -31,7 +31,7 @@ building for you (free for public repositories).
 | repository (repo) | the project folder including its full history, managed by git |
 | commit | a saved snapshot of the code with a message ("what changed and why") |
 | push | upload your new commits to GitHub |
-| tag / release | a name for one specific commit, like `v0.7.1`; here it means "publish this version" |
+| tag / release | a name for one specific commit, like `v0.8.0`; here it means "publish this version" |
 | GitHub Actions | GitHub's robots that run the checks and build the image (file `.github/workflows/build.yml`) |
 | image | the packaged app that Docker runs; ours is `ghcr.io/<you>/biliardino` |
 
@@ -108,12 +108,12 @@ building for you (free for public repositories).
 A *release* is what your NAS installs. You publish one by tagging a commit:
 
 ```sh
-git tag v0.7.1
-git push origin v0.7.1
+git tag v0.8.0
+git push origin v0.8.0
 ```
 
 GitHub Actions runs again (Actions tab). This time, after the checks, it also uploads the image
-to `ghcr.io/YOUR-GITHUB-USER/biliardino` with the tags `0.7.1` and `latest`.
+to `ghcr.io/YOUR-GITHUB-USER/biliardino` with the tags `0.8.0` and `latest`.
 
 **Make the image public (only after the very first release).** New images on GitHub are private
 by default, which means your NAS couldn't download it without a password.
@@ -201,16 +201,16 @@ git push                   # upload; GitHub runs the checks (Actions tab)
 Wait for the green ✓, then publish it as a release with the next version number:
 
 ```sh
-git tag v0.7.2
-git push origin v0.7.2
+git tag v0.8.1
+git push origin v0.8.1
 ```
 
 When that Actions run is green, go to Dockge → stack `biliardino` → **Update**. It pulls the new
 `latest` image and restarts; database changes are applied automatically on start. Your data
 stays where it is.
 
-Version numbers follow [semantic versioning](https://semver.org): `v0.7.2` for fixes,
-`v0.8.0` for new features.
+Version numbers follow [semantic versioning](https://semver.org): `v0.8.1` for fixes,
+`v0.9.0` for new features.
 
 **Getting changes from Claude.** The easiest way: in a Claude session, attach your GitHub
 repository. Claude can then push its changes as a *pull request* (a proposed change). You read it

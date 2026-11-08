@@ -54,7 +54,10 @@ const Home = ({ initial }: { initial: DashboardData }) => {
         <section>
           <div className="flex items-center justify-between mb-2 px-1">
             <h2 className="font-bold">Recent matches</h2>
-            <Link href="/matches" className="text-sm text-blue-500">
+            <Link
+              href="/matches"
+              className="text-sm text-blue-500 dark:text-blue-300"
+            >
               All matches →
             </Link>
           </div>

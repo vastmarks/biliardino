@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { FunctionComponent, ReactNode } from "react";
 import { useRouter } from "next/router";
 import { useTheme } from "next-themes";
@@ -42,19 +43,30 @@ export const Layout: FunctionComponent<{ children: ReactNode }> = ({
   return (
     <div className="max-w-3xl mx-auto min-h-dvh flex flex-col px-3 sm:px-4 pt-2 sm:pt-10 pb-[max(1rem,env(safe-area-inset-bottom))]">
       <header className="flex flex-wrap items-center justify-between gap-x-4">
-        <div className="flex items-end gap-2">
+        <div className="flex items-center gap-3">
           <Link
             href="/"
-            className="text-3xl font-bold py-1"
-            style={{
-              backgroundImage:
-                "linear-gradient(90deg, #0094d8 -20%, #9fc20a 50%)",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-            }}
+            className="py-1 shrink-0"
+            aria-label="biliarDino, home"
           >
-            Biliardino
+            <Image
+              src="/brand/logo-light.svg"
+              alt=""
+              width={146}
+              height={36}
+              priority
+              unoptimized
+              className="dark:hidden"
+            />
+            <Image
+              src="/brand/logo-dark.svg"
+              alt=""
+              width={146}
+              height={36}
+              priority
+              unoptimized
+              className="hidden dark:block"
+            />
           </Link>
           <SeasonSelector />
         </div>
@@ -78,7 +90,7 @@ export const Layout: FunctionComponent<{ children: ReactNode }> = ({
           <Link href="/admin" className="hover:underline mr-3">
             Admin
           </Link>
-          <b>Biliardino v{process.env.NEXT_PUBLIC_APP_VERSION}</b> - based on{" "}
+          <b>biliarDino v{process.env.NEXT_PUBLIC_APP_VERSION}</b> - based on{" "}
           <a
             href="https://github.com/nehalist/hilde"
             className="hover:underline"

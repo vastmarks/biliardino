@@ -161,7 +161,7 @@ export const MatchEditDialog = ({
                   remove.mutate({ id: match.id });
                 }
               }}
-              className="h-11 px-3 rounded-lg text-red-600 border border-red-300 dark:border-red-800"
+              className="h-11 px-3 rounded-lg text-red-500 border border-red-300 dark:border-red-800"
             >
               Delete
             </button>

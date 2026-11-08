@@ -1,15 +1,21 @@
-# Biliardino 🏆
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="public/brand/logo-dark.svg">
+    <img src="public/brand/logo-light.svg" alt="biliarDino" height="80">
+  </picture>
+</p>
 
 A self-hosted tracker for the office foosball table (*biliardino*): 1v1 and 2v2 matches, Elo ratings for players and
 pairs, leaderboards, achievements and a mobile-first page for entering a result right after the game.
 
-Biliardino is based on [Hilde](https://github.com/nehalist/hilde) by [nehalist](https://github.com/nehalist)
+biliarDino is based on [Hilde](https://github.com/nehalist/hilde) by [nehalist](https://github.com/nehalist)
 (MIT licence), modernised and extended; see [Changes from Hilde](#changes-from-hilde).
 
 **Guides:** [run it on your computer](docs/LOCAL.md) · [deploy it on a home server](docs/DEPLOY.md) ·
-[how the app is built](docs/ARCHITECTURE.md)
+[how the app is built](docs/ARCHITECTURE.md) ·
+[brand guide](docs/BRAND.md)
 
-![Biliardino](docs/screenshot.png)
+![biliarDino home page](docs/screenshot.png)
 
 ## Table of Contents
 
@@ -99,7 +105,8 @@ Where things are:
 | `prisma/` | database schema and migrations |
 | `src/**/__tests__/` | unit tests; `src/server/__tests__/` runs the API on a temporary database |
 | `e2e/` | browser tests (Chrome/Firefox, see `e2e/README.md`) |
-| `docs/` | guides: local run, home-server deployment, architecture |
+| `docs/` | guides: local run, home-server deployment, architecture, brand |
+| `design/logo/` | the logo as code; regenerates every logo file and app icon |
 
 Database changes: edit `prisma/schema.prisma`, then `npm run db:migrate:dev -- --name what-changed` creates a
 migration; it's applied automatically on the next container start.
@@ -157,6 +164,7 @@ from the picked players (sorted, lower-cased), so order, spelling or separators 
 
 Based on [nehalist/hilde](https://github.com/nehalist/hilde) (last upstream commit: November 2023).
 
+- New identity (0.8.0): the biliarDino logo, celeste palette for light and dark, Outfit headings.
 - Renamed to **Biliardino** (0.7.1). A database file from before the rename (`hilde.db`) is renamed automatically on start.
 
 - Dependencies brought up to date: Next.js 15, React 19, tRPC 11, TanStack Query 5, Prisma 6, TypeScript 5.9, Node 22

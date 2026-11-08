@@ -2,6 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Colours that differ between light and dark (see tailwind.config.js). R G B channels. */
+:root {
+  --c-gray-400: 88 108 128; /* #586C80 */
+  --c-gray-500: 82 102 122; /* #52667A */
+  --c-green-500: 21 128 61; /* #15803D */
+  --c-red-500: 198 40 40; /* #C62828 */
+}
+
+.dark {
+  --c-gray-400: 131 153 174; /* #8399AE */
+  --c-gray-500: 148 170 189; /* #94AABD */
+  --c-green-500: 74 222 128; /* #4ADE80 */
+  --c-red-500: 248 113 113; /* #F87171 */
+}
+
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
@@ -16,6 +31,13 @@ html.dark {
 body {
   @apply bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-gray-100;
   min-height: 100dvh;
+}
+
+/* Brand typeface (Outfit, bundled) for headings; body text stays on the system font. */
+h1,
+h2,
+h3 {
+  font-family: var(--font-brand), ui-sans-serif, system-ui, sans-serif;
 }
 
 /* iOS zooms into inputs below 16px */

@@ -107,7 +107,7 @@ export const PlayerManager = ({ players }: { players: Player[] }) => {
               </span>
             </span>
             <button
-              className="text-blue-500 h-9 px-1"
+              className="text-blue-500 dark:text-blue-300 h-9 px-1"
               onClick={() => {
                 setName(p.name);
                 setDialog({ kind: "rename", player: p });
@@ -116,7 +116,7 @@ export const PlayerManager = ({ players }: { players: Player[] }) => {
               Rename
             </button>
             <button
-              className="text-blue-500 h-9 px-1"
+              className="text-blue-500 dark:text-blue-300 h-9 px-1"
               disabled={archive.isPending}
               onClick={() =>
                 archive.mutate({ id: p.id, archived: !p.archived })
@@ -126,7 +126,7 @@ export const PlayerManager = ({ players }: { players: Player[] }) => {
             </button>
             {(p.matches === 0 || isAdmin) && (
               <button
-                className="text-red-600 h-9 px-1"
+                className="text-red-500 h-9 px-1"
                 onClick={() => {
                   setConfirmName("");
                   setDialog({ kind: "delete", player: p, step: 1 });
@@ -238,7 +238,7 @@ export const PlayerManager = ({ players }: { players: Player[] }) => {
                   </button>
                 )}
                 <button
-                  className="h-11 px-4 rounded-lg border border-red-400 text-red-600"
+                  className="h-11 px-4 rounded-lg border border-red-400 text-red-500"
                   onClick={() =>
                     setDialog({ kind: "delete", player: target, step: 2 })
                   }
