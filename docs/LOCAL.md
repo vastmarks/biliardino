@@ -1,6 +1,6 @@
-# Running Biliardino on your Mac with Docker
+# Running biliardino on your Mac with Docker
 
-This guide gets Biliardino running on your own computer, inside Docker, exactly as it will run on the NAS later. It assumes no developer background: every command is explained, and so is every part of it.
+This guide gets biliardino running on your own computer, inside Docker, exactly as it will run on the NAS later. It assumes no developer background: every command is explained, and so is every part of it.
 
 Plan about 30 minutes the first time (most of it is waiting for downloads and the first build). After that, starting and stopping takes seconds.
 
@@ -16,11 +16,11 @@ You already use Docker through Dockge, so some of this will be familiar. Here it
 | --- | --- | --- |
 | **Image** | A packaged, read-only copy of the app plus everything it needs (Node.js, libraries, the compiled code). Built once from the `Dockerfile`. | An installer, or a frozen meal: everything is inside, ready to heat. |
 | **Container** | A running instance of an image. You can stop it, delete it and create a new one from the same image at any time. | The meal on the plate. Throwing it away doesn't lose the recipe. |
-| **Volume** | Storage that lives _outside_ the container, so data survives when the container is deleted or replaced. Biliardino's database file lives in one. | The fridge: the plate goes, the leftovers stay. |
+| **Volume** | Storage that lives _outside_ the container, so data survives when the container is deleted or replaced. biliardino's database file lives in one. | The fridge: the plate goes, the leftovers stay. |
 | **Port mapping** | The app listens on port 3000 _inside_ the container; `3000:3000` connects port 3000 of your Mac to it, so the browser can reach it. | A doorbell on the outside of the house wired to a room inside. |
 | **Compose file** | A text file (`docker-compose.yml`) that describes the container: which image, which ports, which volume, which settings. `docker compose` reads it so you don't have to type all that every time. | The recipe card. |
 
-How these fit together for Biliardino:
+How these fit together for biliardino:
 
 ```mermaid
 flowchart LR
@@ -197,7 +197,7 @@ Applying database migrations...
 3 migrations found in prisma/migrations
 ...
 All migrations have been successfully applied.
-Starting Biliardino on port 3000...
+Starting biliardino on port 3000...
  ✓ Ready in 300ms
 ```
 

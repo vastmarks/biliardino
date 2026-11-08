@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 #
-# Biliardino - multi-stage image: install -> build -> small runtime image.
+# biliardino - multi-stage image: install -> build -> small runtime image.
 # Build:  docker build -t biliardino .
 # Run:    see docker-compose.yml / dockge/compose.yaml
 

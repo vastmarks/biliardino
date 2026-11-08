@@ -1,12 +1,12 @@
-![biliarDino](public/brand/logo-light.svg)
+![biliardino](public/brand/logo-light.svg)
 
 A self-hosted tracker for the office foosball table (_biliardino_): 1v1 and 2v2 matches, Elo ratings for players and pairs, leaderboards, a Hall of Fame, achievements and a mobile-first page for entering a result right after the game.
 
-biliarDino is based on [Hilde](https://github.com/nehalist/hilde) by [nehalist](https://github.com/nehalist) (MIT licence), modernised and extended; see _Changes from Hilde_ below.
+biliardino is based on [Hilde](https://github.com/nehalist/hilde) by [nehalist](https://github.com/nehalist) (MIT licence), modernised and extended; see _Changes from Hilde_ below.
 
 **Guides:** [run it on your computer](docs/LOCAL.md) · [deploy it on a home server](docs/DEPLOY.md) · [how the app is built](docs/ARCHITECTURE.md) · [brand guide](docs/BRAND.md)
 
-![biliarDino home page](docs/screenshot.png)
+![biliardino home page](docs/screenshot.png)
 
 ## Features
 
@@ -103,7 +103,7 @@ Try it with fake data on an empty database: `npm run db:seed-demo`.
 
 ## Player statistics
 
-Matches are recorded between _teams_ (`anna,marco` vs `luca,sara`), and the team ratings work as before. In addition, Biliardino derives **per-player statistics** from the very same matches, so nothing extra has to be entered:
+Matches are recorded between _teams_ (`anna,marco` vs `luca,sara`), and the team ratings work as before. In addition, biliardino derives **per-player statistics** from the very same matches, so nothing extra has to be entered:
 
 - `/players`: leaderboard for the current season or all time (rating, matches, W/L, win rate, goal difference, streak)
 - `/players/<name>`: rating history, highest/lowest rating, goals, streaks, results per format (1v1, 2v2, ...), results _with_ every partner and _against_ every opponent, best partner / toughest opponent, recent matches
@@ -131,8 +131,8 @@ Players are defined once on the **Players** page (names are unique, case-insensi
 
 Based on [nehalist/hilde](https://github.com/nehalist/hilde) (last upstream commit: November 2023).
 
-- New identity (0.8.0): the biliarDino logo, celeste palette for light and dark; Geist for all text (0.10.0).
-- Renamed to **Biliardino** (0.7.1). A database file from before the rename (`hilde.db`) is renamed automatically on start.
+- New identity: celeste palette for light and dark (0.8.0), Geist for all text (0.10.0), the logo with players on a rod (0.11.0).
+- Renamed to **biliardino** (0.7.1). A database file from before the rename (`hilde.db`) is renamed automatically on start.
 
 - Dependencies brought up to date (0.10.0): Next.js 16, React 19, tRPC 11, TanStack Query 5, Prisma 7, Tailwind CSS 4, ESLint 10, Jest 30, TypeScript 5.9, Node 22
 - **MySQL replaced by SQLite** (Prisma's Rust-free client with the better-sqlite3 driver adapter): one container, one volume. A fresh initial migration replaces the old MySQL ones, **existing MySQL data is not migrated automatically**.

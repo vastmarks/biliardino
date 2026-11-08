@@ -21,8 +21,7 @@ export const SeasonSelector: FunctionComponent = () => {
   }
 
   return (
-    // A small pill next to the logo. translate-y-1 (4px) centres it on the wordmark's letters
-    // rather than on the logo image, whose box also holds the taller dino mark.
+    // A small pill next to the logo. translate-y-1 (4px) puts its text on the wordmark's baseline.
     <label className="translate-y-1 inline-flex h-7 items-center gap-1 rounded-full border border-gray-200 dark:border-gray-700 pl-3 pr-1 text-xs text-gray-500 dark:text-gray-400">
       Season
       <select

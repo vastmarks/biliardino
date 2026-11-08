@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.0] - 2026-11-08
+
+### Changed
+
+- **New logo**: the name **biliardino**, all lowercase, with the dots of its three i's turned into players on a foosball rod. The app icon is the b of the name with the rod and one player (celeste, white, navy). It replaces the dino.
+- Icons with few colours so they stay clear in browser tabs, light and dark
+
+### Fixed
+
+- On a player's page the rating chart overlapped the Partners and Opponents tables on wide screens
+- Browsers that had visited the app before kept showing the old Hilde icon in the tab: the icon addresses now carry a version (`?v=3`), so every browser fetches the new one
+
 ## [0.10.0] - 2026-11-08
 
 ### Changed

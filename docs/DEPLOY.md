@@ -1,4 +1,4 @@
-# Deploying Biliardino on your home server (TrueNAS + Dockge)
+# Deploying biliardino on your home server (TrueNAS + Dockge)
 
 This guide is written for someone who runs self-hosted apps with Docker Compose (Immich, FileBrowser, …) but has never published their _own_ project. It explains every command. Plan about an hour for the first time; later updates take a few minutes.
 
@@ -73,7 +73,7 @@ This is the same as the apps you already run: their authors publish images, your
    git log --oneline | head -5    # the most recent commits (press q if it waits)
    ```
 
-   The history contains the commits of the original project (Hilde by Kevin Hirczy, MIT licence) and the Biliardino commits on top. Keep the `LICENSE` file: the licence requires it.
+   The history contains the commits of the original project (Hilde by Kevin Hirczy, MIT licence) and the biliardino commits on top. Keep the `LICENSE` file: the licence requires it.
 
    Check where the folder points on GitHub:
 
@@ -116,7 +116,7 @@ A public package can't be made private again. That's fine here: it only contains
 
 ## Part 4 - Prepare the data folder on the NAS (once)
 
-Biliardino keeps everything in one database file. Like your FileBrowser setup, it lives in a folder on your apps dataset and the container runs as TrueNAS's `apps` user (568).
+biliardino keeps everything in one database file. Like your FileBrowser setup, it lives in a folder on your apps dataset and the container runs as TrueNAS's `apps` user (568).
 
 1. TrueNAS web UI → **System** → **Shell** (or SSH into the NAS).
 2. Create the folder and give it to the apps user:
@@ -148,7 +148,7 @@ Biliardino keeps everything in one database file. Like your FileBrowser setup, i
    ```
    Applying database migrations...
    ...
-   Starting Biliardino on port 3000...
+   Starting biliardino on port 3000...
    ✓ Ready
    ```
 

@@ -171,7 +171,7 @@ export const PlayerProfile: FunctionComponent<{
           )}
         </div>
 
-        <div className="col-span-6 h-52 border-b dark:border-gray-600">
+        <div className="col-span-6 border-b dark:border-gray-600 p-2">
           {player.history.length > 1 ? (
             <PlayerRatingHistory name={player.name} history={player.history} />
           ) : (

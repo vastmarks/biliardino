@@ -14,12 +14,13 @@ export default function Document() {
           content="#0A1621"
           media="(prefers-color-scheme: dark)"
         />
-        <meta name="application-name" content="biliarDino" />
+        <meta name="application-name" content="biliardino" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-title" content="biliarDino" />
-        <link rel="icon" href="/icon.svg" type="image/svg+xml" />
-        <link rel="icon" href="/favicon.ico" sizes="48x48" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <meta name="apple-mobile-web-app-title" content="biliardino" />
+        {/* ?v= changes whenever the icons change: browsers keep favicons for a long time */}
+        <link rel="icon" href="/favicon.ico?v=3" sizes="32x32" />
+        <link rel="icon" href="/icon.svg?v=3" type="image/svg+xml" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=3" />
         <link rel="manifest" href="/manifest.webmanifest" />
       </Head>
       <body>

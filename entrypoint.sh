@@ -29,5 +29,5 @@ fi
 echo "Applying database migrations..."
 prisma migrate deploy
 
-echo "Starting Biliardino on port ${PORT}..."
+echo "Starting biliardino on port ${PORT}..."
 exec node server.js

@@ -47,13 +47,13 @@ export const Layout: FunctionComponent<{ children: ReactNode }> = ({
           <Link
             href="/"
             className="py-1 shrink-0"
-            aria-label="biliarDino, home"
+            aria-label="biliardino, home"
           >
             <Image
               src="/brand/logo-light.svg"
               alt=""
-              width={146}
-              height={36}
+              width={110}
+              height={30}
               priority
               unoptimized
               className="dark:hidden"
@@ -61,8 +61,8 @@ export const Layout: FunctionComponent<{ children: ReactNode }> = ({
             <Image
               src="/brand/logo-dark.svg"
               alt=""
-              width={146}
-              height={36}
+              width={110}
+              height={30}
               priority
               unoptimized
               className="hidden dark:block"
@@ -90,7 +90,7 @@ export const Layout: FunctionComponent<{ children: ReactNode }> = ({
           <Link href="/admin" className="hover:underline mr-3">
             Admin
           </Link>
-          <b>biliarDino v{process.env.NEXT_PUBLIC_APP_VERSION}</b> - based on{" "}
+          <b>biliardino v{process.env.NEXT_PUBLIC_APP_VERSION}</b> - based on{" "}
           <a
             href="https://github.com/nehalist/hilde"
             className="hover:underline"

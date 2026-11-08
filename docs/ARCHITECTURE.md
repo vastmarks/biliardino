@@ -1,4 +1,4 @@
-# How Biliardino is built
+# How biliardino is built
 
 This document explains how the app works inside, for someone who wants to understand and change it without a programming background. Read it from the top the first time: each part builds on the one before. Afterwards it works as a reference: the folder tour (section 3) and the glossary (section 14) are the quickest way back in.
 
@@ -8,7 +8,7 @@ You don't need to read code to follow it, but every section names the files invo
 
 ## 1. The big picture
 
-Biliardino is a **web app**: one program that runs on a server (your NAS, or your Mac in Docker) and sends pages to browsers. It has three parts:
+biliardino is a **web app**: one program that runs on a server (your NAS, or your Mac in Docker) and sends pages to browsers. It has three parts:
 
 ```mermaid
 flowchart LR

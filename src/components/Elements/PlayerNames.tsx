@@ -4,7 +4,7 @@ import { parsePlayers } from "~/utils/playerStats";
 
 /**
  * The players of a team ("chiara,elena"), each name a link to that player's profile:
- * "Chiara & Elena". Wherever biliarDino shows a person, the name leads to them.
+ * "Chiara & Elena". Wherever biliardino shows a person, the name leads to them.
  */
 export const PlayerNames: FunctionComponent<{ team: string | string[] }> = ({
   team,
