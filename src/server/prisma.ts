@@ -32,7 +32,7 @@ export function resolveDatabaseUrl(url: string): string {
 function createClient() {
   const adapter = new PrismaBetterSQLite3({
     url: resolveDatabaseUrl(
-      process.env.DATABASE_URL ?? "file:../data/hilde.db",
+      process.env.DATABASE_URL ?? "file:../data/biliardino.db",
     ),
   });
   return new PrismaClient({

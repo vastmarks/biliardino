@@ -1,24 +1,24 @@
-# Hilde - office foosball tracker. Stack for Dockge (or `docker compose up -d`).
+# Biliardino - office foosball tracker. Stack for Dockge (or `docker compose up -d`).
 # Step-by-step guide: docs/DEPLOY.md in the repository.
 
 services:
-  hilde:
+  biliardino:
     # The image GitHub builds for you when you publish a release (a "v..." tag).
     # Replace YOUR-GITHUB-USER with your GitHub username, in lower case.
-    image: ghcr.io/YOUR-GITHUB-USER/hilde:latest
-    container_name: hilde
+    image: ghcr.io/YOUR-GITHUB-USER/biliardino:latest
+    container_name: biliardino
     restart: unless-stopped
     ports:
-      - "${HILDE_PORT:-3000}:3000"
+      - "${BILIARDINO_PORT:-3000}:3000"
     environment:
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:?set ADMIN_PASSWORD in .env (min. 8 characters)}
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?set NEXTAUTH_SECRET in .env (min. 16 characters)}
       TZ: ${TZ:-Europe/Rome} # decides when "Today" starts on the leaderboard
-      # Optional: only if you put Hilde behind a reverse proxy with its own address and the
+      # Optional: only if you put Biliardino behind a reverse proxy with its own address and the
       # admin login misbehaves, e.g. https://foosball.example.com
       # NEXTAUTH_URL: https://foosball.example.com
     volumes:
       # The database: a single SQLite file in this folder. Back it up.
       # The folder must be writable by the user below (TrueNAS "apps" = 568).
-      - /mnt/apps/docker/data/hilde:/data
+      - /mnt/apps/docker/data/biliardino:/data
     user: "568:568"

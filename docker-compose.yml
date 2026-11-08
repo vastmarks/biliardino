@@ -2,18 +2,18 @@
 #   docker compose up -d --build
 # For Dockge / a home server use dockge/compose.yaml instead (see docs/DEPLOY.md).
 services:
-  hilde:
+  biliardino:
     build: .
-    image: hilde:local
+    image: biliardino:local
     restart: unless-stopped
     ports:
-      - "${HILDE_PORT:-3000}:3000"
+      - "${BILIARDINO_PORT:-3000}:3000"
     environment:
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:?set ADMIN_PASSWORD in .env}
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?set NEXTAUTH_SECRET in .env}
       TZ: ${TZ:-Europe/Rome}
     volumes:
-      - hilde-data:/data # the SQLite database lives here, back it up
+      - biliardino-data:/data # the SQLite database lives here, back it up
 
 volumes:
-  hilde-data:
+  biliardino-data:

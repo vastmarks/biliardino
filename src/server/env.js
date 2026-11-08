@@ -5,7 +5,7 @@
 const { z } = require("zod");
 
 const envSchema = z.object({
-  // SQLite connection string, e.g. file:./data/hilde.db
+  // SQLite connection string, e.g. file:./data/biliardino.db
   DATABASE_URL: z.string().startsWith("file:"),
   NODE_ENV: z
     .enum(["development", "test", "production"])

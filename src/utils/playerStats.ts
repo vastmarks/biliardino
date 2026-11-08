@@ -1,7 +1,7 @@
 /**
  * Per-player statistics.
  *
- * Hilde stores matches between *teams* (comma separated player names, e.g. "anna,marco").
+ * Biliardino stores matches between *teams* (comma separated player names, e.g. "anna,marco").
  * Everything in here is derived from the match list by replaying it in chronological order,
  * so it works for historical data, needs no extra database tables and can't drift out of
  * sync when a match is deleted.

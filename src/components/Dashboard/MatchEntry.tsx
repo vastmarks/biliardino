@@ -6,7 +6,7 @@ import { formatSize, MATCH_FORMATS, MatchFormat } from "~/utils/players";
 import { PlayerSearch } from "~/components/Dashboard/PlayerSearch";
 
 type Player = { id: number; key: string; name: string; archived: boolean };
-const FORMAT_KEY = "hilde:format";
+const FORMAT_KEY = "biliardino:format";
 
 const sideColor = [
   "border-sky-500 bg-sky-50 dark:bg-sky-950",

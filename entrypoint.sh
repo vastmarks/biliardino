@@ -18,8 +18,16 @@ if ! touch "$db_dir/.write-test" 2>/dev/null; then
 fi
 rm -f "$db_dir/.write-test"
 
+# The app used to be called Hilde and kept its data in hilde.db: carry such a database over once.
+if [ ! -e "$db_file" ] && [ -e "$db_dir/hilde.db" ]; then
+  echo "Renaming $db_dir/hilde.db to $(basename "$db_file") (the app was renamed from Hilde)..."
+  for suffix in "" -wal -shm -journal; do
+    if [ -e "$db_dir/hilde.db$suffix" ]; then mv "$db_dir/hilde.db$suffix" "$db_file$suffix"; fi
+  done
+fi
+
 echo "Applying database migrations..."
 prisma migrate deploy
 
-echo "Starting Hilde on port ${PORT}..."
+echo "Starting Biliardino on port ${PORT}..."
 exec node server.js

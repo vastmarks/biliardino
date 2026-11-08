@@ -495,7 +495,7 @@ export const achievements: Achievement[] = [
       return ["kh", "dl", "al", "kk"].includes(team.name);
     },
     title: "I'm doing my part",
-    description: "Contribute to Hilde",
+    description: "Contribute to Hilde, the project Biliardino is based on",
     points: 10,
   },
   {

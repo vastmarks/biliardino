@@ -1,6 +1,6 @@
 {
-  "name": "hilde",
-  "version": "0.7.0",
+  "name": "biliardino",
+  "version": "0.7.1",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -15,11 +15,10 @@
     "typecheck": "tsc --noEmit",
     "check": "npm run lint && npm run typecheck && npm test"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/nehalist/hilde"
-  },
-  "author": "Kevin Hirczy <kevin@nehalist.io> (https://nehalist.io)",
+  "author": "vastmarks",
+  "contributors": [
+    "Kevin Hirczy <kevin@nehalist.io> (https://nehalist.io), author of the original Hilde"
+  ],
   "license": "MIT",
   "dependencies": {
     "@prisma/adapter-better-sqlite3": "^6.19.3",
@@ -63,5 +62,5 @@
   "sideEffects": [
     "*.css"
   ],
-  "description": "Self-hosted office foosball tracker (1v1/2v2, Elo, per-player stats). Fork of nehalist/hilde."
+  "description": "Self-hosted office foosball tracker (1v1/2v2, Elo, per-player stats). Based on Hilde by nehalist (MIT)."
 }

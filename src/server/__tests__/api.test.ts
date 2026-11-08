@@ -7,7 +7,7 @@ import { tmpdir } from "os";
 import { join } from "path";
 import Database from "better-sqlite3";
 
-const dir = mkdtempSync(join(tmpdir(), "hilde-test-"));
+const dir = mkdtempSync(join(tmpdir(), "biliardino-test-"));
 const dbFile = join(dir, "test.db");
 process.env.DATABASE_URL = `file:${dbFile}`;
 

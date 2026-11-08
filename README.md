@@ -1,23 +1,24 @@
-# Hilde 🏆
+# Biliardino 🏆
 
-> A modernised fork of [nehalist/hilde](https://github.com/nehalist/hilde): SQLite, 1v1/2v2 with player pickers,
-> per-player stats and a mobile-first home page. **Deploying on a home server: see [docs/DEPLOY.md](docs/DEPLOY.md).**
+A self-hosted tracker for the office foosball table (*biliardino*): 1v1 and 2v2 matches, Elo ratings for players and
+pairs, leaderboards, achievements and a mobile-first page for entering a result right after the game.
 
-You've got a foosball table or similar in your office and want to track your matches, player progress and compare yourself to your
-colleagues and see who's the best? You've come to the right place.
-**Hilde** is a match tracking app for games like foosball, table tennis, air hockey, etc. with achievements, elo ratings, statistics and
-more. **Hilde** is easy to setup and can be used by everyone.
+Biliardino is based on [Hilde](https://github.com/nehalist/hilde) by [nehalist](https://github.com/nehalist)
+(MIT licence), modernised and extended; see [Changes from Hilde](#changes-from-hilde).
 
-![Hilde](hilde.png)
+**Guides:** [run it on your computer](docs/LOCAL.md) · [deploy it on a home server](docs/DEPLOY.md) ·
+[how the app is built](docs/ARCHITECTURE.md)
+
+![Biliardino](docs/screenshot.png)
 
 ## Table of Contents
 
-1. [Features](#features) - Hilde's features
-2. [Getting Started](#getting-started) - How to get Hilde up and running
+1. [Features](#features) - What it does
+2. [Getting Started](#getting-started) - How to get it up and running
 3. [Development](#development) - Working on the code
 4. [Player statistics](#player-statistics) - Per-player ratings and stats
 5. [Configuration](#configuration) - Environment variables
-6. [Changes in this fork](#changes-in-this-fork) - What was modernized
+6. [Changes from Hilde](#changes-from-hilde) - What was modernised
 7. [License](#license)
 
 ## ⚡️ Features
@@ -59,7 +60,8 @@ cp .env.example .env     # then set ADMIN_PASSWORD and NEXTAUTH_SECRET
 docker compose up -d --build
 ```
 
-The app is then available on <http://localhost:3000>; the database lives in the `hilde-data` volume.
+The app is then available on <http://localhost:3000>; the database lives in the `biliardino-data` volume.
+Step by step, with every command explained: **[docs/LOCAL.md](docs/LOCAL.md)**.
 Migrations are applied automatically on every start.
 
 ### Manual
@@ -97,6 +99,7 @@ Where things are:
 | `prisma/` | database schema and migrations |
 | `src/**/__tests__/` | unit tests; `src/server/__tests__/` runs the API on a temporary database |
 | `e2e/` | browser tests (Chrome/Firefox, see `e2e/README.md`) |
+| `docs/` | guides: local run, home-server deployment, architecture |
 
 Database changes: edit `prisma/schema.prisma`, then `npm run db:migrate:dev -- --name what-changed` creates a
 migration; it's applied automatically on the next container start.
@@ -105,7 +108,7 @@ migration; it's applied automatically on the next container start.
 
 Built for entering a result on a phone right after the game:
 
-1. **Match entry** first: pick 1v1/2v2, tap the players (recent players first), type the scores, Save. Players stay selected for rematches; the format is remembered.
+1. **Match entry** first: pick 1v1/2v2, type or tap the players (recent players first), type the scores, Save. Players stay selected for rematches; the format is remembered.
 2. **Leaderboard** with Today / 7 days / 30 days / Season, last-5 form, rank arrows vs. last week.
 3. **Top pairs** (2-player teams with 3+ matches).
 4. **Highlights**: hot streak, rising player, biggest upset, most active.
@@ -116,7 +119,7 @@ Try it with fake data on an empty database: `npm run db:seed-demo`.
 ## 👤 Player statistics
 
 Matches are recorded between _teams_ (`anna,marco` vs `luca,sara`), and the team ratings work as before. In addition,
-Hilde now derives **per-player statistics** from the very same matches, so nothing extra has to be entered:
+Biliardino derives **per-player statistics** from the very same matches, so nothing extra has to be entered:
 
 - `/players`: leaderboard for the current season or all time (rating, matches, W/L, win rate, goal difference, streak)
 - `/players/<name>`: rating history, highest/lowest rating, goals, streaks, results per format (1v1, 2v2, ...),
@@ -148,11 +151,13 @@ from the picked players (sorted, lower-cased), so order, spelling or separators 
 | `NEXTAUTH_SECRET` | Random string to sign sessions (min. 16 chars). Required.                               |
 | `NEXTAUTH_URL`    | Public URL. Optional in Docker (the address from the browser is used); set it outside Docker, or if a reverse proxy breaks the admin login. |
 | `TZ`              | Your time zone (e.g. `Europe/Rome`); decides when "Today" starts on the leaderboard.    |
-| `DATABASE_URL`    | SQLite file, `file:/data/hilde.db` in Docker. Relative paths are relative to `prisma/`. |
+| `DATABASE_URL`    | SQLite file, `file:/data/biliardino.db` in Docker. Relative paths are relative to `prisma/`. |
 
-## 🆕 Changes in this fork
+## 🆕 Changes from Hilde
 
 Based on [nehalist/hilde](https://github.com/nehalist/hilde) (last upstream commit: November 2023).
+
+- Renamed to **Biliardino** (0.7.1). A database file from before the rename (`hilde.db`) is renamed automatically on start.
 
 - Dependencies brought up to date: Next.js 15, React 19, tRPC 11, TanStack Query 5, Prisma 6, TypeScript 5.9, Node 22
 - **MySQL replaced by SQLite** (Prisma's Rust-free client with the better-sqlite3 driver adapter): one container,
@@ -171,4 +176,5 @@ Based on [nehalist/hilde](https://github.com/nehalist/hilde) (last upstream comm
 
 ## License
 
-MIT, see [LICENSE](LICENSE). Original work by [nehalist](https://github.com/nehalist).
+MIT, see [LICENSE](LICENSE). Original work (Hilde) by [nehalist](https://github.com/nehalist); the licence and its
+copyright notice are kept as the MIT licence requires.

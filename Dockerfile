@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 #
-# Hilde - multi-stage image: install -> build -> small runtime image.
-# Build:  docker build -t hilde .
+# Biliardino - multi-stage image: install -> build -> small runtime image.
+# Build:  docker build -t biliardino .
 # Run:    see docker-compose.yml / dockge/compose.yaml
 
 # ---- dependencies ----
@@ -37,7 +37,7 @@ ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
     PORT=3000 \
     HOSTNAME=0.0.0.0 \
-    DATABASE_URL=file:/data/hilde.db \
+    DATABASE_URL=file:/data/biliardino.db \
     # use the address from the browser when NEXTAUTH_URL isn't set
     AUTH_TRUST_HOST=true \
     # no update checks / telemetry from the Prisma CLI

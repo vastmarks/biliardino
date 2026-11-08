@@ -54,7 +54,7 @@ export const Layout: FunctionComponent<{ children: ReactNode }> = ({
               WebkitTextFillColor: "transparent",
             }}
           >
-            Hilde
+            Biliardino
           </Link>
           <SeasonSelector />
         </div>
@@ -78,9 +78,12 @@ export const Layout: FunctionComponent<{ children: ReactNode }> = ({
           <Link href="/admin" className="hover:underline mr-3">
             Admin
           </Link>
-          <b>Hilde v{process.env.NEXT_PUBLIC_APP_VERSION}</b> - by{" "}
-          <a href="https://nehalist.io" className="hover:underline">
-            nehalist.io
+          <b>Biliardino v{process.env.NEXT_PUBLIC_APP_VERSION}</b> - based on{" "}
+          <a
+            href="https://github.com/nehalist/hilde"
+            className="hover:underline"
+          >
+            Hilde
           </a>
         </div>
       </footer>

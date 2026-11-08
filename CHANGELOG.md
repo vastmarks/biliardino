@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.1] - 2026-11-08
+
+### Changed
+
+- Renamed from Hilde to **Biliardino** (app name, icons, Docker image, compose files, docs). An existing
+  `hilde.db` in the data folder is renamed to `biliardino.db` automatically on the first start.
+  Compose setting `HILDE_PORT` is now `BILIARDINO_PORT`. Credit to the original project is kept in the
+  README, the footer and the LICENSE.
+
+### Added
+
+- `docs/LOCAL.md`: running it on a Mac with Docker, every command explained
+- `docs/ARCHITECTURE.md`: how the app is built, for newcomers to the code
+
 ## [0.7.0] - 2026-11-07
 
 ### Added
