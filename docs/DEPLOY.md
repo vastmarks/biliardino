@@ -75,6 +75,14 @@ This is the same as the apps you already run: their authors publish images, your
 
    The history contains the commits of the original project (Hilde by Kevin Hirczy, MIT licence) and the Biliardino commits on top. Keep the `LICENSE` file: the licence requires it.
 
+   Check where the folder points on GitHub:
+
+   ```sh
+   git remote -v
+   ```
+
+   You should see two lines starting with `upstream`, pointing at `github.com/nehalist/hilde`: the original project. A _remote_ is git's bookmark for a copy of the repository somewhere else; `upstream` is the usual name for the project you forked from. You can only read from it (`git fetch upstream`), never upload to it. Your own copy gets the name `origin` in the next step.
+
 3. Create the GitHub repository and upload everything in one go:
 
    ```sh
