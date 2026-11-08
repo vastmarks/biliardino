@@ -105,17 +105,26 @@ export const TeamTable: FunctionComponent<{ teams: TeamWithMeta[] }> = ({
             <th className="p-3" onClick={() => setOrdering("losses")}>
               Losses {orderIcon("losses")}
             </th>
-            <th className="p-3" onClick={() => setOrdering("score")}>
-              Score {orderIcon("score")}
-            </th>
-            <th className="p-3" onClick={() => setOrdering("winRate")}>
-              Winrate {orderIcon("winRate")}
+            <th
+              className="p-3"
+              title="Goals scored this season (Ø: per match)"
+              onClick={() => setOrdering("score")}
+            >
+              Goals {orderIcon("score")}
             </th>
             <th
               className="p-3"
+              title="Share of matches won"
+              onClick={() => setOrdering("winRate")}
+            >
+              Win rate {orderIcon("winRate")}
+            </th>
+            <th
+              className="p-3"
+              title="Achievement points earned this season"
               onClick={() => setOrdering("achievementPoints")}
             >
-              Ach. {orderIcon("achievementPoints")}
+              🏅 Points {orderIcon("achievementPoints")}
             </th>
             <th className="p-3" onClick={() => setOrdering("rating")}>
               Rating {orderIcon("rating")}

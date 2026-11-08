@@ -70,6 +70,7 @@ biliardino/
 │   │   ├── teams/              teams list and one team              →  /teams, /teams/<name>
 │   │   ├── players/            players list and one player          →  /players, /players/<name>
 │   │   ├── hall-of-fame.tsx    all-time records, season champions   →  /hall-of-fame
+│   │   ├── help.tsx            how the app works, for players       →  /help
 │   │   ├── admin/              admin pages (seasons)                →  /admin
 │   │   ├── api/                not pages but server endpoints:
 │   │   │   ├── trpc/[trpc].ts    the door to the whole API

@@ -24,6 +24,7 @@ biliardino is based on [Hilde](https://github.com/nehalist/hilde) by [nehalist](
 - **Hall of Fame**: all-time records (highest rating, longest win streak, biggest win, biggest upset, ...) and the champion of every season
 - Matches page filtered by format, player and season (filters are in the address, so they can be bookmarked)
 - Every player name links to that player's profile
+- **Help page** for players: every page, the rating, seasons and achievements explained
 - Single container, single SQLite file: no database server needed
 
 ## Getting Started

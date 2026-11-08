@@ -110,7 +110,7 @@ const nav = await page.evaluate(() =>
   ),
 );
 check(
-  nav.join() === "Home*,Matches,Teams,Players,Hall of Fame",
+  nav.join() === "Home*,Matches,Teams,Players,Hall of Fame,?",
   "nav has a Home tab, active on /: " + nav,
 );
 await shot("home");
@@ -435,6 +435,18 @@ check(
   "hall of fame: every name links to a player profile",
 );
 await shot("hall-of-fame");
+
+// ---- help
+await page.goto(BASE + "/help", { waitUntil: "load" });
+await sleep(700);
+const help = await page.evaluate(() => document.body.innerText);
+check(
+  /how the rating works/i.test(help) &&
+    /achievement points/i.test(help) &&
+    /goals this team scored/i.test(help),
+  "help page explains rating, teams columns and achievements",
+);
+await shot("help");
 
 await clickText("nav", "Home").catch(async () => page.click('nav a[href="/"]'));
 await page.evaluate(() => document.querySelector('nav a[href="/"]').click());

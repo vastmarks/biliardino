@@ -17,7 +17,9 @@ const NavLink: FunctionComponent<{
   label: string;
   href: string;
   exact?: boolean;
-}> = ({ label, href, exact }) => {
+  /** tooltip and accessible name, when the label alone isn't enough ("?") */
+  title?: string;
+}> = ({ label, href, exact, title }) => {
   const router = useRouter();
   const active = exact
     ? router.pathname === href
@@ -26,7 +28,9 @@ const NavLink: FunctionComponent<{
     <Link
       href={href}
       aria-current={active ? "page" : undefined}
-      className={`px-2 py-2 font-semibold text-sm whitespace-nowrap transition-opacity hover:opacity-100 ${
+      title={title}
+      aria-label={title}
+      className={`px-1.5 sm:px-2 py-2 font-semibold text-sm whitespace-nowrap transition-opacity hover:opacity-100 ${
         active ? "opacity-100" : "opacity-50"
       }`}
     >
@@ -70,10 +74,14 @@ export const Layout: FunctionComponent<{ children: ReactNode }> = ({
           </Link>
           <SeasonSelector />
         </div>
-        <nav className="-mx-2 flex overflow-x-auto" aria-label="Main">
+        <nav
+          className="-mx-1.5 sm:-mx-2 flex overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          aria-label="Main"
+        >
           {NAV.map(n => (
             <NavLink key={n.href} {...n} />
           ))}
+          <NavLink label="?" href="/help" title="Help: how biliardino works" />
         </nav>
       </header>
       <main className="flex-1">{children}</main>
@@ -87,6 +95,9 @@ export const Layout: FunctionComponent<{ children: ReactNode }> = ({
           ◐ Theme
         </button>
         <div>
+          <Link href="/help" className="hover:underline mr-3">
+            Help
+          </Link>
           <Link href="/admin" className="hover:underline mr-3">
             Admin
           </Link>

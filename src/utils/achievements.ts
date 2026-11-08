@@ -13,6 +13,8 @@ export interface Achievement {
   title: string;
   description: string;
   points: number;
+  /** can't be earned in biliardino (kept so old awards still show), left out of the help page */
+  retired?: boolean;
 }
 
 enum Result {
@@ -289,8 +291,8 @@ export const achievements: Achievement[] = [
       const meta = getSeasonMeta(team, match.season);
       return meta.totalScore >= 1;
     },
-    title: "First point",
-    description: `Score your first point`,
+    title: "First goal",
+    description: `Score your first goal`,
     points: 10,
   },
   {
@@ -299,8 +301,8 @@ export const achievements: Achievement[] = [
       const meta = getSeasonMeta(team, match.season);
       return meta.totalScore >= 10;
     },
-    title: "10 Points",
-    description: `Score a total of 10 points`,
+    title: "10 Goals",
+    description: `Score a total of 10 goals`,
     points: 10,
   },
   {
@@ -309,8 +311,8 @@ export const achievements: Achievement[] = [
       const meta = getSeasonMeta(team, match.season);
       return meta.totalScore >= 100;
     },
-    title: "100 Points",
-    description: `Score a total of 100 points`,
+    title: "100 Goals",
+    description: `Score a total of 100 goals`,
     points: 25,
   },
   {
@@ -319,8 +321,8 @@ export const achievements: Achievement[] = [
       const meta = getSeasonMeta(team, match.season);
       return meta.totalScore >= 1000;
     },
-    title: "1000 Points",
-    description: `Score a total of 1000 points`,
+    title: "1000 Goals",
+    description: `Score a total of 1000 goals`,
     points: 25,
   },
   {
@@ -329,8 +331,8 @@ export const achievements: Achievement[] = [
       const meta = getSeasonMeta(team, match.season);
       return meta.totalScore >= 2500;
     },
-    title: "2500 Points",
-    description: `Score a total of 2500 points`,
+    title: "2500 Goals",
+    description: `Score a total of 2500 goals`,
     points: 50,
   },
   {
@@ -339,8 +341,8 @@ export const achievements: Achievement[] = [
       const meta = getSeasonMeta(team, match.season);
       return meta.totalScore >= 2500;
     },
-    title: "5000 Points",
-    description: `Score a total of 2500 points`,
+    title: "5000 Goals",
+    description: `Score a total of 5000 goals`,
     points: 50,
   },
   {
@@ -355,7 +357,7 @@ export const achievements: Achievement[] = [
     },
     title: "Underdog",
     description:
-      "Win a game against someone at least 100 points higher than you",
+      "Win a game against someone rated at least 100 higher than you",
     points: 25,
   },
   {
@@ -370,7 +372,7 @@ export const achievements: Achievement[] = [
     },
     title: "Bad days happen",
     description:
-      "Lose a game against someone at least 100 points lower than you",
+      "Lose a game against someone rated at least 100 lower than you",
     points: 25,
   },
   {
@@ -385,7 +387,7 @@ export const achievements: Achievement[] = [
     },
     title: "David",
     description:
-      "Win a game against someone at least 250 points higher than you",
+      "Win a game against someone rated at least 250 higher than you",
     points: 50,
   },
   {
@@ -400,7 +402,7 @@ export const achievements: Achievement[] = [
     },
     title: "Goliath",
     description:
-      "Lose a game against someone at least 250 points lower than you",
+      "Lose a game against someone rated at least 250 lower than you",
     points: 10,
   },
   {
@@ -497,6 +499,7 @@ export const achievements: Achievement[] = [
     title: "I'm doing my part",
     description: "Contribute to Hilde, the project biliardino is based on",
     points: 10,
+    retired: true,
   },
   {
     id: "daily-o-clock",
@@ -519,6 +522,7 @@ export const achievements: Achievement[] = [
     title: "Have a threesome",
     description: "Play 1 vs 2",
     points: 10,
+    retired: true,
   },
   {
     id: "bad-threesome",
@@ -528,6 +532,7 @@ export const achievements: Achievement[] = [
     title: "The bad kind of threesome",
     description: "Play 2 vs 1",
     points: 10,
+    retired: true,
   },
   {
     id: "leap-year",
@@ -588,7 +593,7 @@ export const achievements: Achievement[] = [
       return matchTeam === "team1" ? match.score1 === 0 : match.score2 === 0;
     },
     title: "Das tapfere Schneiderlein",
-    description: "Lose with 0 points",
+    description: "Lose without scoring a goal",
     points: 10,
   },
 ];
