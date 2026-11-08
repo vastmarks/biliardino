@@ -2,22 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [0.8.0] - 2026-11-08
 
 ### Added
 
-- New identity: the biliarDino logo (a baby dinosaur hatching from a football) in the header, the
-  browser tab and on the phone home screen, with light and dark versions
-- `docs/BRAND.md`, the brand guide; `design/logo/`, the logo as code with a script that regenerates
-  every logo file and app icon
+- New identity: the biliarDino logo (a baby dinosaur hatching from a football) in the header, the browser tab and on the phone home screen, with light and dark versions
+- `docs/BRAND.md`, the brand guide; `design/logo/`, the logo as code with a script that regenerates every logo file and app icon
 
 ### Changed
 
-- Celeste colour palette for light and dark themes; muted text, wins, losses and links now meet
-  WCAG AA contrast in both themes
+- Celeste colour palette for light and dark themes; muted text, wins, losses and links now meet WCAG AA contrast in both themes
 - Headings use the Outfit typeface, bundled with the app (no request to Google)
 - Android maskable icon is now a separate file with the mark inside the safe zone
 
@@ -25,10 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Renamed from Hilde to **Biliardino** (app name, icons, Docker image, compose files, docs). An existing
-  `hilde.db` in the data folder is renamed to `biliardino.db` automatically on the first start.
-  Compose setting `HILDE_PORT` is now `BILIARDINO_PORT`. Credit to the original project is kept in the
-  README, the footer and the LICENSE.
+- Renamed from Hilde to **Biliardino** (app name, icons, Docker image, compose files, docs). An existing `hilde.db` in the data folder is renamed to `biliardino.db` automatically on the first start. Compose setting `HILDE_PORT` is now `BILIARDINO_PORT`. Credit to the original project is kept in the README, the footer and the LICENSE.
 
 ### Added
 
@@ -42,7 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Edit and delete matches: anyone within 24 hours of entry, the admin always (**✎ Edit** on every match)
 - Rename, archive and delete players (**Players** page); deleting a player who has matches is admin-only with a typed-name confirmation
 - Type-ahead player search on the home page (keyboard friendly on mobile), with "add new player" for unknown names
-- **Home** tab in the navigation, and an *Admin* link in the footer
+- **Home** tab in the navigation, and an _Admin_ link in the footer
 - Database migration adding `player.archived` (applied automatically on start)
 
 ### Changed
@@ -57,8 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Deleting a match no longer corrupts team ratings (the loser's rating was lowered instead of restored);
-  deleting a match, team or achievement now recalculates the whole season from the remaining matches
+- Deleting a match no longer corrupts team ratings (the loser's rating was lowered instead of restored); deleting a match, team or achievement now recalculates the whole season from the remaining matches
 - Deleting a team corrected nobody else's rating; removing an achievement took the points from the wrong season
 - Two matches saved at the same moment could overwrite each other's team ratings: all writes are now transactional
 - Team ratings now treat a draw as half a win (like the player ratings) instead of a loss for both
@@ -68,8 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- `NEXTAUTH_URL` is optional in Docker (`AUTH_TRUST_HOST`); the image can run as any user (e.g. TrueNAS `568:568`)
-  and explains clearly when the data folder isn't writable; `/api/health` for the healthcheck
+- `NEXTAUTH_URL` is optional in Docker (`AUTH_TRUST_HOST`); the image can run as any user (e.g. TrueNAS `568:568`) and explains clearly when the data folder isn't writable; `/api/health` for the healthcheck
 - Admin password check is constant-time and slows down wrong guesses
 - Input limits on every API call (e.g. max. 2 players per side, scores 0-99); Zod 4
 - Dockge stack uses the image GitHub publishes on release; CI builds the Docker image on every push

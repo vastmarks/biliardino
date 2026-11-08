@@ -1,19 +1,14 @@
 # How Biliardino is built
 
-This document explains how the app works inside, for someone who wants to understand and change
-it without a programming background. Read it from the top the first time: each part builds on the
-one before. Afterwards it works as a reference: the [folder tour](#3-a-tour-of-the-folders) and
-the [glossary](#14-glossary) are the quickest way back in.
+This document explains how the app works inside, for someone who wants to understand and change it without a programming background. Read it from the top the first time: each part builds on the one before. Afterwards it works as a reference: the [folder tour](#3.%20A%20tour%20of%20the%20folders) and the [glossary](#14.%20Glossary) are the quickest way back in.
 
-You don't need to read code to follow it, but every section names the files involved, so you can
-open them next to this text. They are commented for this purpose.
+You don't need to read code to follow it, but every section names the files involved, so you can open them next to this text. They are commented for this purpose.
 
 ---
 
 ## 1. The big picture
 
-Biliardino is a **web app**: one program that runs on a server (your NAS, or your Mac in Docker)
-and sends pages to browsers. It has three parts:
+Biliardino is a **web app**: one program that runs on a server (your NAS, or your Mac in Docker) and sends pages to browsers. It has three parts:
 
 ```mermaid
 flowchart LR
@@ -33,20 +28,12 @@ flowchart LR
 ```
 
 1. **The browser** shows the pages. What you see and click is built with **React** components.
-2. **The server** does two jobs: it delivers the pages (via **Next.js**), and it answers data
-   requests from those pages, like "save this match" or "give me the leaderboard" (via **tRPC**).
-3. **The database** is a single file, `biliardino.db`, read and written with **SQLite** through
-   **Prisma**.
+2. **The server** does two jobs: it delivers the pages (via **Next.js**), and it answers data requests from those pages, like "save this match" or "give me the leaderboard" (via **tRPC**).
+3. **The database** is a single file, `biliardino.db`, read and written with **SQLite** through **Prisma**.
 
-Everything is written in **TypeScript**, so the same language is used in the browser and on the
-server. That is what lets tRPC check that both sides agree on every request (see
-[section 5](#5-the-api-how-the-browser-talks-to-the-server)).
+Everything is written in **TypeScript**, so the same language is used in the browser and on the server. That is what lets tRPC check that both sides agree on every request (see [section 5](#5.%20How%20the%20browser%20talks%20to%20the%20server)).
 
-**Who can do what.** Nobody logs in to use the app: anyone who can open the page can add
-players and record matches. That's deliberate for an office table: entering a score must take
-seconds. There's a single **admin** password for the things that could do damage, such as
-seasons, changing old matches and deleting players who have played. See
-[section 8](#8-rules-and-the-admin-login).
+**Who can do what.** Nobody logs in to use the app: anyone who can open the page can add players and record matches. That's deliberate for an office table: entering a score must take seconds. There's a single **admin** password for the things that could do damage, such as seasons, changing old matches and deleting players who have played. See [section 8](#8.%20Rules%20and%20the%20admin%20login).
 
 ---
 
@@ -54,13 +41,13 @@ seasons, changing old matches and deleting players who have played. See
 
 | Technology | What it is | Why it's used here | Where |
 | --- | --- | --- | --- |
-| [TypeScript](https://www.typescriptlang.org/docs/) | JavaScript with *types*: every value declares what it is (a number, a list of players...), and mistakes are caught before the app runs. | Most bugs show up as red underlines instead of as broken pages. | every `.ts` / `.tsx` file |
+| [TypeScript](https://www.typescriptlang.org/docs/) | JavaScript with _types_: every value declares what it is (a number, a list of players...), and mistakes are caught before the app runs. | Most bugs show up as red underlines instead of as broken pages. | every `.ts` / `.tsx` file |
 | [Node.js](https://nodejs.org/en/learn) | The program that runs JavaScript/TypeScript on a server. | Needed to run Next.js. | inside the Docker image |
-| [React](https://react.dev/learn) | Builds the user interface out of *components*: small reusable pieces (a button, a match row, the score input) that redraw themselves when their data changes. | The standard for interactive web UIs; huge community. | `src/components/`, `src/pages/` |
-| [Next.js](https://nextjs.org/docs/pages) | A framework around React: turns each file in `src/pages/` into a page with its own address, prepares pages on the server, bundles everything for the browser. | One project for pages *and* API, one container. We use its "Pages Router". | `src/pages/`, `next.config.js` |
+| [React](https://react.dev/learn) | Builds the user interface out of _components_: small reusable pieces (a button, a match row, the score input) that redraw themselves when their data changes. | The standard for interactive web UIs; huge community. | `src/components/`, `src/pages/` |
+| [Next.js](https://nextjs.org/docs/pages) | A framework around React: turns each file in `src/pages/` into a page with its own address, prepares pages on the server, bundles everything for the browser. | One project for pages _and_ API, one container. We use its "Pages Router". | `src/pages/`, `next.config.js` |
 | [tRPC](https://trpc.io/docs) | A way for the browser to call functions on the server as if they were local, with types checked on both sides. | No hand-written API documentation to keep in sync; a typo in a field name is a build error. | `src/server/routers/`, `src/utils/trpc.ts` |
 | [TanStack Query](https://tanstack.com/query/latest/docs/framework/react/overview) | Keeps data fetched from the server in the browser, refreshes it, and tells components when it changes. Comes with tRPC. | After saving a match, the leaderboard updates by itself. | used through `trpc.….useQuery` |
-| [Prisma](https://www.prisma.io/docs/orm) | Describes the database tables in one file and gives typed functions to read and write them. Also manages *migrations* (changes to the tables). | No hand-written SQL for normal operations; the schema is readable. | `prisma/`, `src/server/prisma.ts` |
+| [Prisma](https://www.prisma.io/docs/orm) | Describes the database tables in one file and gives typed functions to read and write them. Also manages _migrations_ (changes to the tables). | No hand-written SQL for normal operations; the schema is readable. | `prisma/`, `src/server/prisma.ts` |
 | [SQLite](https://www.sqlite.org/about.html) | A complete database stored in one file, with no separate database server. | One container, one file to back up. Plenty for an office (thousands of matches a year). | `/data/biliardino.db` |
 | [Zod](https://zod.dev) | Describes what valid input looks like ("a score is a whole number 0–99") and rejects everything else. | Every request from a browser is checked before it touches the database. | `src/utils/validation.ts`, `src/server/env.js` |
 | [NextAuth](https://next-auth.js.org) | Login handling: password check, the login cookie, the login page. | The admin password. | `src/pages/api/auth/[...nextauth].ts` |
@@ -134,21 +121,15 @@ biliardino/
 └── CHANGELOG.md, README.md, LICENSE
 ```
 
-Two folders you'll see on your computer but that are never committed: `node_modules/` (the
-downloaded libraries, recreated by `npm ci`) and `.next/` (the build output).
+Two folders you'll see on your computer but that are never committed: `node_modules/` (the downloaded libraries, recreated by `npm ci`) and `.next/` (the build output).
 
-**One rule organises `src/`:** code that touches the database lives in `src/server/`; pure
-calculations live in `src/utils/`. A *pure* function only computes an answer from what it's given
-("these matches → this leaderboard"). It doesn't read the database or the clock on its own, so it
-can be tested quickly and always gives the same answer. Most of the interesting logic is written
-this way.
+**One rule organises `src/`:** code that touches the database lives in `src/server/`; pure calculations live in `src/utils/`. A _pure_ function only computes an answer from what it's given ("these matches → this leaderboard"). It doesn't read the database or the clock on its own, so it can be tested quickly and always gives the same answer. Most of the interesting logic is written this way.
 
 ---
 
-## 4. Following one action: saving a match
+## 4. Following one action, saving a match
 
-The best way to understand the app is to follow one tap of **Save** from your phone to the
-database and back.
+The best way to understand the app is to follow one tap of **Save** from your phone to the database and back.
 
 ```mermaid
 sequenceDiagram
@@ -176,50 +157,28 @@ sequenceDiagram
 
 Step by step, with the files:
 
-1. **The form** (`src/components/Dashboard/MatchEntry.tsx`). It keeps the chosen format, the
-   players in each slot, the scores and the note in React *state* (values that, when they change,
-   redraw the component). `PlayerSearch.tsx` is the type-ahead box: it filters the roster as you
-   type, ignoring accents and capitals.
-2. **The call.** Save runs `trpc.matches.add.useMutation()`. tRPC turns that into an HTTP request
-   to `/api/trpc/matches.add`. Your code just calls a function.
-3. **The door** (`src/pages/api/trpc/[trpc].ts`) hands every API request to the main router,
-   `src/server/routers/_app.ts`, which forwards it to `matchesRouter.add` in
-   `src/server/routers/matches.ts`.
-4. **Input check.** `matchAddValidation` (in `src/utils/validation.ts`) declares the rules: 1 or 2
-   players per side matching the format, no player on both sides, scores 0–99, note up to 500
-   characters. Anything else is rejected with a message before any database work.
-5. **Players → teams.** The router loads the players and builds the two team names with
-   `teamNameFromKeys` (`src/utils/players.ts`). See [section 6](#6-the-database) for why a team
-   is identified by a name.
-6. **Safe write.** Everything that *reads then writes* runs inside `writeTransaction`
-   (`src/server/db.ts`). Two reasons:
-   - *All or nothing.* If anything fails halfway, every change is undone; you never get a
-     match without its rating update.
-   - *One at a time.* Two phones saving at the same moment are queued, so neither overwrites the
-     other's rating.
+1. **The form** (`src/components/Dashboard/MatchEntry.tsx`). It keeps the chosen format, the players in each slot, the scores and the note in React _state_ (values that, when they change, redraw the component). `PlayerSearch.tsx` is the type-ahead box: it filters the roster as you type, ignoring accents and capitals.
+2. **The call.** Save runs `trpc.matches.add.useMutation()`. tRPC turns that into an HTTP request to `/api/trpc/matches.add`. Your code just calls a function.
+3. **The door** (`src/pages/api/trpc/[trpc].ts`) hands every API request to the main router, `src/server/routers/_app.ts`, which forwards it to `matchesRouter.add` in `src/server/routers/matches.ts`.
+4. **Input check.** `matchAddValidation` (in `src/utils/validation.ts`) declares the rules: 1 or 2 players per side matching the format, no player on both sides, scores 0–99, note up to 500 characters. Anything else is rejected with a message before any database work.
+5. **Players → teams.** The router loads the players and builds the two team names with `teamNameFromKeys` (`src/utils/players.ts`). See [section 6](#6.%20The%20database) for why a team is identified by a name.
+6. **Safe write.** Everything that _reads then writes_ runs inside `writeTransaction` (`src/server/db.ts`). Two reasons:
+   - _All or nothing._ If anything fails halfway, every change is undone; you never get a match without its rating update.
+   - _One at a time._ Two phones saving at the same moment are queued, so neither overwrites the other's rating.
 7. **The match itself** (`createMatch` in `src/server/model/match.ts`):
    - refuses the exact same result between the same teams within 5 minutes (a double tap);
    - fetches or creates both teams (`getOrCreateTeam`);
-   - computes the new numbers for both teams with `applyResult` (`src/utils/teamStats.ts`), a
-     pure function;
-   - stores the numbers, the match (including each team's rating change, shown as `+15.5`), and
-     any achievements earned.
-8. **Back in the browser.** On success the form tells TanStack Query that the dashboard, matches
-   and players data are out of date (`invalidate`). Every component showing those refetches and
-   redraws: the leaderboard moves and the match appears in *Recent matches*. The players stay
-   selected for a rematch.
+   - computes the new numbers for both teams with `applyResult` (`src/utils/teamStats.ts`), a pure function;
+   - stores the numbers, the match (including each team's rating change, shown as `+15.5`), and any achievements earned.
+8. **Back in the browser.** On success the form tells TanStack Query that the dashboard, matches and players data are out of date (`invalidate`). Every component showing those refetches and redraws: the leaderboard moves and the match appears in _Recent matches_. The players stay selected for a rematch.
 
-Editing and deleting a match (`matches.update`, `matches.delete` in the same router) follow the
-same path, with one difference: because every later rating depends on earlier ones, they
-**recalculate the whole season** afterwards (`rebuildSeason`, see
-[section 7](#7-ratings-and-statistics)).
+Editing and deleting a match (`matches.update`, `matches.delete` in the same router) follow the same path, with one difference: because every later rating depends on earlier ones, they **recalculate the whole season** afterwards (`rebuildSeason`, see [section 7](#7.%20Ratings%20and%20statistics)).
 
 ---
 
-## 5. The API: how the browser talks to the server
+## 5. How the browser talks to the server
 
-The API is a set of **procedures**: named functions on the server the browser may call. They are
-grouped by subject in `src/server/routers/`:
+The API is a set of **procedures**: named functions on the server the browser may call. They are grouped by subject in `src/server/routers/`:
 
 | Router | Main procedures |
 | --- | --- |
@@ -236,8 +195,7 @@ There are two kinds of procedure:
 - a **query** only reads (`trpc.players.all.useQuery()` in a component);
 - a **mutation** changes something (`trpc.matches.add.useMutation()`).
 
-Each procedure is defined with one of three starting points from `src/server/trpc.ts`, which
-decide who may call it:
+Each procedure is defined with one of three starting points from `src/server/trpc.ts`, which decide who may call it:
 
 | Starting point | Who | Used for |
 | --- | --- | --- |
@@ -245,11 +203,7 @@ decide who may call it:
 | `roleAwareProcedure` | everyone, but the procedure knows whether the caller is the admin (`ctx.isAdmin`) | rules that differ: editing matches, deleting players |
 | `protectedProcedure` | admin only, others get "unauthorized" | managing seasons, deleting teams and achievements |
 
-**Why tRPC helps a beginner.** The type of the whole API (`AppRouter`) is exported from
-`_app.ts` and imported by the browser client (`src/utils/trpc.ts`). If you rename a field on the
-server, every page using the old name fails the type check (`npm run check`) before anything is
-deployed. **superjson** is also configured on both sides, so dates arrive in the browser as real
-dates rather than as text.
+**Why tRPC helps a beginner.** The type of the whole API (`AppRouter`) is exported from `_app.ts` and imported by the browser client (`src/utils/trpc.ts`). If you rename a field on the server, every page using the old name fails the type check (`npm run check`) before anything is deployed. **superjson** is also configured on both sides, so dates arrive in the browser as real dates rather than as text.
 
 ---
 
@@ -307,42 +261,26 @@ erDiagram
     Match ||--o{ TeamAchievement : "earned in"
 ```
 
-**Teams are identified by their name, and the name is made from the players.** A team is
-"the set of players who played together". Its name is the players' keys, sorted alphabetically
-and joined by a comma: Elena + Chiara and Chiara + Elena are both `chiara,elena`. That gives
-three useful properties:
+**Teams are identified by their name, and the name is made from the players.** A team is "the set of players who played together". Its name is the players' keys, sorted alphabetically and joined by a comma: Elena + Chiara and Chiara + Elena are both `chiara,elena`. That gives three useful properties:
 
 - the order in which you pick players can never create a duplicate team;
 - a match row shows who played without looking anything up;
 - per-player statistics can be computed from the match list alone (split the name at the commas).
 
-The price: renaming a player has to rewrite every team name, match and achievement that contains
-their key. `players.rename` does exactly that, inside one transaction.
+The price: renaming a player has to rewrite every team name, match and achievement that contains their key. `players.rename` does exactly that, inside one transaction.
 
 **What is stored and what is calculated.**
 
-- *Stored:* players, teams, matches (with the team ratings at that moment), achievements earned,
-  and `TeamMeta`, the current numbers of each team per season (rating, wins, streaks...). Storing
-  them makes team pages fast.
-- *Calculated on demand:* everything about individual players (rating, form, partners,
-  opponents) and the home-page leaderboards. They're recomputed from the matches every time. That
-  sounds slow but takes milliseconds for thousands of matches, and it can never go out of sync.
+- _Stored:_ players, teams, matches (with the team ratings at that moment), achievements earned, and `TeamMeta`, the current numbers of each team per season (rating, wins, streaks...). Storing them makes team pages fast.
+- _Calculated on demand:_ everything about individual players (rating, form, partners, opponents) and the home-page leaderboards. They're recomputed from the matches every time. That sounds slow but takes milliseconds for thousands of matches, and it can never go out of sync.
 
-### Migrations: changing the tables safely
+### Migrations, changing the tables safely
 
-A **migration** is a small SQL file that changes the tables, e.g. adding the `archived` column to
-players: `prisma/migrations/20261107000000_player_archived/migration.sql`. Migrations are applied
-in date order and each one only once. The database itself records which ones it already has (in
-a table called `_prisma_migrations`).
+A **migration** is a small SQL file that changes the tables, e.g. adding the `archived` column to players: `prisma/migrations/20261107000000_player_archived/migration.sql`. Migrations are applied in date order and each one only once. The database itself records which ones it already has (in a table called `_prisma_migrations`).
 
-That's what makes updates safe: when a new version starts, `entrypoint.sh` runs
-`prisma migrate deploy`, which applies only the migrations that are new. Your data stays, the
-tables gain what the new code needs.
+That's what makes updates safe: when a new version starts, `entrypoint.sh` runs `prisma migrate deploy`, which applies only the migrations that are new. Your data stays, the tables gain what the new code needs.
 
-To change the tables yourself: edit `schema.prisma`, then run
-`npm run db:migrate:dev -- --name what-changed`. Prisma compares the schema with the database,
-writes the new migration file and applies it to your development database. Commit the migration
-together with the code that uses it.
+To change the tables yourself: edit `schema.prisma`, then run `npm run db:migrate:dev -- --name what-changed`. Prisma compares the schema with the database, writes the new migration file and applies it to your development database. Commit the migration together with the code that uses it.
 
 ---
 
@@ -350,122 +288,77 @@ together with the code that uses it.
 
 ### Elo, the basic idea
 
-[Elo](https://en.wikipedia.org/wiki/Elo_rating_system) is the rating system from chess. Everyone
-starts at **1000**. Before a match, the difference between two ratings predicts the result: equal
-ratings mean 50% each, 200 points more means about 76% for the stronger side. After the match the
-winner takes points from the loser:
+[Elo](https://en.wikipedia.org/wiki/Elo_rating_system) is the rating system from chess. Everyone starts at **1000**. Before a match, the difference between two ratings predicts the result: equal ratings mean 50% each, 200 points more means about 76% for the stronger side. After the match the winner takes points from the loser:
 
 ```text
 expected = 1 / (1 + 10^((opponent − mine) / 400))
 new      = old + K × (result − expected)        result: 1 win, 0.5 draw, 0 loss
 ```
 
-Beating a stronger side gains a lot; beating a weaker one gains little. **K** decides how fast
-ratings move: 32 below 1200, 24 up to 1400, 16 above, so newcomers settle quickly and top players
-are stable. The formula is in `src/utils/elo.ts` (21 lines).
+Beating a stronger side gains a lot; beating a weaker one gains little. **K** decides how fast ratings move: 32 below 1200, 24 up to 1400, 16 above, so newcomers settle quickly and top players are stable. The formula is in `src/utils/elo.ts` (21 lines).
 
-### Team ratings: stored and updated
+### Team ratings are stored and updated
 
-Each team (each single player in 1v1, each pair in 2v2) has its own rating per season, kept in
-`TeamMeta`. `applyResult` in `src/utils/teamStats.ts` takes a team's numbers before the match and
-returns them after: rating, wins, streaks, goals, the "today" numbers. Saving a match calls it
-for both teams.
+Each team (each single player in 1v1, each pair in 2v2) has its own rating per season, kept in `TeamMeta`. `applyResult` in `src/utils/teamStats.ts` takes a team's numbers before the match and returns them after: rating, wins, streaks, goals, the "today" numbers. Saving a match calls it for both teams.
 
-**Why editing or deleting recalculates the whole season.** Every rating depends on all the
-earlier matches. If you fix the score of a match from last Tuesday, every later rating of everyone
-who played since is slightly different. `rebuildSeason` (`src/server/model/team.ts`) therefore
-*replays* the season: it starts all teams at 1000 and applies the remaining matches in date
-order with `replaySeason`. That's the same `applyResult` used when saving, so the numbers are
-identical to what they would have been. The tests check that replaying gives the same result as
-adding the matches one by one.
+**Why editing or deleting recalculates the whole season.** Every rating depends on all the earlier matches. If you fix the score of a match from last Tuesday, every later rating of everyone who played since is slightly different. `rebuildSeason` (`src/server/model/team.ts`) therefore _replays_ the season: it starts all teams at 1000 and applies the remaining matches in date order with `replaySeason`. That's the same `applyResult` used when saving, so the numbers are identical to what they would have been. The tests check that replaying gives the same result as adding the matches one by one.
 
-### Player ratings: always replayed
+### Player ratings are always replayed
 
-The per-player rating (`src/utils/playerStats.ts`) is the one on the leaderboard. It isn't stored
-at all; it's computed by replaying all matches:
+The per-player rating (`src/utils/playerStats.ts`) is the one on the leaderboard. It isn't stored at all; it's computed by replaying all matches:
 
 - a side's strength is the **average rating of its players**;
-- every player of a side gets the same expected result and outcome, but each moves by their **own
-  K-factor**;
+- every player of a side gets the same expected result and outcome, but each moves by their **own K-factor**;
 - this works for any mix: 1v1 and 2v2 matches count towards the same personal rating.
 
-The same replay produces each player's history, partners ("with") and opponents ("against"),
-streaks and goals. Players with fewer than 5 matches are marked *provisional*.
+The same replay produces each player's history, partners ("with") and opponents ("against"), streaks and goals. Players with fewer than 5 matches are marked _provisional_.
 
-`src/utils/dashboard.ts` builds the home page from the same replay: boards for Today, 7 days,
-30 days and the season, the last-5 form, rank arrows compared with a week ago, top pairs and the
-highlight tiles.
+`src/utils/dashboard.ts` builds the home page from the same replay: boards for Today, 7 days, 30 days and the season, the last-5 form, rank arrows compared with a week ago, top pairs and the highlight tiles.
 
 ### Achievements
 
-`src/utils/achievements.ts` lists about fifty achievements, each with an id, a title, points and
-a *condition*: a small function that receives the team, the opponent and the match and answers
-yes or no ("won 10 in a row", "won 10:0"...). After a match is saved, `checkAchievements` tests
-every condition the team hasn't earned yet this season. Editing a match's result removes the
-achievements earned with it, because their conditions may no longer hold.
+`src/utils/achievements.ts` lists about fifty achievements, each with an id, a title, points and a _condition_: a small function that receives the team, the opponent and the match and answers yes or no ("won 10 in a row", "won 10:0"...). After a match is saved, `checkAchievements` tests every condition the team hasn't earned yet this season. Editing a match's result removes the achievements earned with it, because their conditions may no longer hold.
 
 ---
 
 ## 8. Rules and the admin login
 
-**The edit window** (`src/utils/editRules.ts`): anyone may edit or delete a match for **24 hours**
-after it was entered; afterwards only the admin. The same function decides both whether the
-browser shows **✎ Edit** and whether the server accepts the change. The server check is what
-counts: hiding a button is a convenience, not a protection.
+**The edit window** (`src/utils/editRules.ts`): anyone may edit or delete a match for **24 hours** after it was entered; afterwards only the admin. The same function decides both whether the browser shows **✎ Edit** and whether the server accepts the change. The server check is what counts: hiding a button is a convenience, not a protection.
 
-**Players** (`src/server/routers/players.ts`): rename and archive are open to everyone. Delete:
-anyone if the player has no matches; otherwise admin only, and the request must contain the
-player's name typed again (`confirmName`). The two-step dialog lives in
-`src/components/Elements/PlayerManager.tsx`.
+**Players** (`src/server/routers/players.ts`): rename and archive are open to everyone. Delete: anyone if the player has no matches; otherwise admin only, and the request must contain the player's name typed again (`confirmName`). The two-step dialog lives in `src/components/Elements/PlayerManager.tsx`.
 
 **The admin login** (`src/pages/api/auth/[...nextauth].ts`):
 
 - one account, no username, the password is `ADMIN_PASSWORD`;
 - a wrong password is answered after a 1-second pause, which makes guessing slow;
-- the comparison takes the same time however much of a guess is right ("constant time"), so the
-  timing gives nothing away;
-- on success NextAuth sets a cookie signed with `NEXTAUTH_SECRET`, valid for 30 days. Because it's
-  signed, it can't be forged without the secret.
+- the comparison takes the same time however much of a guess is right ("constant time"), so the timing gives nothing away;
+- on success NextAuth sets a cookie signed with `NEXTAUTH_SECRET`, valid for 30 days. Because it's signed, it can't be forged without the secret.
 
-`src/middleware.ts` sends anyone opening `/admin` without that cookie to the login page.
-On the server, `roleAwareProcedure` and `protectedProcedure` read the same cookie.
+`src/middleware.ts` sends anyone opening `/admin` without that cookie to the login page. On the server, `roleAwareProcedure` and `protectedProcedure` read the same cookie.
 
-Because everyone may enter results, keep the app on your home/office network (or behind a VPN
-such as Tailscale), not open on the internet.
+Because everyone may enter results, keep the app on your home/office network (or behind a VPN such as Tailscale), not open on the internet.
 
 ---
 
 ## 9. The pages and how they load fast
 
-Most pages load in the browser: the page appears, then fetches its data through tRPC and shows a
-loading indicator meanwhile.
+Most pages load in the browser: the page appears, then fetches its data through tRPC and shows a loading indicator meanwhile.
 
-The **home page** is different, because it's opened right after a match on a phone and should be
-usable at once. `src/pages/index.tsx` has a `getServerSideProps` function: Next.js runs it **on the
-server** before sending the page, so the HTML already contains the roster, the leaderboard and the
-recent matches. In the browser, that data becomes the starting value (`initialData`) of the
-`dashboard.get` query, so there's no second loading step. After that, TanStack Query refreshes it
-every time the page comes back into view.
+The **home page** is different, because it's opened right after a match on a phone and should be usable at once. `src/pages/index.tsx` has a `getServerSideProps` function: Next.js runs it **on the server** before sending the page, so the HTML already contains the roster, the leaderboard and the recent matches. In the browser, that data becomes the starting value (`initialData`) of the `dashboard.get` query, so there's no second loading step. After that, TanStack Query refreshes it every time the page comes back into view.
 
 Other choices for speed and phones:
 
-- Small downloads: Next.js splits the code per page, so each page only loads what it uses
-  (`npm run build` prints the sizes; the home page is about 148 kB of JavaScript in total). The
-  rating charts are a small hand-written component instead of a charting library.
+- Small downloads: Next.js splits the code per page, so each page only loads what it uses (`npm run build` prints the sizes; the home page is about 148 kB of JavaScript in total). The rating charts are a small hand-written component instead of a charting library.
 - Inputs use a font size of at least 16 px, otherwise iPhones zoom in when you tap them.
 - The score fields open the number keyboard; the player search opens the normal one.
-- `public/manifest.webmanifest` and the icons let you *Add to Home Screen*; it then opens without
-  browser bars, like an app.
+- `public/manifest.webmanifest` and the icons let you _Add to Home Screen_; it then opens without browser bars, like an app.
 - Light and dark theme follow the phone's setting (`next-themes`), with a toggle in the footer.
 
 ---
 
 ## 10. Settings and start-up
 
-**Settings** come from environment variables (the `.env` file locally, the `.env` box in Dockge).
-`src/server/env.js` checks them with Zod when the app builds and when it starts: a missing or too
-short `ADMIN_PASSWORD` or `NEXTAUTH_SECRET` stops the app with a clear message instead of running
-insecurely. There are no default passwords anywhere.
+**Settings** come from environment variables (the `.env` file locally, the `.env` box in Dockge). `src/server/env.js` checks them with Zod when the app builds and when it starts: a missing or too short `ADMIN_PASSWORD` or `NEXTAUTH_SECRET` stops the app with a clear message instead of running insecurely. There are no default passwords anywhere.
 
 **Start-up** (`entrypoint.sh`, run every time the container starts):
 
@@ -475,32 +368,23 @@ insecurely. There are no default passwords anywhere.
 4. apply new migrations (`prisma migrate deploy`);
 5. start the app (`node server.js`).
 
-`/api/health` answers `{"status":"ok"}` when the app runs and the database responds; Docker calls
-it every 30 seconds to show *healthy*.
+`/api/health` answers `{"status":"ok"}` when the app runs and the database responds; Docker calls it every 30 seconds to show _healthy_.
 
 ---
 
-## 11. From code to your NAS: Docker and GitHub Actions
+## 11. From code to your NAS with Docker and GitHub Actions
 
 ### The image (`Dockerfile`)
 
-The image is built in three **stages**. Each starts from a clean Node.js 22 base (the small
-*Alpine Linux* variant), and only the last one becomes the image you run:
+The image is built in three **stages**. Each starts from a clean Node.js 22 base (the small _Alpine Linux_ variant), and only the last one becomes the image you run:
 
-1. **deps**: installs the exact library versions from `package-lock.json` (`npm ci`). This stage
-   includes compilers, needed only if the SQLite library has to be built from source.
-2. **builder**: copies the code and runs `npm run build`. Next.js produces a *standalone* output:
-   a minimal `server.js` plus only the library files the app really uses.
-3. **runner**: copies just the standalone output, the static files, `public/`, the migrations and
-   `entrypoint.sh`, and installs the Prisma command-line tool (to apply migrations) in the exact
-   version the app was built with. Compilers, source code and the full `node_modules` stay behind.
+1. **deps**: installs the exact library versions from `package-lock.json` (`npm ci`). This stage includes compilers, needed only if the SQLite library has to be built from source.
+2. **builder**: copies the code and runs `npm run build`. Next.js produces a _standalone_ output: a minimal `server.js` plus only the library files the app really uses.
+3. **runner**: copies just the standalone output, the static files, `public/`, the migrations and `entrypoint.sh`, and installs the Prisma command-line tool (to apply migrations) in the exact version the app was built with. Compilers, source code and the full `node_modules` stay behind.
 
-The final image runs as an unprivileged user, never as `root`. On the NAS the compose file sets it
-to TrueNAS's `apps` user (568), which owns the data folder. The database is outside the image, in
-the `/data` volume, so replacing the image never touches it.
+The final image runs as an unprivileged user, never as `root`. On the NAS the compose file sets it to TrueNAS's `apps` user (568), which owns the data folder. The database is outside the image, in the `/data` volume, so replacing the image never touches it.
 
-`.dockerignore` keeps `.env`, `.git`, `node_modules` and local data out of the build, so secrets
-never end up in an image.
+`.dockerignore` keeps `.env`, `.git`, `node_modules` and local data out of the build, so secrets never end up in an image.
 
 ### The robots (`.github/workflows/build.yml`)
 
@@ -509,16 +393,13 @@ On every push to GitHub:
 1. **checks**: install, lint and formatting, type check, tests, production build;
 2. **docker**: build the image, only if the checks passed.
 
-When the push is a **version tag** (`v0.7.1`), the image is also published to
-`ghcr.io/<you>/biliardino` as `0.7.1` and `latest`. Dockge's *Update* pulls `latest`. Nothing
-reaches the NAS unless every check is green.
+When the push is a **version tag** (`v0.7.1`), the image is also published to `ghcr.io/<you>/biliardino` as `0.7.1` and `latest`. Dockge's _Update_ pulls `latest`. Nothing reaches the NAS unless every check is green.
 
 ---
 
 ## 12. Tests and checks
 
-`npm run check` runs everything below except the browser tests, and it's the one command to run
-before every commit.
+`npm run check` runs everything below except the browser tests, and it's the one command to run before every commit.
 
 | Kind | What it proves | Where |
 | --- | --- | --- |
@@ -529,34 +410,24 @@ before every commit.
 | **API tests** | the real procedures on a temporary database: saving, double entry, editing, deleting and recalculating, rename, archive, permissions, two saves at once | `src/server/__tests__/api.test.ts` |
 | **Browser tests** | a real Chrome and Firefox at phone and desktop sizes: entering a match by typing, the note, editing, deleting, renaming, navigation, no layout overflow, no console errors | `e2e/` (run by hand, see `e2e/README.md`) |
 
-A test is a small program that sets up a situation and checks the result, e.g. "after a 10:0 win
-of A over B, both starting at 1000, A has 1016 and B 984". When a later change breaks that, the
-test fails and tells you where.
+A test is a small program that sets up a situation and checks the result, e.g. "after a 10:0 win of A over B, both starting at 1000, A has 1016 and B 984". When a later change breaks that, the test fails and tells you where.
 
 ---
 
-## 13. How to make a change: a worked example
+## 13. How to make a change, a worked example
 
-Say you want a **"Location"** field on matches (which table was used). The path through the code
-is always the same:
+Say you want a **"Location"** field on matches (which table was used). The path through the code is always the same:
 
-1. **Database**: in `prisma/schema.prisma`, add `location String @default("")` to `Match`.
-   Run `npm run db:migrate:dev -- --name match-location`; a migration file appears.
-2. **Validation**: in `src/utils/validation.ts`, add `location: z.string().max(50).optional()` to
-   `matchAddValidation`.
-3. **Server**: in `src/server/routers/matches.ts` (`add`) and `src/server/model/match.ts`
-   (`createMatch`), pass `location` through to `db.match.create`.
-4. **Browser**: in `MatchEntry.tsx`, add the input and send `location` with the mutation; in
-   `MatchTable.tsx`, show it.
-5. **Test**: in `src/server/__tests__/api.test.ts`, add a case that saves a match with a location
-   and reads it back.
+1. **Database**: in `prisma/schema.prisma`, add `location String @default("")` to `Match`. Run `npm run db:migrate:dev -- --name match-location`; a migration file appears.
+2. **Validation**: in `src/utils/validation.ts`, add `location: z.string().max(50).optional()` to `matchAddValidation`.
+3. **Server**: in `src/server/routers/matches.ts` (`add`) and `src/server/model/match.ts` (`createMatch`), pass `location` through to `db.match.create`.
+4. **Browser**: in `MatchEntry.tsx`, add the input and send `location` with the mutation; in `MatchTable.tsx`, show it.
+5. **Test**: in `src/server/__tests__/api.test.ts`, add a case that saves a match with a location and reads it back.
 6. **Check**: `npm run check`. The type checker will point at any place you forgot.
 7. **Try**: `npm run dev` (needs `npm ci` once and a `.env`), or `docker compose up -d --build`.
-8. **Record**: a line in `CHANGELOG.md`, the version in `package.json`, then `git add -A`,
-   `git commit`, `git push`, and a tag for a release ([DEPLOY.md](DEPLOY.md#updating-to-a-new-version)).
+8. **Record**: a line in `CHANGELOG.md`, the version in `package.json`, then `git add -A`, `git commit`, `git push`, and a tag for a release ([DEPLOY.md](DEPLOY.md#Updating%20to%20a%20new%20version)).
 
-Steps 1 → 4 are the order data flows: table, rules, server, screen. Most changes follow this
-shape.
+Steps 1 → 4 are the order data flows: table, rules, server, screen. Most changes follow this shape.
 
 ---
 
@@ -588,10 +459,9 @@ shape.
 
 ## Sources
 
-The official documentation for each technology is linked in [section 2](#2-the-technologies-and-why-each-one).
-Good places to learn more, in the order they're useful here:
+The official documentation for each technology is linked in [section 2](#2.%20The%20technologies,%20and%20why%20each%20one). Good places to learn more, in the order they're useful here:
 
-- React, *Learn* (interactive, starts from zero): <https://react.dev/learn>
+- React, _Learn_ (interactive, starts from zero): <https://react.dev/learn>
 - Next.js Pages Router: <https://nextjs.org/docs/pages>
 - TypeScript for the new programmer: <https://www.typescriptlang.org/docs/handbook/typescript-from-scratch.html>
 - tRPC concepts: <https://trpc.io/docs/concepts>
