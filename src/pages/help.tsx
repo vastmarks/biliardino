@@ -71,6 +71,17 @@ const H3 = ({ children }: { children: ReactNode }) => (
 
 const round1 = (n: number) => Math.round(n * 10) / 10;
 
+/** Formulas in MathML, which every current browser renders natively. */
+const EXPECTED = `<math display="block"><msub><mi>E</mi><mi>A</mi></msub><mo>=</mo><mfrac><mn>1</mn><mrow><mn>1</mn><mo>+</mo><msup><mn>10</mn><mrow><mo>(</mo><msub><mi>R</mi><mi>B</mi></msub><mo>−</mo><msub><mi>R</mi><mi>A</mi></msub><mo>)</mo><mo>/</mo><mn>400</mn></mrow></msup></mrow></mfrac></math>`;
+const UPDATE = `<math display="block"><msubsup><mi>R</mi><mi>A</mi><mo>′</mo></msubsup><mo>=</mo><msub><mi>R</mi><mi>A</mi></msub><mo>+</mo><mi>K</mi><mo>·</mo><mo>(</mo><msub><mi>S</mi><mi>A</mi></msub><mo>−</mo><msub><mi>E</mi><mi>A</mi></msub><mo>)</mo></math>`;
+
+const Formula = ({ mathml }: { mathml: string }) => (
+  <div
+    className="overflow-x-auto rounded-lg bg-gray-100 dark:bg-gray-900 py-3 text-lg"
+    dangerouslySetInnerHTML={{ __html: mathml }}
+  />
+);
+
 /** The worked example, computed with the app's own formula so the numbers are always right. */
 function example() {
   const anna = 1000;
@@ -316,8 +327,8 @@ const Help = () => {
                   >
                     achievement
                   </a>{" "}
-                  earned this season is worth 10, 25 or 50 points, and this is
-                  their total.
+                  is worth 10, 25 or 50 points, and this is their total over all
+                  seasons (achievements are earned once and kept for good).
                 </>,
               ],
               ["Rating", "The team's own rating this season."],
@@ -356,8 +367,12 @@ const Help = () => {
                 "The most matches one player played in a day.",
               ],
               [
-                "Champions",
-                `For every season: the best-rated player at the end (with at least ${PROVISIONAL_MATCHES} matches) and the best pair. The current season shows who is leading.`,
+                "👑 Reigning champions",
+                `At the top: the 1v1 and 2v2 champions of the last season that ended. They keep the title until the next season ends.`,
+              ],
+              [
+                "Every season",
+                `The 1v1 champion (best-rated player on their own) and the 2v2 champions (best-rated pair), each with at least ${PAIR_MIN_MATCHES} matches, plus the top player by individual rating across both formats (at least ${PROVISIONAL_MATCHES} matches). For the current season it shows who is leading.`,
               ],
             ]}
           />
@@ -373,7 +388,7 @@ const Help = () => {
         >
           <p>
             Everyone starts at <b>{defaultRating}</b>. After each match the
-            winners gain points and the losers lose the same amount. How many
+            winners gain points and the losers lose about as many. How many
             depends on how surprising the result was:{" "}
             <b>
               beating someone stronger is worth a lot, beating someone weaker
@@ -399,6 +414,57 @@ const Help = () => {
               </li>
             </ul>
           </div>
+          <details className="rounded-lg border border-gray-200 dark:border-gray-700 p-3">
+            <summary className="cursor-pointer font-semibold">
+              The formula
+            </summary>
+            <div className="mt-2 space-y-2">
+              <p>
+                Expected score of side A against side B (its chance of winning,
+                0 to 1):
+              </p>
+              <Formula mathml={EXPECTED} />
+              <p>New rating after the match:</p>
+              <Formula mathml={UPDATE} />
+              <ul className="list-disc pl-5 space-y-1">
+                <li>
+                  <i>S</i> is the result: 1 for a win, ½ for a draw, 0 for a
+                  loss.
+                </li>
+                <li>
+                  <i>K</i> is how far one match can move a rating: 32 below{" "}
+                  {defaultRating + 200}, 24 below {defaultRating + 400}, 16
+                  above. Each player uses their own <i>K</i>, so gains and
+                  losses are equal only when both sides have the same <i>K</i>.
+                </li>
+                <li>
+                  The 400 sets the scale: a side rated 400 higher is expected to
+                  win about 10 times out of 11 (<i>E</i> ≈ 0.91).
+                </li>
+                <li>
+                  <b>2v2:</b> <i>R</i> of a side is the average of its two
+                  players. <i>E</i> is computed side against side; then each
+                  player updates their own rating with that <i>E</i>, their own{" "}
+                  <i>K</i> and the side&apos;s result.
+                </li>
+                <li>
+                  <b>Team ratings</b> (Teams, Top pairs) use the same formula
+                  with the team&apos;s own rating, as if the pair were one
+                  player.
+                </li>
+              </ul>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                More on the method:{" "}
+                <a
+                  href="https://en.wikipedia.org/wiki/Elo_rating_system"
+                  className="text-blue-500 dark:text-blue-300 hover:underline"
+                >
+                  Elo rating system (Wikipedia)
+                </a>
+                .
+              </p>
+            </div>
+          </details>
           <Terms
             items={[
               [
@@ -435,20 +501,24 @@ const Help = () => {
             few months). New matches then count for the new season and ratings
             start again at {defaultRating}. Old seasons are never lost: pick one
             in the <b>Season</b> menu next to the logo to look at it, and its
-            champion stays in the Hall of Fame.
+            champions stay in the Hall of Fame.
           </p>
         </Section>
 
         <Section
           id="achievements"
           title="Achievements"
-          intro="Small badges for milestones, streaks and fun moments, earned by teams in a season."
+          intro="Small badges for milestones, streaks and fun moments. Earned once, kept for good."
         >
           <p>
             Achievements belong to a <b>team</b> (you alone in 1v1, or a pair in
-            2v2) and to the season in which they were earned. Each is worth 10,
-            25 or 50 points; the total is the 🏅 column on the Teams page. A 🏅
-            next to a match shows one was earned there.
+            2v2). Each one is earned <b>once</b> and kept across seasons.
+            Milestones (wins, matches, goals) count all seasons together, so
+            &quot;1000 matches&quot; is reachable; the ones about rating or
+            streaks happen within a season, because ratings start again at{" "}
+            {defaultRating} every season. Each is worth 10, 25 or 50 points; the
+            total is the 🏅 column on the Teams page. A 🏅 next to a match shows
+            one was earned there.
           </p>
           <details className="rounded-lg border border-gray-200 dark:border-gray-700 p-3">
             <summary className="cursor-pointer font-semibold">

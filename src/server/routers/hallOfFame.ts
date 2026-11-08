@@ -19,7 +19,7 @@ export const hallOfFameRouter = router({
         },
       }),
       prisma.team.findMany({
-        where: { teamsize: 2 },
+        // singles (1v1) and pairs (2v2), for each season's champions
         select: {
           name: true,
           teamsize: true,

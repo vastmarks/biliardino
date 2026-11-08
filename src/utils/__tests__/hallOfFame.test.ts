@@ -200,3 +200,42 @@ describe("computeHallOfFame", () => {
     ]);
   });
 });
+
+describe("reigning champions", () => {
+  const team = (name: string, season: number, rating: number) => ({
+    name,
+    teamsize: name.split(",").length,
+    meta: [{ season, rating, totalMatches: 4, totalWins: 3, totalLosses: 1 }],
+  });
+
+  it("are the 1v1 and 2v2 winners of the last season that has ended", () => {
+    const matches = [
+      m(1, "anna", 10, 5, "bob", 1),
+      m(2, "anna,bob", 10, 5, "carl,dan", 1),
+      m(40, "carl", 10, 5, "anna", 2),
+    ];
+    const teams = [
+      team("anna", 1, 1040),
+      team("bob", 1, 960),
+      team("anna,bob", 1, 1030),
+      team("carl,dan", 1, 970),
+      team("carl", 2, 1016),
+    ];
+    const hof = computeHallOfFame(matches, teams, 2);
+    expect(hof.reigning).toMatchObject({
+      season: 1,
+      single: { player: "anna", rating: 1040 },
+      pair: { players: ["anna", "bob"], rating: 1030 },
+    });
+    expect(hof.seasons[0]).toMatchObject({
+      season: 2,
+      current: true,
+      single: { player: "carl" },
+    });
+  });
+
+  it("don't exist while the first season is running", () => {
+    const hof = computeHallOfFame([m(1, "anna", 10, 5, "bob", 1)], [], 1);
+    expect(hof.reigning).toBeUndefined();
+  });
+});

@@ -4,7 +4,6 @@ import { TimeDistance } from "~/components/Elements/TimeDistance";
 import { TeamWithMetaAndAchievements } from "~/server/model/team";
 import { trpc } from "~/utils/trpc";
 import { toast } from "~/utils/toast";
-import { useStore } from "~/utils/store";
 import { useIsAdmin } from "~/utils/useIsAdmin";
 
 const AchievementCard: FunctionComponent<{
@@ -98,17 +97,13 @@ export const AchievementList: FunctionComponent<{
   team: TeamWithMetaAndAchievements;
   versus?: TeamWithMetaAndAchievements;
 }> = ({ team, versus }) => {
-  const selectedSeason = useStore(state => state.season);
+  // achievements are earned once and kept for good, whatever season is selected
   const teamAchievements = achievements.filter(achievement =>
-    team.achievements.find(
-      a => a.achievement === achievement.id && a.season === selectedSeason,
-    ),
+    team.achievements.find(a => a.achievement === achievement.id),
   );
   const versusAchievements = versus
     ? achievements.filter(achievement =>
-        versus.achievements.find(
-          a => a.achievement === achievement.id && a.season === selectedSeason,
-        ),
+        versus.achievements.find(a => a.achievement === achievement.id),
       )
     : [];
 

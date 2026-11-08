@@ -320,7 +320,7 @@ The same replay produces each player's history, partners ("with") and opponents 
 
 ### Achievements
 
-`src/utils/achievements.ts` lists about fifty achievements, each with an id, a title, points and a _condition_: a small function that receives the team, the opponent and the match and answers yes or no ("won 10 in a row", "won 10:0"...). After a match is saved, `checkAchievements` tests every condition the team hasn't earned yet this season. Editing a match's result removes the achievements earned with it, because their conditions may no longer hold.
+`src/utils/achievements.ts` lists about fifty achievements, each with an id, a title, points and a _condition_: a small function that receives the team, the opponent and the match and answers yes or no ("won 10 in a row", "won 10:0"...). After a match is saved, `checkAchievements` tests every condition the team hasn't earned yet. Achievements are earned **once per team, ever**: milestones (wins, matches, goals) use the team's numbers of all seasons added up (`career`), while rating and streak conditions use the current season, because ratings restart. Points are never stored: `achievementPoints` adds them up from the earned achievements. Editing a match's result removes the achievements earned with it, because their conditions may no longer hold.
 
 ---
 

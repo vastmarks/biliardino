@@ -5,6 +5,7 @@ import { trpc } from "~/utils/trpc";
 import { getSeasonMeta } from "~/model";
 import { TeamLink } from "~/components/Elements/TeamLink";
 import { TeamWithMeta } from "~/server/model/team";
+import { achievementPoints } from "~/utils/achievements";
 import { useStore } from "~/utils/store";
 import { useIsAdmin } from "~/utils/useIsAdmin";
 
@@ -18,7 +19,9 @@ type TeamOrder =
   | "achievementPoints"
   | "rating";
 
-export const TeamTable: FunctionComponent<{ teams: TeamWithMeta[] }> = ({
+type TeamRow = TeamWithMeta & { achievements: Array<{ achievement: string }> };
+
+export const TeamTable: FunctionComponent<{ teams: TeamRow[] }> = ({
   teams,
 }) => {
   const isAdmin = useIsAdmin();
@@ -59,7 +62,10 @@ export const TeamTable: FunctionComponent<{ teams: TeamWithMeta[] }> = ({
         case "winRate":
           return meta2.totalWinRate - meta1.totalWinRate;
         case "achievementPoints":
-          return meta2.achievementPoints - meta1.achievementPoints;
+          return (
+            achievementPoints(team2.achievements) -
+            achievementPoints(team1.achievements)
+          );
         default:
         case "rating":
           return meta2.rating - meta1.rating;
@@ -121,7 +127,7 @@ export const TeamTable: FunctionComponent<{ teams: TeamWithMeta[] }> = ({
             </th>
             <th
               className="p-3"
-              title="Achievement points earned this season"
+              title="Achievement points, all seasons together"
               onClick={() => setOrdering("achievementPoints")}
             >
               🏅 Points {orderIcon("achievementPoints")}
@@ -176,7 +182,9 @@ export const TeamTable: FunctionComponent<{ teams: TeamWithMeta[] }> = ({
                     <>{(team.meta.totalWinRate * 100).toFixed(2)}%</>
                   )}
                 </td>
-                <td className={`p-3`}>{+team.meta.achievementPoints}</td>
+                <td className={`p-3`}>
+                  {achievementPoints(team.achievements)}
+                </td>
                 <td className={`p-3`}>{+team.meta.rating.toFixed(2)}</td>
               </tr>
             ))}

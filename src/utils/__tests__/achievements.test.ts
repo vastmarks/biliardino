@@ -1,4 +1,10 @@
-import { Achievement, achievements } from "~/utils/achievements";
+import {
+  Achievement,
+  achievementPoints,
+  achievements,
+  career,
+  checkAchievements,
+} from "~/utils/achievements";
 import type { Match, Team, TeamMeta } from "~/generated/prisma/browser";
 import { TeamWithMetaAndAchievements } from "~/server/model/team";
 import { getDefaultTeamMeta, getTeamSize } from "~/model";
@@ -349,5 +355,73 @@ describe("goliath", () => {
       createMatch(player, opponent, 0, 1),
     );
     expect(granted).toBe(false);
+  });
+});
+
+describe("across seasons", () => {
+  const withSeasons = (
+    name: string,
+    seasons: Array<Partial<TeamMeta> & { season: number }>,
+  ): TeamWithMetaAndAchievements => ({
+    ...createTeam(name),
+    meta: seasons.map(m => ({
+      ...getDefaultTeamMeta(m.season),
+      ...m,
+      teamId: 0,
+    })),
+  });
+
+  test("milestones count the wins of all seasons", () => {
+    const team = withSeasons("anna", [
+      { season: 1, totalWins: 6, totalMatches: 8 },
+      { season: 2, totalWins: 4, totalMatches: 5 },
+    ]);
+    expect(career(team)).toMatchObject({ totalWins: 10, totalMatches: 13 });
+    const opp = createTeam("bob");
+    const m = { ...createMatch(team, opp, 10, 5), season: 2 };
+    expect(getAchievement("wins-10").condition(team, opp, m)).toBe(true);
+  });
+
+  test("an achievement earned in an earlier season is not earned again", () => {
+    const team = withSeasons("anna", [
+      { season: 1, totalWins: 1, totalMatches: 1 },
+      { season: 2, totalWins: 1, totalMatches: 1 },
+    ]);
+    team.achievements = [
+      {
+        id: 1,
+        createdAt: new Date(),
+        teamId: 0,
+        teamName: "anna",
+        achievement: "wins-1",
+        season: 1,
+        matchId: 1,
+      },
+    ];
+    const opp = createTeam("bob");
+    const m = { ...createMatch(team, opp, 10, 5), season: 2 };
+    expect(checkAchievements(team, opp, m).map(a => a.id)).not.toContain(
+      "wins-1",
+    );
+  });
+
+  test("points add up each achievement once", () => {
+    const first = getAchievement("wins-1").points;
+    const tenth = getAchievement("wins-10").points;
+    expect(
+      achievementPoints([
+        { achievement: "wins-1" },
+        { achievement: "wins-1" },
+        { achievement: "wins-10" },
+        { achievement: "no-longer-exists" },
+      ]),
+    ).toBe(first + tenth);
+  });
+
+  test("5000 goals needs 5000 goals", () => {
+    const opp = createTeam("bob");
+    const team = withSeasons("anna", [{ season: 1, totalScore: 4999 }]);
+    const m = createMatch(team, opp, 10, 5);
+    expect(getAchievement("score-5000").condition(team, opp, m)).toBe(false);
   });
 });

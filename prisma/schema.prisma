@@ -54,7 +54,6 @@ model TeamMeta {
   season                   Int      @default(1)
   teamId                   Int
   rating                   Float    @default(0)
-  achievementPoints        Int      @default(0)
   totalMatches             Int      @default(0)
   totalWins                Int      @default(0)
   totalLosses              Int      @default(0)

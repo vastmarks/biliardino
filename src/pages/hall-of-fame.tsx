@@ -8,6 +8,7 @@ import {
 import { trpc } from "~/utils/trpc";
 import type { HallRecord, RecordKey, SeasonChampion } from "~/utils/hallOfFame";
 import { PROVISIONAL_MATCHES } from "~/utils/playerStats";
+import { PAIR_MIN_MATCHES } from "~/utils/dashboard";
 
 const date = (d: Date | string) =>
   new Date(d).toLocaleDateString("en-GB", {
@@ -112,6 +113,25 @@ function months(s: SeasonChampion): string {
     : `${month(from)} – ${month(to)}`;
 }
 
+const ChampionLine = ({
+  icon,
+  label,
+  who,
+  rating,
+}: {
+  icon: string;
+  label: string;
+  who: ReactNode;
+  rating: number;
+}) => (
+  <div className="text-sm">
+    <span aria-hidden>{icon}</span>{" "}
+    <span className="text-gray-500 dark:text-gray-400">{label}</span>{" "}
+    <b>{who}</b>
+    <span className="text-xs text-gray-400"> · {Math.round(rating)}</span>
+  </div>
+);
+
 const SeasonRow = ({ s }: { s: SeasonChampion }) => (
   <li className="flex gap-4 px-4 py-3">
     <div className="w-28 shrink-0">
@@ -122,39 +142,66 @@ const SeasonRow = ({ s }: { s: SeasonChampion }) => (
       </div>
     </div>
     <div className="flex-1 min-w-0 space-y-0.5">
-      {s.champion ? (
-        <div>
-          <span aria-hidden>{s.current ? "📈" : "👑"}</span>{" "}
-          <b>
-            <PlayerLink name={s.champion.player} />
-          </b>
-          <span className="text-sm text-gray-500 dark:text-gray-400">
-            {" "}
-            {s.current ? "leading" : "champion"}
-          </span>
-          <div className="text-xs text-gray-400">
-            {Math.round(s.champion.rating)} rating · {s.champion.wins} won,{" "}
-            {s.champion.losses} lost
-          </div>
-        </div>
-      ) : (
-        <div className="text-sm text-gray-400">
-          No champion yet: {PROVISIONAL_MATCHES} matches needed
-        </div>
+      {s.single && (
+        <ChampionLine
+          icon={s.current ? "📈" : "👑"}
+          label={s.current ? "1v1 leader" : "1v1"}
+          who={<PlayerLink name={s.single.player} />}
+          rating={s.single.rating}
+        />
       )}
       {s.pair && (
-        <div className="text-sm text-gray-500 dark:text-gray-400">
-          <span aria-hidden>🤝</span> Best pair{" "}
-          <PlayerNames team={s.pair.players} />
-          <span className="text-xs text-gray-400">
-            {" "}
-            · {Math.round(s.pair.rating)}
-          </span>
-        </div>
+        <ChampionLine
+          icon={s.current ? "📈" : "👑"}
+          label={s.current ? "2v2 leaders" : "2v2"}
+          who={<PlayerNames team={s.pair.players} />}
+          rating={s.pair.rating}
+        />
+      )}
+      {s.champion && (
+        <ChampionLine
+          icon="⭐"
+          label="Top player"
+          who={<PlayerLink name={s.champion.player} />}
+          rating={s.champion.rating}
+        />
+      )}
+      {!s.single && !s.pair && !s.champion && (
+        <div className="text-sm text-gray-400">No champions yet</div>
       )}
     </div>
   </li>
 );
+
+/** The champions of the last season that ended, at the top of the page. */
+const Reigning = ({ s }: { s: SeasonChampion }) => {
+  const card = (format: string, who: ReactNode, rating: number) => (
+    <div className="rounded-lg bg-white dark:bg-gray-800 shadow-sm p-4 min-w-0">
+      <div className="text-[11px] uppercase tracking-wide text-gray-400">
+        <span aria-hidden>👑</span> {format} champion
+        {format === "2v2" ? "s" : ""}
+      </div>
+      <div className="mt-1 text-xl font-bold truncate">{who}</div>
+      <div className="text-sm text-gray-500 dark:text-gray-400">
+        Season {s.season} · rating {Math.round(rating)}
+      </div>
+    </div>
+  );
+  if (!s.single && !s.pair) return null;
+  return (
+    <section aria-labelledby="reigning" className="mb-6">
+      <h2 id="reigning" className="font-bold mb-2 px-1">
+        Reigning champions
+      </h2>
+      <div className="grid gap-3 sm:grid-cols-2">
+        {s.single &&
+          card("1v1", <PlayerLink name={s.single.player} />, s.single.rating)}
+        {s.pair &&
+          card("2v2", <PlayerNames team={s.pair.players} />, s.pair.rating)}
+      </div>
+    </section>
+  );
+};
 
 /**
  * Hall of Fame: what the home page doesn't show. The home page is about now (this season,
@@ -169,7 +216,7 @@ const HallOfFame = () => {
       <div className="my-4">
         <h1 className="text-2xl font-bold">Hall of Fame</h1>
         <p className="text-sm text-gray-500 dark:text-gray-400">
-          All-time records and the champion of every season
+          Reigning champions, all-time records and every season&apos;s winners
           {data &&
             data.totalMatches > 0 &&
             ` · ${plural(data.totalMatches, "match", "matches")} played`}
@@ -183,6 +230,8 @@ const HallOfFame = () => {
           No records yet. Play a few matches and they will show up here.
         </p>
       )}
+
+      {data?.reigning && <Reigning s={data.reigning} />}
 
       {data && data.records.length > 0 && (
         <section aria-labelledby="records">
@@ -208,9 +257,10 @@ const HallOfFame = () => {
             ))}
           </ul>
           <p className="text-xs text-gray-500 mt-2 px-1">
-            The champion is the best-rated player at the end of the season (from{" "}
-            {PROVISIONAL_MATCHES} matches on); the best pair is the best-rated
-            2v2 team with at least 3 matches.
+            1v1 and 2v2 champions are the best-rated single player and pair at
+            the end of the season (at least {PAIR_MIN_MATCHES} matches); the top
+            player has the best individual rating across both formats (at least{" "}
+            {PROVISIONAL_MATCHES} matches).
           </p>
         </section>
       )}

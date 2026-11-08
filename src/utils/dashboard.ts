@@ -256,6 +256,16 @@ export function computeDashboard(
 
 /** Pair (2-player team) standings for one season, best rating first. */
 export function topPairs(
+  teams: Parameters<typeof topTeams>[0],
+  season: number,
+  minMatches = PAIR_MIN_MATCHES,
+  limit = 5,
+): PairRow[] {
+  return topTeams(teams, season, 2, minMatches, limit);
+}
+
+/** Team standings of one size (1 = singles, 2 = pairs) for one season, best rating first. */
+export function topTeams(
   teams: Array<{
     name: string;
     teamsize: number;
@@ -268,11 +278,12 @@ export function topPairs(
     }>;
   }>,
   season: number,
+  size: number,
   minMatches = PAIR_MIN_MATCHES,
   limit = 5,
 ): PairRow[] {
   return teams
-    .filter(t => t.teamsize === 2)
+    .filter(t => t.teamsize === size)
     .flatMap(t => {
       const m = t.meta.find(x => x.season === season);
       if (!m || m.totalMatches < minMatches) return [];

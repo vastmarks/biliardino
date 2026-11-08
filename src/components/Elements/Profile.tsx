@@ -6,6 +6,7 @@ import { EloHistory } from "~/components/Elements/EloHistory";
 import type { Match, Team, TeamMeta } from "~/generated/prisma/browser";
 import { TeamWithMetaAndAchievements } from "~/server/model/team";
 import { AchievementList } from "~/components/Elements/AchievementList";
+import { achievementPoints } from "~/utils/achievements";
 import { getSeasonMeta } from "~/model";
 import { useStore } from "~/utils/store";
 
@@ -195,10 +196,15 @@ export const Profile: FunctionComponent<{
         </div>
         <div className="col-span-6 p-3">
           <div className="my-5 text-2xl font-semibold text-center">
-            🏅 {meta.achievementPoints}
-            <small className="opacity-50 ml-1">
-              {vsMeta?.achievementPoints}
-            </small>
+            🏅 {achievementPoints(team.achievements)}
+            {versus && (
+              <small className="opacity-50 ml-1">
+                {achievementPoints(versus.achievements)}
+              </small>
+            )}
+            <div className="text-xs font-normal opacity-60">
+              achievement points, all seasons
+            </div>
           </div>
           <AchievementList team={team} versus={versus || undefined} />
         </div>

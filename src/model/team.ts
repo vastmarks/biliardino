@@ -12,7 +12,6 @@ export function getDefaultTeamMeta(season: number) {
     updatedAt: new Date(),
     season: season,
     rating: defaultRating,
-    achievementPoints: 0,
     totalMatches: 0,
     totalWins: 0,
     totalLosses: 0,

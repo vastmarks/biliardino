@@ -1,7 +1,6 @@
 import { Prisma } from "~/generated/prisma/client";
 import type { Db } from "~/server/db";
 import { getTeamSize } from "~/model";
-import { achievements as allAchievements } from "~/utils/achievements";
 import {
   emptyTeamNumbers,
   fromMeta,
@@ -60,9 +59,6 @@ export async function saveTeamNumbers(
   return meta;
 }
 
-const pointsOf = (achievementId: string) =>
-  allAchievements.find(a => a.id === achievementId)?.points ?? 0;
-
 /**
  * Deletes a team with all its matches and achievements, then recalculates every season it
  * played in (its opponents' ratings change too).
@@ -119,15 +115,6 @@ export async function rebuildSeason(db: Db, season: number) {
     }
   }
 
-  const earned = await db.teamAchievement.findMany({
-    where: { season },
-    select: { teamId: true, achievement: true },
-  });
-  const points = new Map<number, number>();
-  for (const a of earned) {
-    points.set(a.teamId, (points.get(a.teamId) ?? 0) + pointsOf(a.achievement));
-  }
-
   // an edited match can put a team into a season where it has no stats row yet
   const existing = new Set(
     (
@@ -156,7 +143,6 @@ export async function rebuildSeason(db: Db, season: number) {
         ...toMetaData(numbers),
         // a team without matches keeps its old date instead of "now"
         ...(numbers.lastMatchAt ? {} : { updatedAt: meta.createdAt }),
-        achievementPoints: points.get(meta.teamId) ?? 0,
       },
     });
   }

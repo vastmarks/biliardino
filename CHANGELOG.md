@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.0] - 2026-11-08
+
+### Changed
+
+- **Achievements are earned once and kept for good**, instead of again every season. Milestones (wins, matches, goals) now count all seasons together, so the big ones (1000 matches, 5000 goals) are actually reachable; rating and streak achievements still happen within a season, because ratings restart. Achievement points on the Teams and team pages are the all-time total.
+- On update, achievements a team had earned again in a later season are removed (the first one stays), and the per-season points column is dropped: points are added up from the achievements.
+- **Hall of Fame**: the **reigning 1v1 and 2v2 champions** (the winners of the last season that ended) at the top; every season now lists its 1v1 champion, 2v2 champions and top player.
+- **Help**: the Elo formula, with what K, S, E and the 400 mean, how 2v2 is calculated and how team ratings differ.
+
+### Fixed
+
+- _5000 Goals_ was awarded at 2500 goals
+
 ## [0.12.0] - 2026-11-08
 
 ### Added

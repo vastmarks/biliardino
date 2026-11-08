@@ -17,6 +17,30 @@ export interface Achievement {
   retired?: boolean;
 }
 
+/**
+ * A team's numbers over its whole history, all seasons added up. Achievements are earned
+ * once per team, ever, so milestones (wins, matches, goals) count all seasons; ratings and
+ * streaks still come from the current season, because ratings start again every season.
+ */
+export function career(team: TeamWithMeta) {
+  return team.meta.reduce(
+    (sum, m) => ({
+      totalMatches: sum.totalMatches + m.totalMatches,
+      totalWins: sum.totalWins + m.totalWins,
+      totalScore: sum.totalScore + m.totalScore,
+    }),
+    { totalMatches: 0, totalWins: 0, totalScore: 0 },
+  );
+}
+
+/** Total points of a list of earned achievements (each achievement counts once). */
+export function achievementPoints(earned: Array<{ achievement: string }>) {
+  return [...new Set(earned.map(a => a.achievement))].reduce(
+    (sum, id) => sum + (achievements.find(a => a.id === id)?.points ?? 0),
+    0,
+  );
+}
+
 enum Result {
   Loss,
   Win,
@@ -39,7 +63,7 @@ export const achievements: Achievement[] = [
       if (matchResult(team, match) === Result.Loss) {
         return false;
       }
-      const meta = getSeasonMeta(team, match.season);
+      const meta = career(team);
       return meta.totalWins >= 1;
     },
     title: "First Win",
@@ -52,7 +76,7 @@ export const achievements: Achievement[] = [
       if (matchResult(team, match) === Result.Loss) {
         return false;
       }
-      const meta = getSeasonMeta(team, match.season);
+      const meta = career(team);
       return meta.totalWins >= 10;
     },
     title: "10 Wins",
@@ -65,7 +89,7 @@ export const achievements: Achievement[] = [
       if (matchResult(team, match) === Result.Loss) {
         return false;
       }
-      const meta = getSeasonMeta(team, match.season);
+      const meta = career(team);
       return meta.totalWins >= 50;
     },
     title: "50 Wins",
@@ -78,7 +102,7 @@ export const achievements: Achievement[] = [
       if (matchResult(team, match) === Result.Loss) {
         return false;
       }
-      const meta = getSeasonMeta(team, match.season);
+      const meta = career(team);
       return meta.totalWins >= 100;
     },
     title: "100 Wins",
@@ -91,7 +115,7 @@ export const achievements: Achievement[] = [
       if (matchResult(team, match) === Result.Loss) {
         return false;
       }
-      const meta = getSeasonMeta(team, match.season);
+      const meta = career(team);
       return meta.totalWins >= 500;
     },
     title: "500 Wins",
@@ -104,7 +128,7 @@ export const achievements: Achievement[] = [
       if (matchResult(team, match) === Result.Loss) {
         return false;
       }
-      const meta = getSeasonMeta(team, match.season);
+      const meta = career(team);
       return meta.totalWins >= 1000;
     },
     title: "Winning is my hobby",
@@ -228,7 +252,7 @@ export const achievements: Achievement[] = [
   {
     id: "matches-1",
     condition: (team, opponent, match) => {
-      const meta = getSeasonMeta(team, match.season);
+      const meta = career(team);
       return meta.totalMatches >= 1;
     },
     title: "First match",
@@ -238,7 +262,7 @@ export const achievements: Achievement[] = [
   {
     id: "matches-10",
     condition: (team, opponent, match) => {
-      const meta = getSeasonMeta(team, match.season);
+      const meta = career(team);
       return meta.totalMatches >= 10;
     },
     title: "10 Matches",
@@ -248,7 +272,7 @@ export const achievements: Achievement[] = [
   {
     id: "matches-50",
     condition: (team, opponent, match) => {
-      const meta = getSeasonMeta(team, match.season);
+      const meta = career(team);
       return meta.totalMatches >= 50;
     },
     title: "50 Matches",
@@ -258,7 +282,7 @@ export const achievements: Achievement[] = [
   {
     id: "matches-100",
     condition: (team, opponent, match) => {
-      const meta = getSeasonMeta(team, match.season);
+      const meta = career(team);
       return meta.totalMatches >= 100;
     },
     title: "100 Matches",
@@ -268,7 +292,7 @@ export const achievements: Achievement[] = [
   {
     id: "matches-500",
     condition: (team, opponent, match) => {
-      const meta = getSeasonMeta(team, match.season);
+      const meta = career(team);
       return meta.totalMatches >= 500;
     },
     title: "500 Matches",
@@ -278,7 +302,7 @@ export const achievements: Achievement[] = [
   {
     id: "matches-1000",
     condition: (team, opponent, match) => {
-      const meta = getSeasonMeta(team, match.season);
+      const meta = career(team);
       return meta.totalMatches >= 1000;
     },
     title: "I haven't left this place for years",
@@ -288,7 +312,7 @@ export const achievements: Achievement[] = [
   {
     id: "score-1",
     condition: (team, opponent, match) => {
-      const meta = getSeasonMeta(team, match.season);
+      const meta = career(team);
       return meta.totalScore >= 1;
     },
     title: "First goal",
@@ -298,7 +322,7 @@ export const achievements: Achievement[] = [
   {
     id: "score-10",
     condition: (team, opponent, match) => {
-      const meta = getSeasonMeta(team, match.season);
+      const meta = career(team);
       return meta.totalScore >= 10;
     },
     title: "10 Goals",
@@ -308,7 +332,7 @@ export const achievements: Achievement[] = [
   {
     id: "score-100",
     condition: (team, opponent, match) => {
-      const meta = getSeasonMeta(team, match.season);
+      const meta = career(team);
       return meta.totalScore >= 100;
     },
     title: "100 Goals",
@@ -318,7 +342,7 @@ export const achievements: Achievement[] = [
   {
     id: "score-1000",
     condition: (team, opponent, match) => {
-      const meta = getSeasonMeta(team, match.season);
+      const meta = career(team);
       return meta.totalScore >= 1000;
     },
     title: "1000 Goals",
@@ -328,7 +352,7 @@ export const achievements: Achievement[] = [
   {
     id: "score-2500",
     condition: (team, opponent, match) => {
-      const meta = getSeasonMeta(team, match.season);
+      const meta = career(team);
       return meta.totalScore >= 2500;
     },
     title: "2500 Goals",
@@ -338,8 +362,8 @@ export const achievements: Achievement[] = [
   {
     id: "score-5000",
     condition: (team, opponent, match) => {
-      const meta = getSeasonMeta(team, match.season);
-      return meta.totalScore >= 2500;
+      const meta = career(team);
+      return meta.totalScore >= 5000;
     },
     title: "5000 Goals",
     description: `Score a total of 5000 goals`,
@@ -603,11 +627,9 @@ export function checkAchievements(
   opponent: TeamWithMetaAndAchievements,
   match: Match,
 ): Achievement[] {
-  const teamAchievements = team.achievements.filter(
-    a => a.season === match.season,
-  );
+  // once per team, ever: whatever was earned in any season isn't earned again
   return achievements.filter(achievement => {
-    if (teamAchievements.find(a => a.achievement === achievement.id)) {
+    if (team.achievements.find(a => a.achievement === achievement.id)) {
       return false;
     }
     return achievement.condition(team, opponent, match);

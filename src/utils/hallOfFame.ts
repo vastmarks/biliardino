@@ -13,13 +13,14 @@ import {
   computePlayerStats,
   parsePlayers,
 } from "~/utils/playerStats";
-import { PAIR_MIN_MATCHES, UPSET_MIN_GAP, topPairs } from "~/utils/dashboard";
+import { PAIR_MIN_MATCHES, UPSET_MIN_GAP, topTeams } from "~/utils/dashboard";
 
 export interface SeasonMatch extends MatchLike {
   id: number;
   season: number;
 }
 
+/** a team (1v1 or 2v2) with its numbers per season */
 export interface PairMeta {
   name: string;
   teamsize: number;
@@ -62,12 +63,18 @@ export interface SeasonChampion {
   /** first and last match of the season */
   from: Date;
   to: Date;
+  /** best individual rating, all formats */
   champion?: { player: string; rating: number; wins: number; losses: number };
+  /** best 1v1 team (a player on their own) */
+  single?: { player: string; rating: number };
+  /** best 2v2 team */
   pair?: { players: string[]; rating: number };
 }
 
 export interface HallOfFame {
   records: HallRecord[];
+  /** the champions of the last season that has ended (none while the first one runs) */
+  reigning?: SeasonChampion;
   seasons: SeasonChampion[];
   totalMatches: number;
 }
@@ -99,7 +106,7 @@ function better(
 
 export function computeHallOfFame(
   matches: SeasonMatch[],
-  pairs: PairMeta[],
+  teams: PairMeta[],
   currentSeason: number,
 ): HallOfFame {
   const ordered = chronological(matches);
@@ -126,7 +133,8 @@ export function computeHallOfFame(
           a.name.localeCompare(b.name),
       );
     const top = ranked[0];
-    const pair = topPairs(pairs, season, PAIR_MIN_MATCHES, 1)[0];
+    const pair = topTeams(teams, season, 2, PAIR_MIN_MATCHES, 1)[0];
+    const single = topTeams(teams, season, 1, PAIR_MIN_MATCHES, 1)[0];
     champions.push({
       season,
       current: season === currentSeason,
@@ -139,6 +147,7 @@ export function computeHallOfFame(
         wins: top.wins,
         losses: top.losses,
       },
+      single: single && { player: single.players[0], rating: single.rating },
       pair: pair && { players: pair.players, rating: pair.rating },
     });
 
@@ -279,9 +288,11 @@ export function computeHallOfFame(
     "biggestUpset",
     "marathon",
   ];
+  const newestFirst = champions.reverse();
   return {
     records: ORDER.flatMap(k => (records.has(k) ? [records.get(k)!] : [])),
-    seasons: champions.reverse(),
+    reigning: newestFirst.find(s => s.season < currentSeason),
+    seasons: newestFirst,
     totalMatches: ordered.length,
   };
 }

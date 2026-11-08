@@ -10,7 +10,11 @@ export const teamsRouter = router({
     .input(z.object({ teamsize: z.number().int().min(1).max(2).default(1) }))
     .query(({ input }) =>
       prisma.team.findMany({
-        include: { meta: true },
+        // achievements: their points are shown for all seasons together
+        include: {
+          meta: true,
+          achievements: { select: { achievement: true } },
+        },
         where: { teamsize: input.teamsize },
       }),
     ),

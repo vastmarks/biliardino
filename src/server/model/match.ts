@@ -124,12 +124,4 @@ async function grantAchievements(
       },
     });
   }
-  await db.teamMeta.update({
-    where: { season_teamId: { season: match.season, teamId: team.id } },
-    data: {
-      achievementPoints: {
-        increment: earned.reduce((sum, a) => sum + a.points, 0),
-      },
-    },
-  });
 }
