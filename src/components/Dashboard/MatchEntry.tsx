@@ -230,7 +230,7 @@ export const MatchEntry = ({
     created.length === 0
   ) {
     return (
-      <section className="rounded-lg bg-white dark:bg-gray-800 shadow p-5 text-center text-sm text-gray-500">
+      <section className="rounded-lg bg-white dark:bg-gray-800 shadow-sm p-5 text-center text-sm text-gray-500">
         A {format} needs at least {needed} players. Add players on the{" "}
         <Link
           href="/players"
@@ -256,7 +256,7 @@ export const MatchEntry = ({
         }`}
         // one border per state, never two: dashed = empty, solid celeste = being picked,
         // solid team colour = filled
-        className={`min-h-11 w-full px-3 rounded-lg border-2 text-base text-left truncate transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 ${
+        className={`min-h-11 w-full px-3 rounded-lg border-2 text-base text-left truncate transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-blue-500/40 ${
           p
             ? sideColor[side]
             : active === i
@@ -290,14 +290,14 @@ export const MatchEntry = ({
         setStatus(null);
       }}
       onFocus={e => e.currentTarget.select()}
-      className="w-16 h-14 text-center text-3xl font-bold tabular-nums rounded-lg bg-gray-100 dark:bg-gray-900 border-0 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+      className="w-16 h-14 text-center text-3xl font-bold tabular-nums rounded-lg bg-gray-100 dark:bg-gray-900 border-0 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
     />
   );
 
   return (
     <form
       onSubmit={submit}
-      className="rounded-lg bg-white dark:bg-gray-800 shadow p-3 sm:p-4"
+      className="rounded-lg bg-white dark:bg-gray-800 shadow-sm p-3 sm:p-4"
     >
       <div className="flex items-center justify-between mb-3">
         <div
@@ -372,7 +372,7 @@ export const MatchEntry = ({
             placeholder="Note (optional)"
             aria-label="Note"
             autoFocus
-            className="flex-1 h-11 px-3 text-base rounded-lg bg-gray-100 dark:bg-gray-900 border-0 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            className="flex-1 h-11 px-3 text-base rounded-lg bg-gray-100 dark:bg-gray-900 border-0 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
           />
           <button
             type="button"

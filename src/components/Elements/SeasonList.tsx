@@ -40,7 +40,7 @@ export const SeasonList: FunctionComponent<{ seasons: Season[] }> = ({
               <td className={`p-3`}>
                 {season.number}
                 {season.current && (
-                  <span className="inline-flex items-center bg-green-50 rounded px-2 py-0.5 text-xs font-medium text-green-700 ml-3">
+                  <span className="inline-flex items-center bg-green-50 rounded-sm px-2 py-0.5 text-xs font-medium text-green-700 ml-3">
                     Active
                   </span>
                 )}

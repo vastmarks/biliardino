@@ -20,13 +20,13 @@ const AchievementCard: FunctionComponent<{
   let bgColor;
   switch (true) {
     case achievement.points > 25:
-      bgColor = "bg-gradient-to-b from-yellow-500 to-amber-600";
+      bgColor = "bg-linear-to-b from-yellow-500 to-amber-600";
       break;
     case achievement.points > 10:
-      bgColor = "bg-gradient-to-b from-gray-400 to-gray-500";
+      bgColor = "bg-linear-to-b from-gray-400 to-gray-500";
       break;
     default:
-      bgColor = "bg-gradient-to-b from-amber-700 to-amber-800";
+      bgColor = "bg-linear-to-b from-amber-700 to-amber-800";
   }
   const isAdmin = useIsAdmin();
   const utils = trpc.useUtils();
@@ -40,7 +40,7 @@ const AchievementCard: FunctionComponent<{
   });
 
   return (
-    <div className="w-full border rounded flex items-center dark:border-gray-500 group">
+    <div className="w-full border rounded-sm flex items-center dark:border-gray-500 group">
       <div className={`p-3 text-lg h-full text-white flex items-center`}>
         <div>
           <span

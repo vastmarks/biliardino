@@ -7,7 +7,7 @@ import { trpc } from "~/utils/trpc";
 
 const digits = (v: string) => v.replace(/\D/g, "").slice(0, 2);
 const field =
-  "w-full h-11 px-3 text-base rounded-lg bg-gray-100 dark:bg-gray-900 border-0 focus:ring-2 focus:ring-blue-500 focus:outline-none";
+  "w-full h-11 px-3 text-base rounded-lg bg-gray-100 dark:bg-gray-900 border-0 focus:ring-2 focus:ring-blue-500 focus:outline-hidden";
 
 type Roster = Array<{
   id: number;

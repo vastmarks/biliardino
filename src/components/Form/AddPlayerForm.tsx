@@ -37,7 +37,7 @@ export const AddPlayerForm = () => {
         placeholder="Name"
         autoComplete="off"
         onChange={e => setName(e.target.value)}
-        className="bg-gray-50 p-2 rounded-lg focus:outline-none dark:bg-gray-900"
+        className="bg-gray-50 p-2 rounded-lg focus:outline-hidden dark:bg-gray-900"
       />
       <button
         type="submit"

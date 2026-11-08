@@ -26,7 +26,7 @@ export const SeasonSelector: FunctionComponent = () => {
     <label className="translate-y-1 inline-flex h-7 items-center gap-1 rounded-full border border-gray-200 dark:border-gray-700 pl-3 pr-1 text-xs text-gray-500 dark:text-gray-400">
       Season
       <select
-        className="bg-transparent font-semibold text-gray-700 dark:text-gray-200 text-base sm:text-xs cursor-pointer rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
+        className="bg-transparent font-semibold text-gray-700 dark:text-gray-200 text-base sm:text-xs cursor-pointer rounded-full focus:outline-hidden focus-visible:ring-2 focus-visible:ring-blue-500/40"
         value={selectedSeason}
         onChange={e => setSeason(+e.target.value)}
       >

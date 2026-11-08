@@ -47,13 +47,13 @@ Everything is written in **TypeScript**, so the same language is used in the bro
 | [Next.js](https://nextjs.org/docs/pages) | A framework around React: turns each file in `src/pages/` into a page with its own address, prepares pages on the server, bundles everything for the browser. | One project for pages _and_ API, one container. We use its "Pages Router". | `src/pages/`, `next.config.js` |
 | [tRPC](https://trpc.io/docs) | A way for the browser to call functions on the server as if they were local, with types checked on both sides. | No hand-written API documentation to keep in sync; a typo in a field name is a build error. | `src/server/routers/`, `src/utils/trpc.ts` |
 | [TanStack Query](https://tanstack.com/query/latest/docs/framework/react/overview) | Keeps data fetched from the server in the browser, refreshes it, and tells components when it changes. Comes with tRPC. | After saving a match, the leaderboard updates by itself. | used through `trpc.….useQuery` |
-| [Prisma](https://www.prisma.io/docs/orm) | Describes the database tables in one file and gives typed functions to read and write them. Also manages _migrations_ (changes to the tables). | No hand-written SQL for normal operations; the schema is readable. | `prisma/`, `src/server/prisma.ts` |
+| [Prisma](https://www.prisma.io/docs/orm) | Describes the database tables in one file and gives typed functions to read and write them. Also manages _migrations_ (changes to the tables). | No hand-written SQL for normal operations; the schema is readable. | `prisma/`, `prisma.config.ts`, `src/server/prisma.ts` |
 | [SQLite](https://www.sqlite.org/about.html) | A complete database stored in one file, with no separate database server. | One container, one file to back up. Plenty for an office (thousands of matches a year). | `/data/biliardino.db` |
 | [Zod](https://zod.dev) | Describes what valid input looks like ("a score is a whole number 0–99") and rejects everything else. | Every request from a browser is checked before it touches the database. | `src/utils/validation.ts`, `src/server/env.js` |
 | [NextAuth](https://next-auth.js.org) | Login handling: password check, the login cookie, the login page. | The admin password. | `src/pages/api/auth/[...nextauth].ts` |
-| [Tailwind CSS](https://tailwindcss.com/docs) | Styling through short class names written directly on elements (`rounded-lg p-3 text-sm`). | No separate stylesheets to keep in sync; small final CSS. | `className="..."` everywhere, `tailwind.config.js` |
+| [Tailwind CSS](https://tailwindcss.com/docs) | Styling through short class names written directly on elements (`rounded-lg p-3 text-sm`). | No separate stylesheets to keep in sync; small final CSS. | `className="..."` everywhere; colours and fonts in `src/styles/globals.css` (`@theme`) |
 | [Zustand](https://zustand.docs.pmnd.rs) | A tiny store for state shared between pages in the browser. | Only remembers which season you're looking at. | `src/utils/store.ts` |
-| [Jest](https://jestjs.io/docs/getting-started) | Runs automated tests. | 88 tests run on every change. | `**/__tests__/` |
+| [Jest](https://jestjs.io/docs/getting-started) | Runs automated tests. | About 100 tests run on every change. | `**/__tests__/` |
 | [Docker](https://docs.docker.com/get-started/docker-overview/) | Packages the app with everything it needs into an image. | Runs identically on your Mac and the NAS. | `Dockerfile`, compose files |
 | [GitHub Actions](https://docs.github.com/en/actions) | GitHub's machines that run the checks and build the image on every push. | Nothing broken reaches the NAS. | `.github/workflows/build.yml` |
 
@@ -101,10 +101,12 @@ biliardino/
 │   ├── model/                small helpers usable in browser and server
 │   ├── styles/globals.css    the few global styles, theme colour variables
 │   ├── fonts/                Outfit, the brand typeface (bundled)
-│   └── middleware.ts         sends /admin visitors to the login first
+│   ├── generated/prisma/     the database client, generated from the schema (not in git)
+│   └── proxy.ts              sends /admin visitors to the login first
 ├── prisma/
 │   ├── schema.prisma         the database tables
 │   └── migrations/           every change to the tables, in order
+├── prisma.config.ts          where the database is (read by the Prisma command-line tool)
 ├── public/                   files served as they are (logo, icons, manifest for "Add to Home Screen")
 ├── scripts/seed-demo.ts      fills an empty database with fake players and matches
 ├── e2e/                      browser tests (Chrome, Firefox)
@@ -334,7 +336,7 @@ The same replay produces each player's history, partners ("with") and opponents 
 - the comparison takes the same time however much of a guess is right ("constant time"), so the timing gives nothing away;
 - on success NextAuth sets a cookie signed with `NEXTAUTH_SECRET`, valid for 30 days. Because it's signed, it can't be forged without the secret.
 
-`src/middleware.ts` sends anyone opening `/admin` without that cookie to the login page. On the server, `roleAwareProcedure` and `protectedProcedure` read the same cookie.
+`src/proxy.ts` (Next.js used to call this file "middleware") sends anyone opening `/admin` without that cookie to the login page. On the server, `roleAwareProcedure` and `protectedProcedure` read the same cookie.
 
 Because everyone may enter results, keep the app on your home/office network (or behind a VPN such as Tailscale), not open on the internet.
 
@@ -378,9 +380,9 @@ Other choices for speed and phones:
 
 The image is built in three **stages**. Each starts from a clean Node.js 22 base (the small _Alpine Linux_ variant), and only the last one becomes the image you run:
 
-1. **deps**: installs the exact library versions from `package-lock.json` (`npm ci`). This stage includes compilers, needed only if the SQLite library has to be built from source.
+1. **deps**: installs the exact library versions from `package-lock.json` (`npm ci`), which also generates the database client into `src/generated/prisma`. This stage includes compilers, needed only if the SQLite library has to be built from source.
 2. **builder**: copies the code and runs `npm run build`. Next.js produces a _standalone_ output: a minimal `server.js` plus only the library files the app really uses.
-3. **runner**: copies just the standalone output, the static files, `public/`, the migrations and `entrypoint.sh`, and installs the Prisma command-line tool (to apply migrations) in the exact version the app was built with. Compilers, source code and the full `node_modules` stay behind.
+3. **runner**: copies just the standalone output, the static files, `public/`, the migrations with `prisma.config.ts` and `entrypoint.sh`, and installs the Prisma command-line tool (to apply migrations) in the exact version the app was built with. Compilers, source code and the full `node_modules` stay behind.
 
 The final image runs as an unprivileged user, never as `root`. On the NAS the compose file sets it to TrueNAS's `apps` user (568), which owns the data folder. The database is outside the image, in the `/data` volume, so replacing the image never touches it.
 
@@ -403,7 +405,7 @@ When the push is a **version tag** (`v0.7.1`), the image is also published to `g
 
 | Kind | What it proves | Where |
 | --- | --- | --- |
-| **Lint** (ESLint) | common mistakes and React rule violations | `next lint` |
+| **Lint** (ESLint) | common mistakes and React rule violations | `eslint .` (rules in `eslint.config.mjs`) |
 | **Formatting** (Prettier) | consistent layout of the code, so changes show only what really changed | `prettier --check` |
 | **Type check** | every value is used as what it is, API and pages agree | `tsc --noEmit` |
 | **Unit tests** | the calculations: Elo, team and player stats, dashboard, achievements, names, 24h rule, search | `src/utils/__tests__/`, `src/components/Dashboard/__tests__/` |

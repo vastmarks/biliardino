@@ -19,7 +19,7 @@ type Dialog =
   | null;
 
 const input =
-  "w-full h-11 px-3 text-base rounded-lg bg-gray-100 dark:bg-gray-900 border-0 focus:ring-2 focus:ring-blue-500 focus:outline-none";
+  "w-full h-11 px-3 text-base rounded-lg bg-gray-100 dark:bg-gray-900 border-0 focus:ring-2 focus:ring-blue-500 focus:outline-hidden";
 const secondary = "h-11 px-4 rounded-lg bg-gray-200 dark:bg-gray-700";
 const danger =
   "h-11 px-4 rounded-lg bg-red-600 text-white font-semibold disabled:opacity-40";
@@ -93,13 +93,13 @@ export const PlayerManager = ({ players }: { players: Player[] }) => {
   return (
     <section className="mt-4">
       <h2 className="font-bold mb-2 px-1">Manage players</h2>
-      <ul className="divide-y dark:divide-gray-700 rounded-lg bg-white dark:bg-gray-800 shadow">
+      <ul className="divide-y dark:divide-gray-700 rounded-lg bg-white dark:bg-gray-800 shadow-sm">
         {players.map(p => (
           <li
             key={p.id}
             className="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2 text-sm"
           >
-            <span className="flex-1 min-w-[8rem]">
+            <span className="flex-1 min-w-32">
               <Link
                 href={`/players/${encodeURIComponent(p.key)}`}
                 className={`font-bold hover:underline ${p.archived ? "opacity-50" : ""}`}

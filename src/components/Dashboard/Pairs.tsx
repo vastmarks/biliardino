@@ -6,7 +6,7 @@ import { teamNameFromKeys } from "~/utils/players";
 export const Pairs = ({ pairs }: { pairs: PairRow[] }) => {
   if (pairs.length === 0) return null;
   return (
-    <section className="rounded-lg bg-white dark:bg-gray-800 shadow">
+    <section className="rounded-lg bg-white dark:bg-gray-800 shadow-sm">
       <h2 className="font-bold px-3 pt-3 sm:px-4">Top pairs</h2>
       <ol className="mt-1 pb-1">
         {pairs.map((p, i) => (

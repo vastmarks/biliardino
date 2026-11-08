@@ -134,7 +134,7 @@ Based on [nehalist/hilde](https://github.com/nehalist/hilde) (last upstream comm
 - New identity (0.8.0): the biliarDino logo, celeste palette for light and dark, Outfit headings.
 - Renamed to **Biliardino** (0.7.1). A database file from before the rename (`hilde.db`) is renamed automatically on start.
 
-- Dependencies brought up to date: Next.js 15, React 19, tRPC 11, TanStack Query 5, Prisma 6, TypeScript 5.9, Node 22
+- Dependencies brought up to date (0.10.0): Next.js 16, React 19, tRPC 11, TanStack Query 5, Prisma 7, Tailwind CSS 4, ESLint 10, Jest 30, TypeScript 5.9, Node 22
 - **MySQL replaced by SQLite** (Prisma's Rust-free client with the better-sqlite3 driver adapter): one container, one volume. A fresh initial migration replaces the old MySQL ones, **existing MySQL data is not migrated automatically**.
 - Secure by default: no built-in admin password or session secret (the app refuses to start without them); deleting old matches, teams or achievements and deleting players with matches require the admin login
 - New per-player statistics (see above)
@@ -144,7 +144,7 @@ Based on [nehalist/hilde](https://github.com/nehalist/hilde) (last upstream comm
 - Team ratings are recalculated from the remaining matches when a match, team or achievement is deleted (before, deleting a lost match lowered the loser's rating further; opponents of deleted teams kept stale ratings)
 - Saving is transactional: two phones saving at the same moment can't overwrite each other's ratings
 - Fixed a MySQL-only assumption (placeholder `id: 0` on team creation) that breaks on SQLite
-- Not changed on purpose: Tailwind 3, ESLint 8 / `next lint`, next-auth 4 (their successors are bigger migrations)
+- Not changed on purpose: next-auth 4 (now maintained by Better Auth with security fixes; the admin login doesn't need more) and TypeScript 7 (until 7.1 lets ESLint and Jest work with it)
 
 ## License
 

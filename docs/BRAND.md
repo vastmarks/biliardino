@@ -41,7 +41,7 @@ More variants (one colour, reversed on celeste, stacked, night icon) come out of
 | Loss, errors | `#C62828` | `#F87171` |
 | Highlight ("sole") | `#F2A20C` | `#FFC24D` |
 
-Every text colour meets WCAG 2.2 AA contrast (4.5:1, or 3:1 for large text) on its background. In code: `tailwind.config.js` (the celeste scale also answers to `blue-*` and `sky-*`) and the CSS variables at the top of `src/styles/globals.css` for the colours that change with the theme.
+Every text colour meets WCAG 2.2 AA contrast (4.5:1, or 3:1 for large text) on its background. In code: the `@theme` block at the top of `src/styles/globals.css` (the celeste scale also answers to `blue-*` and `sky-*`), followed by the colours that change with the theme.
 
 ## Typeface
 

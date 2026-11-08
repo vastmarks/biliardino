@@ -141,7 +141,7 @@ export const PlayerSearch = ({
           setHighlight(0);
         }}
         onKeyDown={onKeyDown}
-        className="w-full h-12 px-3 text-base rounded-lg bg-gray-100 dark:bg-gray-900 border-0 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:opacity-40"
+        className="w-full h-12 px-3 text-base rounded-lg bg-gray-100 dark:bg-gray-900 border-0 focus:ring-2 focus:ring-blue-500 focus:outline-hidden disabled:opacity-40"
       />
       <div
         id={listId}

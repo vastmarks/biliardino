@@ -162,7 +162,7 @@ export const LineChart: FunctionComponent<{
       </svg>
       {hover !== null && (
         <div
-          className="absolute top-1 pointer-events-none text-xs bg-white dark:bg-gray-800 shadow rounded px-2 py-1 whitespace-nowrap"
+          className="absolute top-1 pointer-events-none text-xs bg-white dark:bg-gray-800 shadow-sm rounded-sm px-2 py-1 whitespace-nowrap"
           style={{
             left: `${(x(hover) / W) * 100}%`,
             transform: `translateX(${hover > steps / 2 ? "-105%" : "5%"})`,

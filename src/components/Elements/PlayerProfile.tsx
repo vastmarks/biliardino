@@ -146,7 +146,7 @@ export const PlayerProfile: FunctionComponent<{
               .map(([format, r]) => (
                 <div
                   key={format}
-                  className="border rounded px-3 py-2 dark:border-gray-600 text-sm"
+                  className="border rounded-sm px-3 py-2 dark:border-gray-600 text-sm"
                 >
                   <b>{format}</b> — {r.matches} played, {r.wins}-{r.losses}
                   {r.draws > 0 ? `-${r.draws}` : ""} ({pct(r.winRate)})

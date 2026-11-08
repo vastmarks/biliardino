@@ -7,7 +7,7 @@ export const AdminLayout = ({ children }: { children: ReactNode }) => (
       <ul>
         <li>
           <button
-            className="py-1 px-2 dark:bg-gray-600 bg-gray-200 rounded"
+            className="py-1 px-2 dark:bg-gray-600 bg-gray-200 rounded-sm"
             onClick={() => signOut({ callbackUrl: "/" })}
           >
             Logout

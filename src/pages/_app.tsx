@@ -9,7 +9,7 @@ import localFont from "next/font/local";
 /** Brand typeface for headings (Outfit, SIL Open Font Licence, see src/fonts/OFL.txt). Bundled, no Google request. */
 const outfit = localFont({
   src: "../fonts/Outfit-Variable.woff2",
-  variable: "--font-brand",
+  variable: "--font-outfit",
   weight: "100 900",
   display: "swap",
 });

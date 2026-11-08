@@ -1,61 +1,166 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-/* Colours that differ between light and dark (see tailwind.config.js). R G B channels. */
+/*
+ * biliarDino theme (Tailwind CSS 4 keeps its settings here, in CSS). Colours follow the brand
+ * palette (docs/BRAND.md): celeste for the brand and actions, cool blue-grey neutrals, and a few
+ * colours that change between light and dark wherever one shade can't be readable on both.
+ */
+
+/* `dark:` classes apply inside <html class="dark"> (set by next-themes) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-celeste-50: #eef9fe;
+  --color-celeste-100: #d6f1fc;
+  --color-celeste-200: #b2e6fa;
+  --color-celeste-300: #7fd3f5;
+  --color-celeste-400: #45baec;
+  --color-celeste-500: #0a78ad; /* actions: buttons (white text 4.9:1), links on light */
+  --color-celeste-600: #0b6896;
+  --color-celeste-700: #0e5579;
+  --color-celeste-800: #103f59;
+  --color-celeste-900: #0a2a3d;
+  --color-celeste-950: #071c29;
+
+  /* blue-* and sky-* are the celeste scale too */
+  --color-blue-50: var(--color-celeste-50);
+  --color-blue-100: var(--color-celeste-100);
+  --color-blue-200: var(--color-celeste-200);
+  --color-blue-300: var(--color-celeste-300);
+  --color-blue-400: var(--color-celeste-400);
+  --color-blue-500: var(--color-celeste-500);
+  --color-blue-600: var(--color-celeste-600);
+  --color-blue-700: var(--color-celeste-700);
+  --color-blue-800: var(--color-celeste-800);
+  --color-blue-900: var(--color-celeste-900);
+  --color-blue-950: var(--color-celeste-950);
+  --color-sky-50: var(--color-celeste-50);
+  --color-sky-100: var(--color-celeste-100);
+  --color-sky-200: var(--color-celeste-200);
+  --color-sky-300: var(--color-celeste-300);
+  --color-sky-400: var(--color-celeste-400);
+  --color-sky-500: var(--color-celeste-500);
+  --color-sky-600: var(--color-celeste-600);
+  --color-sky-700: var(--color-celeste-700);
+  --color-sky-800: var(--color-celeste-800);
+  --color-sky-900: var(--color-celeste-900);
+  --color-sky-950: var(--color-celeste-950);
+
+  --color-gray-50: #f7fafc;
+  --color-gray-100: #f0f5f9; /* page background (light) */
+  --color-gray-200: #dce7ef; /* borders, chips */
+  --color-gray-300: #c2d1dd;
+  --color-gray-400: var(--themed-gray-400); /* secondary text */
+  --color-gray-500: var(--themed-gray-500); /* muted text */
+  --color-gray-600: #3b4f63;
+  --color-gray-700: #22384b; /* borders (dark) */
+  --color-gray-800: #112231; /* cards (dark) */
+  --color-gray-900: #0a1621; /* page background (dark), body text (light) */
+  --color-gray-950: #060e16;
+
+  --color-green-500: var(--themed-green-500); /* wins, +rating */
+  --color-green-600: #15803d;
+  --color-red-500: var(--themed-red-500); /* losses, errors, delete */
+  --color-red-600: #b42318;
+  --color-sole: #f2a20c; /* highlights */
+  --color-sole-light: #ffc24d;
+}
+
+/*
+ * `font-brand`: Outfit. --font-outfit is set by next/font on the app's wrapper (src/pages/_app.tsx),
+ * so the value is written into each class ("inline") instead of being resolved on <html>.
+ */
+@theme inline {
+  --font-brand: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* The colours that differ between light and dark */
 :root {
-  --c-gray-400: 88 108 128; /* #586C80 */
-  --c-gray-500: 82 102 122; /* #52667A */
-  --c-green-500: 21 128 61; /* #15803D */
-  --c-red-500: 198 40 40; /* #C62828 */
+  --themed-gray-400: #586c80;
+  --themed-gray-500: #52667a;
+  --themed-green-500: #15803d;
+  --themed-red-500: #c62828;
 }
 
 .dark {
-  --c-gray-400: 131 153 174; /* #8399AE */
-  --c-gray-500: 148 170 189; /* #94AABD */
-  --c-green-500: 74 222 128; /* #4ADE80 */
-  --c-red-500: 248 113 113; /* #F87171 */
+  --themed-gray-400: #8399ae;
+  --themed-gray-500: #94aabd;
+  --themed-green-500: #4ade80;
+  --themed-red-500: #f87171;
 }
 
-html {
-  -webkit-text-size-adjust: 100%;
-  text-size-adjust: 100%;
-  -webkit-tap-highlight-color: transparent;
-  color-scheme: light;
+/*
+ * Tailwind 4 changed a few defaults; these keep the Tailwind 3 look
+ * (https://tailwindcss.com/docs/upgrade-guide#changes-from-v3).
+ */
+@layer base {
+  /* borders were light grey, now they'd follow the text colour */
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+
+  /* buttons showed a pointer (hand) cursor */
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  /* placeholders were grey */
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-gray-400);
+  }
 }
 
-html.dark {
-  color-scheme: dark;
-}
+/*
+ * Page-wide defaults. Inside the base layer so that Tailwind classes still win over them
+ * (in Tailwind 4 anything outside a layer would beat every class).
+ */
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+    color-scheme: light;
+  }
 
-body {
-  @apply bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-gray-100;
-  min-height: 100dvh;
-}
+  html.dark {
+    color-scheme: dark;
+  }
 
-/* Brand typeface (Outfit, bundled) for headings; body text stays on the system font. */
-h1,
-h2,
-h3 {
-  font-family: var(--font-brand), ui-sans-serif, system-ui, sans-serif;
-}
+  body {
+    @apply bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-gray-100;
+    min-height: 100dvh;
+  }
 
-/* iOS zooms into inputs below 16px */
-input,
-select,
-textarea {
-  font-size: max(16px, 1em);
-}
+  /* Brand typeface (Outfit, bundled) for headings; body text stays on the system font. */
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
+  }
 
-button,
-a,
-[role="tab"] {
-  touch-action: manipulation;
-}
+  /* iOS zooms into inputs below 16px */
+  input,
+  select,
+  textarea {
+    font-size: max(16px, 1em);
+  }
 
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.01ms !important;
-    transition-duration: 0.01ms !important;
+  button,
+  a,
+  [role="tab"] {
+    touch-action: manipulation;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }

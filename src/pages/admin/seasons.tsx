@@ -44,7 +44,7 @@ const Seasons = () => {
               placeholder="Numbers only"
               value={number}
               onChange={e => setNumber(e.target.value)}
-              className="bg-gray-50 w-full p-2 text-base rounded-lg focus:outline-none dark:bg-gray-900"
+              className="bg-gray-50 w-full p-2 text-base rounded-lg focus:outline-hidden dark:bg-gray-900"
             />
           </div>
           <button

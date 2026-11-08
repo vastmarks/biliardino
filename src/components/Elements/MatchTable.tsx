@@ -41,7 +41,7 @@ const Side: FunctionComponent<{
         won ? "font-semibold" : "text-gray-600 dark:text-gray-300"
       }`}
     >
-      <div className="break-words">
+      <div className="wrap-break-word">
         <PlayerNames team={team} />
         {badges && (
           <span title={badges} aria-label={badges} className="ml-1">
@@ -75,7 +75,7 @@ export const MatchRow: FunctionComponent<{
         align="right"
       />
       <div
-        className="shrink-0 px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-900 font-mono tabular-nums text-base"
+        className="shrink-0 px-2 py-0.5 rounded-sm bg-gray-100 dark:bg-gray-900 font-mono tabular-nums text-base"
         aria-label={`${match.score1} to ${match.score2}`}
       >
         {match.score1}
@@ -124,7 +124,7 @@ export const MatchTable: FunctionComponent<{ matches: MatchRowData[] }> = ({
 
   return (
     <>
-      <ul className="divide-y dark:divide-gray-700 rounded-lg bg-white dark:bg-gray-800 shadow">
+      <ul className="divide-y dark:divide-gray-700 rounded-lg bg-white dark:bg-gray-800 shadow-sm">
         {matches.map(match => (
           <MatchRow
             key={match.id}

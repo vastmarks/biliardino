@@ -27,7 +27,7 @@ const Form = ({ form }: { form: BoardRow["form"] }) => (
         <span
           key={i}
           aria-hidden
-          className={`w-4 h-4 rounded-sm text-[10px] leading-4 text-center font-bold ${
+          className={`w-4 h-4 rounded-xs text-[10px] leading-4 text-center font-bold ${
             r ? formStyle[r] : "bg-gray-200 dark:bg-gray-700"
           }`}
         >
@@ -79,7 +79,7 @@ export const Leaderboard = ({
   );
 
   return (
-    <section className="rounded-lg bg-white dark:bg-gray-800 shadow">
+    <section className="rounded-lg bg-white dark:bg-gray-800 shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-2 px-3 pt-3 sm:px-4">
         <h2 className="font-bold">Leaderboard</h2>
         <div

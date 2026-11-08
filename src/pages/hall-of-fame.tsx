@@ -77,7 +77,7 @@ const RECORDS: Record<
 const RecordCard = ({ record }: { record: HallRecord }) => {
   const meta = RECORDS[record.key];
   return (
-    <li className="rounded-lg bg-white dark:bg-gray-800 shadow p-3 sm:p-4 min-w-0">
+    <li className="rounded-lg bg-white dark:bg-gray-800 shadow-sm p-3 sm:p-4 min-w-0">
       <div className="text-[11px] uppercase tracking-wide text-gray-400">
         <span aria-hidden>{meta.icon}</span> {meta.label}
       </div>
@@ -161,7 +161,7 @@ const HallOfFame = () => {
       {isLoading && <LoadingIndicator />}
 
       {data && data.totalMatches === 0 && (
-        <p className="rounded-lg bg-white dark:bg-gray-800 shadow p-6 text-center text-sm text-gray-500">
+        <p className="rounded-lg bg-white dark:bg-gray-800 shadow-sm p-6 text-center text-sm text-gray-500">
           No records yet. Play a few matches and they will show up here.
         </p>
       )}
@@ -184,7 +184,7 @@ const HallOfFame = () => {
           <h2 id="champions" className="font-bold mb-2 px-1">
             Champions
           </h2>
-          <ul className="divide-y divide-gray-100 dark:divide-gray-700 rounded-lg bg-white dark:bg-gray-800 shadow">
+          <ul className="divide-y divide-gray-100 dark:divide-gray-700 rounded-lg bg-white dark:bg-gray-800 shadow-sm">
             {data.seasons.map(s => (
               <SeasonRow key={s.season} s={s} />
             ))}

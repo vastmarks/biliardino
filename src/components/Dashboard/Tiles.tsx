@@ -13,7 +13,7 @@ const Tile = ({
   children: ReactNode;
   sub: string;
 }) => (
-  <div className="rounded-lg bg-white dark:bg-gray-800 shadow p-3 min-w-0">
+  <div className="rounded-lg bg-white dark:bg-gray-800 shadow-sm p-3 min-w-0">
     <div className="text-[11px] uppercase tracking-wide text-gray-400">
       <span aria-hidden>{icon}</span> {label}
     </div>
