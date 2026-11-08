@@ -8,12 +8,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
-- **Help page** (`/help`, the **?** in the menu and *Help* at the bottom): every page explained for players, how the rating works with a worked example, seasons, all achievements with their points, and how to fix a wrong entry. Its numbers (thresholds, the example, the achievement list) come from the app's own code, so they can't go out of date.
+- **Help page** (`/help`, the **?** in the menu and _Help_ at the bottom): every page explained for players, how the rating works with a worked example, seasons, all achievements with their points, and how to fix a wrong entry. Its numbers (thresholds, the example, the achievement list) come from the app's own code, so they can't go out of date.
 
 ### Changed
 
-- Teams table: *Score* is now **Goals** (goals scored this season; Ø per match) and *Ach.* is **🏅 Points** (achievement points); every column has a tooltip, and a link explains them
-- Achievements talk about goals instead of "points" (*First goal*, *10 Goals*...); *5000 Goals* said 2500
+- Teams table: _Score_ is now **Goals** (goals scored this season; Ø per match) and _Ach._ is **🏅 Points** (achievement points); every column has a tooltip, and a link explains them
+- Achievements talk about goals instead of "points" (_First goal_, _10 Goals_...); _5000 Goals_ said 2500
 - The menu no longer shows a scrollbar on narrow phones
 
 ## [0.11.0] - 2026-11-08
