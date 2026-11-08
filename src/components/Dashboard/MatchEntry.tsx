@@ -1,4 +1,10 @@
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import {
+  FormEvent,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import Link from "next/link";
 import { toast } from "~/utils/toast";
 import { trpc } from "~/utils/trpc";
@@ -7,6 +13,49 @@ import { PlayerSearch } from "~/components/Dashboard/PlayerSearch";
 
 type Player = { id: number; key: string; name: string; archived: boolean };
 const FORMAT_KEY = "biliardino:format";
+
+/**
+ * The last used format (1v1/2v2), remembered in the browser. Read with useSyncExternalStore,
+ * React's way to use a browser value: the server renders 2v2, the browser then switches to the
+ * stored one without a mismatch. https://react.dev/reference/react/useSyncExternalStore
+ */
+const formatStore = (() => {
+  let current: MatchFormat | null = null; // also works when storage is blocked
+  const listeners = new Set<() => void>();
+  const notify = () => listeners.forEach(l => l());
+  return {
+    subscribe(listener: () => void) {
+      listeners.add(listener);
+      const onStorage = () => {
+        current = null;
+        listener();
+      };
+      window.addEventListener("storage", onStorage);
+      return () => {
+        listeners.delete(listener);
+        window.removeEventListener("storage", onStorage);
+      };
+    },
+    get(): MatchFormat {
+      if (current) return current;
+      try {
+        return localStorage.getItem(FORMAT_KEY) === "1v1" ? "1v1" : "2v2";
+      } catch {
+        return "2v2";
+      }
+    },
+    server: (): MatchFormat => "2v2",
+    set(f: MatchFormat) {
+      current = f;
+      try {
+        localStorage.setItem(FORMAT_KEY, f);
+      } catch {
+        /* storage unavailable: remembered until the page is closed */
+      }
+      notify();
+    },
+  };
+})();
 
 const sideColor = [
   "border-sky-500 bg-sky-50 dark:bg-sky-950",
@@ -30,7 +79,11 @@ export const MatchEntry = ({
   season: number;
   isCurrentSeason: boolean;
 }) => {
-  const [format, setFormat] = useState<MatchFormat>("2v2");
+  const format = useSyncExternalStore(
+    formatStore.subscribe,
+    formatStore.get,
+    formatStore.server,
+  );
   // flat list: side 1 slots followed by side 2 slots (only `size` per side are shown)
   const [slots, setSlots] = useState<Array<number | null>>([
     null,
@@ -48,15 +101,6 @@ export const MatchEntry = ({
   const [created, setCreated] = useState<Player[]>([]);
   const searchRef = useRef<HTMLInputElement>(null);
   const score1Ref = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(FORMAT_KEY);
-      if (saved === "1v1" || saved === "2v2") setFormat(saved);
-    } catch {
-      /* storage unavailable: keep the default */
-    }
-  }, []);
 
   const everybody = useMemo(
     () => [...roster, ...created.filter(c => !roster.some(r => r.id === c.id))],
@@ -103,14 +147,9 @@ export const MatchEntry = ({
   const available = everybody.filter(p => !p.archived && !pickedIds.has(p.id));
 
   const chooseFormat = (f: MatchFormat) => {
-    setFormat(f);
+    formatStore.set(f);
     setCursor(null);
     setStatus(null);
-    try {
-      localStorage.setItem(FORMAT_KEY, f);
-    } catch {
-      /* ignore */
-    }
   };
 
   const place = (id: number) => {

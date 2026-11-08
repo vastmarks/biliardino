@@ -69,7 +69,14 @@ export const Leaderboard = ({
   const rows = boards[period];
   const isSeason = period === "season";
   const firstPlacement = isSeason ? rows.findIndex(r => r.placement) : -1;
-  let rank = 0;
+  // rank shown in front of each row: placement players (season view) get none
+  const ranks = rows.reduce<number[]>(
+    (acc, r) => [
+      ...acc,
+      !isSeason || !r.placement ? Math.max(0, ...acc) + 1 : 0,
+    ],
+    [],
+  );
 
   return (
     <section className="rounded-lg bg-white dark:bg-gray-800 shadow">
@@ -102,8 +109,8 @@ export const Leaderboard = ({
       ) : (
         <ol className="mt-2 pb-1">
           {rows.map((r, i) => {
-            const ranked = !isSeason || !r.placement;
-            if (ranked) rank += 1;
+            const rank = ranks[i];
+            const ranked = rank > 0;
             return (
               <li key={r.name}>
                 {i === firstPlacement && (
