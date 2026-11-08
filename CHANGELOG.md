@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - A clean install prints one warning instead of four (`prebuild-install`, which comes with the SQLite driver and goes away with a future Prisma version)
 - Seasons page (admin): **Start season N** creates the next season and makes it current in one step; each season shows its dates (first and last match) and number of matches; clear dialogs for _Make current_ and _Delete_
 - Hall of Fame: each season shows the months it was played
+- **New typeface: Geist** for all text, bundled with the app, so biliarDino looks the same on every computer and phone (before, body text used each device's own system font). Scores in match lists use it too, with same-width digits.
 
 ### Fixed
 

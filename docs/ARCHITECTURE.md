@@ -100,7 +100,7 @@ biliardino/
 │   │   └── editRules.ts        the 24-hour rule
 │   ├── model/                small helpers usable in browser and server
 │   ├── styles/globals.css    the few global styles, theme colour variables
-│   ├── fonts/                Outfit, the brand typeface (bundled)
+│   ├── fonts/                Geist, the typeface for all text (bundled)
 │   ├── generated/prisma/     the database client, generated from the schema (not in git)
 │   └── proxy.ts              sends /admin visitors to the login first
 ├── prisma/

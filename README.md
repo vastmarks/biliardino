@@ -131,7 +131,7 @@ Players are defined once on the **Players** page (names are unique, case-insensi
 
 Based on [nehalist/hilde](https://github.com/nehalist/hilde) (last upstream commit: November 2023).
 
-- New identity (0.8.0): the biliarDino logo, celeste palette for light and dark, Outfit headings.
+- New identity (0.8.0): the biliarDino logo, celeste palette for light and dark; Geist for all text (0.10.0).
 - Renamed to **Biliardino** (0.7.1). A database file from before the rename (`hilde.db`) is renamed automatically on start.
 
 - Dependencies brought up to date (0.10.0): Next.js 16, React 19, tRPC 11, TanStack Query 5, Prisma 7, Tailwind CSS 4, ESLint 10, Jest 30, TypeScript 5.9, Node 22

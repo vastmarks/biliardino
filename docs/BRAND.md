@@ -45,7 +45,8 @@ Every text colour meets WCAG 2.2 AA contrast (4.5:1, or 3:1 for large text) on i
 
 ## Typeface
 
-[Outfit](https://github.com/Outfitio/Outfit-Fonts) (SIL Open Font Licence 1.1): the wordmark ("biliar" Regular 400, "Dino" SemiBold 600) and the headings in the app. It's bundled with the app (`src/fonts/`, Latin characters only, 33 kB), so no request goes to Google. Body text uses the device's system font.
+- **The app: [Geist](https://vercel.com/font)** (by Vercel, SIL Open Font Licence 1.1) for all text, headings included. Chosen from Geist, Gantari, Inter and Plus Jakarta Sans by comparing them on the real pages: crisp and modern, and it has same-width digits, so scores and ratings line up in columns (`tabular-nums`). Bundled with the app (`src/fonts/`, Latin characters only, 28 kB): no request to Google, and the same look on every device instead of each system's own font.
+- **The wordmark: [Outfit](https://github.com/Outfitio/Outfit-Fonts)** (SIL Open Font Licence 1.1), "biliar" Regular 400 and "Dino" SemiBold 600. The logo files contain the letters as outlines, so the app doesn't need Outfit itself.
 
 ## Sources
 
