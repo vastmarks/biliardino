@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] - 2026-11-08
+
+### Added
+
+- **Hall of Fame** (`/hall-of-fame`) replaces the Leaderboards page: all-time records (highest rating, longest win streak, most wins, biggest win, biggest upset, marathon day) and the champion and best pair of every season. The old `/leaderboards` address redirects there.
+- Matches page filters: format (All / 1v1 / 2v2), player, and season including "All seasons". The filters are kept in the address, e.g. `/matches?player=anna&format=2v2`.
+
+### Changed
+
+- Every player name links to the player's profile: in match lists (each name of a pair separately), on team pages, in the Hall of Fame and under Manage players
+- Player slots in the match entry have a single border per state: dashed when empty, solid celeste while picking, team colour when filled
+- The season selector in the header is a small pill, aligned with the logo's lettering
+
+### Removed
+
+- The Leaderboards page and its "Team 1 / Team 2" filters on the Matches page
+
 ## [0.8.0] - 2026-11-08
 
 ### Added

@@ -37,6 +37,21 @@ function teamFilter(
   };
 }
 
+/**
+ * Conditions for "the player is on this side": team names are sorted player keys joined by a
+ * comma, so the key is the whole name, the first part or the last part.
+ */
+function sideHas(
+  side: "team1" | "team2",
+  key: string,
+): Prisma.MatchWhereInput[] {
+  return [
+    { [side]: key },
+    { [side]: { startsWith: `${key},` } },
+    { [side]: { endsWith: `,${key}` } },
+  ];
+}
+
 export const matchesRouter = router({
   /** Latest matches (of a team, or between two teams) of a season. */
   list: publicProcedure
@@ -60,25 +75,47 @@ export const matchesRouter = router({
       }),
     ),
 
-  /** Paginated version of `list` for the matches page ("Load more"). */
+  /**
+   * The matches page: newest first, paginated ("Load more"), optionally only one format, one
+   * player's matches, or all seasons.
+   */
   infiniteList: publicProcedure
     .input(
       z.object({
         limit: z.number().int().min(1).max(100).default(50),
         cursor: z.number().int().nullish(),
-        team1: z.string().max(200).optional(),
-        team2: z.string().max(200).optional(),
-        exact: z.boolean().optional(),
-        season: z.number().int().optional(),
+        /** a player's key: matches they played on either side */
+        player: z.string().max(100).optional(),
+        format: z.enum(["1v1", "2v2"]).optional(),
+        /** a season number, "all" for every season; default the current one */
+        season: z.union([z.number().int(), z.literal("all")]).optional(),
       }),
     )
     .query(async ({ input }) => {
+      const where: Prisma.MatchWhereInput[] = [];
+      if (input.season !== "all") {
+        where.push({ season: input.season ?? (await getCurrentSeason()) });
+      }
+      if (input.player) {
+        where.push({
+          OR: [
+            ...sideHas("team1", input.player),
+            ...sideHas("team2", input.player),
+          ],
+        });
+      }
+      if (input.format) {
+        // a 2v2 team name has a comma ("anna,marco"), a 1v1 one doesn't
+        where.push({
+          team1:
+            input.format === "2v2"
+              ? { contains: "," }
+              : { not: { contains: "," } },
+        });
+      }
       const items = await prisma.match.findMany({
         take: input.limit + 1,
-        where: {
-          ...teamFilter(input.team1, input.team2, input.exact),
-          season: input.season ?? (await getCurrentSeason()),
-        },
+        where: { AND: where },
         include: { achievements: true },
         cursor: input.cursor ? { id: input.cursor } : undefined,
         orderBy: [{ createdAt: "desc" }, { id: "desc" }],

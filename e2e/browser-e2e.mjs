@@ -110,7 +110,7 @@ const nav = await page.evaluate(() =>
   ),
 );
 check(
-  nav.join() === "Home*,Matches,Teams,Players,Leaderboards",
+  nav.join() === "Home*,Matches,Teams,Players,Hall of Fame",
   "nav has a Home tab, active on /: " + nav,
 );
 await shot("home");
@@ -352,6 +352,15 @@ const elenaDelete = await page.evaluate(() => {
   );
 });
 check(!elenaDelete, "no Delete button for a player with matches (not admin)");
+check(
+  (await page.evaluate(
+    () =>
+      [...document.querySelectorAll("section li a")].filter(a =>
+        a.pathname.startsWith("/players/"),
+      ).length,
+  )) > 0,
+  "manage players: names link to the profile",
+);
 await shot("players");
 
 await page.goto(BASE + "/matches", { waitUntil: "load" });
@@ -364,6 +373,69 @@ check(
   counts.edit < counts.rows,
   `matches: old matches are locked for non-admin (${counts.edit} editable of ${counts.rows})`,
 );
+// every name in a match row leads to that player
+const targets = await page.evaluate(() =>
+  [...document.querySelectorAll("ul.divide-y li a")].map(a => a.pathname),
+);
+check(
+  targets.length > 0 && targets.every(p => p.startsWith("/players/")),
+  "matches: every name links to a player profile",
+);
+check(
+  !(await page.evaluate(() => document.body.innerText)).includes("Team 1"),
+  "matches: no old Team 1 filter",
+);
+// filters: format, then player; they go into the address
+await clickText('[aria-label="Format"]', "1v1");
+await page.waitForFunction(() => location.search.includes("format=1v1"));
+await sleep(800);
+check(
+  await page.evaluate(() =>
+    [...document.querySelectorAll("ul.divide-y li")].every(
+      li => !li.innerText.includes("&"),
+    ),
+  ),
+  "matches: the 1v1 filter shows only 1v1 matches",
+);
+await clickText('[aria-label="Format"]', "2v2");
+await page.select('select[aria-label="Player"]', "luca");
+await page.waitForFunction(() => location.search.includes("player=luca"));
+await sleep(800);
+check(
+  await page.evaluate(() => {
+    const rows = [...document.querySelectorAll("ul.divide-y li")];
+    return (
+      rows.length > 0 &&
+      rows.every(
+        li => li.innerText.includes("Luca") && li.innerText.includes("&"),
+      )
+    );
+  }),
+  "matches: 2v2 + player filter shows only Luca's 2v2 matches",
+);
+await shot("matches-filtered");
+
+// ---- hall of fame (and the old leaderboards address)
+await page.goto(BASE + "/leaderboards", { waitUntil: "load" });
+await sleep(900);
+check(
+  new URL(page.url()).pathname === "/hall-of-fame",
+  "old /leaderboards address leads to the Hall of Fame",
+);
+const hof = await page.evaluate(() => ({
+  text: document.body.innerText,
+  links: [...document.querySelectorAll("main a")].map(a => a.pathname),
+}));
+check(
+  /champions/i.test(hof.text) && /most wins/i.test(hof.text),
+  "hall of fame: records and champions",
+);
+check(
+  hof.links.length > 0 && hof.links.every(p => p.startsWith("/players/")),
+  "hall of fame: every name links to a player profile",
+);
+await shot("hall-of-fame");
+
 await clickText("nav", "Home").catch(async () => page.click('nav a[href="/"]'));
 await page.evaluate(() => document.querySelector('nav a[href="/"]').click());
 await page.waitForSelector("form");

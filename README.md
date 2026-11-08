@@ -1,6 +1,6 @@
 ![biliarDino](public/brand/logo-light.svg)
 
-A self-hosted tracker for the office foosball table (_biliardino_): 1v1 and 2v2 matches, Elo ratings for players and pairs, leaderboards, achievements and a mobile-first page for entering a result right after the game.
+A self-hosted tracker for the office foosball table (_biliardino_): 1v1 and 2v2 matches, Elo ratings for players and pairs, leaderboards, a Hall of Fame, achievements and a mobile-first page for entering a result right after the game.
 
 biliarDino is based on [Hilde](https://github.com/nehalist/hilde) by [nehalist](https://github.com/nehalist) (MIT licence), modernised and extended; see _Changes from Hilde_ below.
 
@@ -21,7 +21,9 @@ biliarDino is based on [Hilde](https://github.com/nehalist/hilde) by [nehalist](
 - A team is just a set of players: Elena+Chiara and Chiara+Elena are always the same team, so recurring pairs get their own stats, rating and achievements
 - **Light/Dark theme**
 - Match comments
-- **Leaderboards**
+- **Hall of Fame**: all-time records (highest rating, longest win streak, biggest win, biggest upset, ...) and the champion of every season
+- Matches page filtered by format, player and season (filters are in the address, so they can be bookmarked)
+- Every player name links to that player's profile
 - Single container, single SQLite file: no database server needed
 
 ## Getting Started
@@ -78,6 +80,7 @@ Where things are:
 | `src/utils/teamStats.ts` | team ratings and stats (pure functions, tested) |
 | `src/utils/playerStats.ts` | per-player ratings and stats (pure functions, tested) |
 | `src/utils/dashboard.ts` | home page numbers: period boards, form, highlights (pure, tested) |
+| `src/utils/hallOfFame.ts` | Hall of Fame records and season champions (pure, tested) |
 | `prisma/` | database schema and migrations |
 | `src/**/__tests__/` | unit tests; `src/server/__tests__/` runs the API on a temporary database |
 | `e2e/` | browser tests (Chrome/Firefox, see `e2e/README.md`) |

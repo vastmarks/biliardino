@@ -100,7 +100,12 @@ export const PlayerManager = ({ players }: { players: Player[] }) => {
             className="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2 text-sm"
           >
             <span className="flex-1 min-w-[8rem]">
-              <b className={p.archived ? "opacity-50" : ""}>{p.name}</b>{" "}
+              <Link
+                href={`/players/${encodeURIComponent(p.key)}`}
+                className={`font-bold hover:underline ${p.archived ? "opacity-50" : ""}`}
+              >
+                {p.name}
+              </Link>{" "}
               <span className="text-xs text-gray-500">
                 {p.matches} {p.matches === 1 ? "match" : "matches"}
                 {p.archived && " · archived"}

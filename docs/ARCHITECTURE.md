@@ -66,10 +66,10 @@ biliardino/
 ├── src/                      the application
 │   ├── pages/                one file = one page (address = file path)
 │   │   ├── index.tsx           home: match entry + dashboard        →  /
-│   │   ├── matches.tsx         all matches                          →  /matches
+│   │   ├── matches.tsx         all matches, filterable              →  /matches
 │   │   ├── teams/              teams list and one team              →  /teams, /teams/<name>
 │   │   ├── players/            players list and one player          →  /players, /players/<name>
-│   │   ├── leaderboards.tsx    leaderboards                         →  /leaderboards
+│   │   ├── hall-of-fame.tsx    all-time records, season champions   →  /hall-of-fame
 │   │   ├── admin/              admin pages (seasons)                →  /admin
 │   │   ├── api/                not pages but server endpoints:
 │   │   │   ├── trpc/[trpc].ts    the door to the whole API
@@ -182,10 +182,10 @@ The API is a set of **procedures**: named functions on the server the browser ma
 
 | Router | Main procedures |
 | --- | --- |
-| `matches` | `list`, `infiniteList` (paged, "Load more"), `add`, `update`, `delete` |
+| `matches` | `list`, `infiniteList` (paged, "Load more"; filters: player, format, season or all seasons), `add`, `update`, `delete` |
 | `players` | `all`, `names`, `list` (leaderboard), `byName` (one player's stats), `create`, `rename`, `archive`, `delete` |
 | `teams` | `list`, `byId`, `delete`, `deleteAchievement` |
-| `leaderboards` | `forSeason` |
+| `hallOfFame` | `get`: all-time records and the champion of every season (computed in `src/utils/hallOfFame.ts`) |
 | `seasons` | `list`, `add`, `activate`, `delete` |
 | `dashboard` | `get`: everything the home page shows, in one request |
 | `session` | `isAdmin`: is the admin logged in? |

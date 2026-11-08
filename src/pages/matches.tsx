@@ -1,105 +1,162 @@
 import { trpc } from "~/utils/trpc";
 import { Card, MatchTable, PageTitle } from "~/components/Elements";
-import { useState } from "react";
 import { keepPreviousData } from "@tanstack/react-query";
-import { Select } from "~/components/Form";
 import { useStore } from "~/utils/store";
+import { useRouter } from "next/router";
 
+type Format = "" | "1v1" | "2v2";
+const FORMATS: Array<{ value: Format; label: string }> = [
+  { value: "", label: "All" },
+  { value: "1v1", label: "1v1" },
+  { value: "2v2", label: "2v2" },
+];
+
+const selectClass =
+  "h-9 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-2 text-sm";
+
+/**
+ * Every match, newest first. Filters: format, player and season. They live in the address
+ * (`/matches?player=anna&format=2v2&season=all`), so a filtered list can be bookmarked or
+ * linked to, e.g. "all matches" on a player's profile.
+ */
 const Matches = () => {
-  const [team1Filter, setTeam1Filter] = useState<string>("");
-  const [team2Filter, setTeam2Filter] = useState<string>("");
-  const [team, setTeam] = useState(true);
+  const router = useRouter();
+  const headerSeason = useStore(state => +state.season);
+  const q = router.query;
+  const format: Format =
+    q.format === "1v1" || q.format === "2v2" ? q.format : "";
+  const player = typeof q.player === "string" ? q.player : "";
+  // no season in the address = the one picked in the header
+  const season: number | "all" =
+    q.season === "all"
+      ? "all"
+      : typeof q.season === "string" && /^\d+$/.test(q.season)
+        ? +q.season
+        : headerSeason;
 
-  const selectedSeason = useStore(state => +state.season);
+  const setFilter = (key: string, value: string) => {
+    const next = { ...router.query, [key]: value };
+    if (!value) delete next[key];
+    router.replace({ pathname: router.pathname, query: next }, undefined, {
+      shallow: true,
+    });
+  };
+
   const {
     data: matches,
     hasNextPage,
     fetchNextPage,
+    isFetchingNextPage,
   } = trpc.matches.infiniteList.useInfiniteQuery(
     {
       limit: 25,
-      team1: team1Filter,
-      team2: team2Filter,
-      exact: !team,
-      season: selectedSeason,
+      player: player || undefined,
+      format: format || undefined,
+      season,
     },
     {
+      enabled: router.isReady,
       initialCursor: undefined,
       getNextPageParam: lastPage => lastPage.nextCursor,
       placeholderData: keepPreviousData,
     },
   );
-  const { data: teams } = trpc.teams.list.useQuery({});
+  const roster = trpc.players.all.useQuery();
+  const seasons = trpc.seasons.list.useQuery();
+  const items = matches?.pages.flatMap(p => p.items) ?? [];
+  const filtered = format !== "" || player !== "";
 
   return (
     <>
       <PageTitle title="Matches" />
-      <div className="my-2 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div>
-            <Select
-              label="Team 1"
-              options={[
-                { label: "All", value: "" },
-                ...(teams || [])
-                  .map(t => ({ label: t.name, value: t.name }))
-                  .filter(t => t.value !== team2Filter),
-              ]}
-              selectedValue={team1Filter}
-              onChange={e => setTeam1Filter(e.target.value)}
-            />
-          </div>
-          {team1Filter !== "" && (
-            <div>
-              <Select
-                label="Team 2"
-                options={[
-                  { label: "All", value: "" },
-                  ...(teams || [])
-                    .map(t => ({ label: t.name, value: t.name }))
-                    .filter(t => t.value !== team1Filter),
-                ]}
-                selectedValue={team2Filter}
-                onChange={e => setTeam2Filter(e.target.value)}
-              />
-            </div>
-          )}
-          {team1Filter && (
-            <label
-              htmlFor="exact-toggle"
-              className="inline-flex relative items-center cursor-pointer"
+      <div className="my-3 flex flex-wrap items-center gap-2">
+        <div
+          role="group"
+          aria-label="Format"
+          className="inline-flex h-9 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-0.5"
+        >
+          {FORMATS.map(f => (
+            <button
+              key={f.value}
+              type="button"
+              aria-pressed={format === f.value}
+              onClick={() => setFilter("format", f.value)}
+              className={`px-3 rounded-md text-sm ${
+                format === f.value
+                  ? "bg-blue-500 text-white"
+                  : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+              }`}
             >
-              <input
-                type="checkbox"
-                checked={team}
-                id="exact-toggle"
-                className="sr-only peer"
-                onChange={() => setTeam(!team)}
-              />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-lime-500"></div>
-              <span className="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300">
-                Team
-              </span>
-            </label>
-          )}
+              {f.label}
+            </button>
+          ))}
         </div>
+        <select
+          aria-label="Player"
+          className={selectClass}
+          value={player}
+          onChange={e => setFilter("player", e.target.value)}
+        >
+          <option value="">All players</option>
+          {(roster.data ?? [])
+            .slice()
+            .sort((a, b) => a.name.localeCompare(b.name))
+            .map(p => (
+              <option key={p.key} value={p.key}>
+                {p.name}
+              </option>
+            ))}
+        </select>
+        {(seasons.data?.length ?? 0) > 1 && (
+          <select
+            aria-label="Season"
+            className={selectClass}
+            value={String(season)}
+            onChange={e => setFilter("season", e.target.value)}
+          >
+            {(seasons.data ?? []).map(s => (
+              <option key={s.id} value={s.number}>
+                Season {s.number}
+              </option>
+            ))}
+            <option value="all">All seasons</option>
+          </select>
+        )}
+        {filtered && (
+          <button
+            type="button"
+            onClick={() =>
+              router.replace(
+                {
+                  pathname: router.pathname,
+                  query: q.season ? { season: q.season } : {},
+                },
+                undefined,
+                { shallow: true },
+              )
+            }
+            className="text-sm text-blue-500 dark:text-blue-300 hover:underline"
+          >
+            Clear filters
+          </button>
+        )}
       </div>
       <Card>
-        <MatchTable
-          matches={
-            matches?.pages
-              ?.flat()
-              .map(i => i.items)
-              .flat() || []
-          }
-        />
+        {matches && items.length === 0 ? (
+          <p className="p-4 text-center text-sm text-gray-500">
+            No matches {filtered ? "for these filters" : "yet"}.
+          </p>
+        ) : (
+          <MatchTable matches={items} />
+        )}
         {hasNextPage && (
-          <div className="border-t text-center p-2">
+          <div className="border-t border-gray-100 dark:border-gray-800 text-center p-2">
             <button
               onClick={() => fetchNextPage()}
+              disabled={isFetchingNextPage}
               className="text-sm uppercase block w-full text-center"
             >
-              Load more
+              {isFetchingNextPage ? "Loading…" : "Load more"}
             </button>
           </div>
         )}

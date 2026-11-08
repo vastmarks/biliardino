@@ -2,7 +2,7 @@ import { FunctionComponent, useState } from "react";
 import { MatchEditDialog } from "~/components/Elements/MatchEditDialog";
 import { canModifyMatch } from "~/utils/editRules";
 import { TimeDistance } from "~/components/Elements/TimeDistance";
-import { TeamLink } from "~/components/Elements/TeamLink";
+import { PlayerNames } from "~/components/Elements/PlayerNames";
 import { RatingChange } from "~/components/Elements/RatingChange";
 import { achievements as allAchievements } from "~/utils/achievements";
 import { useIsAdmin } from "~/utils/useIsAdmin";
@@ -42,7 +42,7 @@ const Side: FunctionComponent<{
       }`}
     >
       <div className="break-words">
-        <TeamLink team={team} />
+        <PlayerNames team={team} />
         {badges && (
           <span title={badges} aria-label={badges} className="ml-1">
             🏅

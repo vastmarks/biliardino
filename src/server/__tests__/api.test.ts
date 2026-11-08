@@ -177,8 +177,13 @@ describe("seasons", () => {
       // new matches go to the new season
       const m = await add(["Anna"], ["Dario"], 10, 9);
       expect(m.season).toBe(2);
-      const leaderboards = await api.leaderboards.forSeason({ season: 2 });
-      expect(leaderboards.totalMatches).toMatchObject({ total: 1, perDay: 1 });
+      const hof = await api.hallOfFame.get();
+      expect(hof.seasons[0]).toMatchObject({
+        season: 2,
+        current: true,
+        matches: 1,
+      });
+      expect(hof.seasons.map(s => s.season)).toContain(1);
     } finally {
       admin = false;
     }
@@ -196,6 +201,41 @@ describe("dashboard", () => {
         .slice(0, 2)
         .sort(),
     ).toEqual(["Anna", "Dario"]);
+  });
+});
+
+describe("matches page filters", () => {
+  it("filters by player, format and season", async () => {
+    for (const name of ["Pia", "Quin", "Rita", "Sam"]) {
+      ids[name] = (await api.players.create({ name })).id;
+    }
+    await add(["Pia"], ["Quin"], 10, 5);
+    await add(["Pia", "Rita"], ["Quin", "Sam"], 10, 7);
+    await add(["Rita"], ["Sam"], 10, 9);
+    const list = async (
+      input: Parameters<typeof api.matches.infiniteList>[0],
+    ) =>
+      (await api.matches.infiniteList(input)).items.map(
+        m => `${m.team1}-${m.team2}`,
+      );
+
+    expect(await list({ player: "pia" })).toEqual([
+      "pia,rita-quin,sam",
+      "pia-quin",
+    ]);
+    expect(await list({ player: "sam" })).toEqual([
+      "rita-sam",
+      "pia,rita-quin,sam",
+    ]);
+    expect(await list({ player: "pia", format: "1v1" })).toEqual(["pia-quin"]);
+    expect(await list({ player: "rita", format: "2v2" })).toEqual([
+      "pia,rita-quin,sam",
+    ]);
+    // a key that is only part of another player's key doesn't match
+    expect(await list({ player: "ri" })).toEqual([]);
+    // other seasons: none of these were played in season 1
+    expect(await list({ player: "pia", season: 1 })).toEqual([]);
+    expect(await list({ player: "pia", season: "all" })).toHaveLength(2);
   });
 });
 

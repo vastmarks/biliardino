@@ -215,11 +215,15 @@ export const MatchEntry = ({
         aria-label={`${side === 0 ? "Team 1" : "Team 2"} player ${(i % 2) + 1}${
           p ? `: ${p.name} (tap to remove)` : ""
         }`}
-        className={`min-h-11 w-full px-3 rounded-lg border-2 text-base text-left truncate ${
+        // one border per state, never two: dashed = empty, solid celeste = being picked,
+        // solid team colour = filled
+        className={`min-h-11 w-full px-3 rounded-lg border-2 text-base text-left truncate transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 ${
           p
             ? sideColor[side]
-            : "border-dashed border-gray-300 dark:border-gray-600 text-gray-400"
-        } ${active === i ? "ring-2 ring-blue-500" : ""}`}
+            : active === i
+              ? "border-blue-500 bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-200"
+              : "border-dashed border-gray-300 dark:border-gray-600 text-gray-400 hover:border-gray-400"
+        }`}
       >
         {p ? p.name : active === i ? "Pick a player…" : "Player"}
       </button>

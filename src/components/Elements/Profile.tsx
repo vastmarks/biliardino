@@ -1,6 +1,7 @@
 import { usePlayerNames } from "~/utils/usePlayerNames";
 import { FunctionComponent, useMemo } from "react";
 import { Card } from "~/components/Elements/Card";
+import { PlayerNames } from "~/components/Elements/PlayerNames";
 import { EloHistory } from "~/components/Elements/EloHistory";
 import { Match, Team, TeamMeta } from "@prisma/client";
 import { TeamWithMetaAndAchievements } from "~/server/model/team";
@@ -72,7 +73,7 @@ export const Profile: FunctionComponent<{
       <div className="grid grid-cols-6 relative">
         <div className="col-span-6 bg-gray-100 dark:bg-gray-600 flex items-center justify-between rounded-t px-3 sticky top-0 z-50">
           <h2 className="bg-white px-2 font-semibold text-2xl my-5 text-gray-800 rounded-lg block">
-            <span className="capitalize">{players.team(team.name)}</span>
+            <PlayerNames team={team.name} />
           </h2>
           <div>
             {versus && "vs."}

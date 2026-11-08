@@ -10,7 +10,7 @@ const NAV = [
   { label: "Matches", href: "/matches" },
   { label: "Teams", href: "/teams" },
   { label: "Players", href: "/players" },
-  { label: "Leaderboards", href: "/leaderboards" },
+  { label: "Hall of Fame", href: "/hall-of-fame" },
 ];
 
 const NavLink: FunctionComponent<{

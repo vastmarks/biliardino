@@ -9,6 +9,16 @@ const nextConfig = {
   output: "standalone",
   // native module, must not be bundled
   serverExternalPackages: ["better-sqlite3"],
+  // the old Leaderboards page became the Hall of Fame (0.9.0); keep old bookmarks working
+  async redirects() {
+    return [
+      {
+        source: "/leaderboards",
+        destination: "/hall-of-fame",
+        permanent: true,
+      },
+    ];
+  },
   // Files that are loaded dynamically at runtime (native SQLite module, Prisma's WASM
   // query compiler) can't be found by file tracing, so ship them explicitly.
   outputFileTracingIncludes: {
