@@ -8,7 +8,6 @@ export * from "./TimeDistance";
 export * from "./Score";
 export * from "./AchievementList";
 export * from "./SeasonSelector";
-export * from "./SeasonList";
 export * from "./PlayerLink";
 export * from "./PlayerNames";
 export * from "./PlayerTable";

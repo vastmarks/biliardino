@@ -59,6 +59,9 @@ export interface SeasonChampion {
   season: number;
   current: boolean;
   matches: number;
+  /** first and last match of the season */
+  from: Date;
+  to: Date;
   champion?: { player: string; rating: number; wins: number; losses: number };
   pair?: { players: string[]; rating: number };
 }
@@ -128,6 +131,8 @@ export function computeHallOfFame(
       season,
       current: season === currentSeason,
       matches: seasonMatches.length,
+      from: new Date(seasonMatches[0].createdAt),
+      to: new Date(seasonMatches[seasonMatches.length - 1].createdAt),
       champion: top && {
         player: top.name,
         rating: top.rating,

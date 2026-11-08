@@ -84,12 +84,6 @@ export const playerAddValidation = z.object({
   name: z.string().min(1).max(100), // the real rules are in validatePlayerName
 });
 
-export const seasonAddValidation = z.object({
-  number: wholeNumber(1, 9999),
-});
-
 export type MatchUpdateInput = z.input<typeof matchUpdateValidation>;
 export type MatchAddInput = z.input<typeof matchAddValidation>;
 export type MatchAddOutput = z.output<typeof matchAddValidation>;
-export type SeasonAddInput = z.input<typeof seasonAddValidation>;
-export type SeasonAddOutput = z.output<typeof seasonAddValidation>;

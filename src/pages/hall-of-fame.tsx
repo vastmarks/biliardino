@@ -95,10 +95,28 @@ const RecordCard = ({ record }: { record: HallRecord }) => {
   );
 };
 
+const month = (d: Date, year = true) =>
+  new Date(d).toLocaleDateString("en-GB", {
+    month: "short",
+    ...(year ? { year: "numeric" } : {}),
+  });
+
+/** When a season was played: "Oct 2026", "Sept – Oct 2026", "Dec 2026 – Jan 2027" */
+function months(s: SeasonChampion): string {
+  if (s.current) return `since ${month(s.from)}`;
+  const from = new Date(s.from);
+  const to = new Date(s.to);
+  if (month(from) === month(to)) return month(to);
+  return from.getFullYear() === to.getFullYear()
+    ? `${month(from, false)} – ${month(to)}`
+    : `${month(from)} – ${month(to)}`;
+}
+
 const SeasonRow = ({ s }: { s: SeasonChampion }) => (
   <li className="flex gap-4 px-4 py-3">
-    <div className="w-20 shrink-0">
+    <div className="w-28 shrink-0">
       <div className="font-semibold">Season {s.season}</div>
+      <div className="text-xs text-gray-400">{months(s)}</div>
       <div className="text-xs text-gray-400">
         {s.current ? "in progress" : plural(s.matches, "match", "matches")}
       </div>

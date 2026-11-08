@@ -203,7 +203,66 @@ check(true, "player Elena and his matches deleted after typing the name");
 await page.goto(base + "/admin/seasons", { waitUntil: "load" });
 await new Promise(r => setTimeout(r, 800));
 const txt = await page.evaluate(() => document.body.innerText);
-check(/Season|1/.test(txt), "admin seasons page renders");
+check(
+  /Season 1/.test(txt) && /Since \d/.test(txt) && /\d+ matches/.test(txt),
+  "seasons page shows the current season with its start date and matches",
+);
+const clickIn = (scope, re) =>
+  page.evaluate(
+    (scope, src) => {
+      const b = [...document.querySelectorAll(scope + " button")].find(x =>
+        new RegExp(src).test(x.textContent),
+      );
+      b?.click();
+      return !!b;
+    },
+    scope,
+    re.source,
+  );
+// start season 2, then delete season 1 with its matches (number typed again)
+await clickIn("body", /^Start season 2$/);
+await page.waitForSelector("dialog[open]");
+await clickIn("dialog[open]", /^Start season 2$/);
+await page.waitForFunction(
+  () => /Season 2\s*Current/.test(document.body.innerText),
+  { timeout: 8000 },
+);
+check(true, "season 2 started and current");
+await page.evaluate(() => {
+  const li = [...document.querySelectorAll("li")].find(l =>
+    l.innerText.startsWith("Season 1"),
+  );
+  [...li.querySelectorAll("button")]
+    .find(b => b.textContent === "Delete")
+    .click();
+});
+await page.waitForSelector("dialog[open] input");
+const disabled = () =>
+  page.evaluate(
+    () =>
+      [...document.querySelectorAll("dialog[open] button")].find(
+        b => b.textContent === "Delete",
+      ).disabled,
+  );
+check(await disabled(), "season delete disabled until the number is typed");
+await page.type("dialog[open] input", "1");
+check(!(await disabled()), "season delete enabled after typing 1");
+await clickIn("dialog[open]", /^Delete$/);
+await page.waitForFunction(
+  () =>
+    !/Season 1\b/.test(document.body.innerText.replace("Season 1 ", "")) &&
+    ![...document.querySelectorAll("li")].some(l =>
+      l.innerText.startsWith("Season 1"),
+    ),
+  { timeout: 8000 },
+);
+check(true, "season 1 and its matches deleted");
+await page.goto(base + "/matches?season=all", { waitUntil: "load" });
+await new Promise(r => setTimeout(r, 800));
+check(
+  (await count()) === 0,
+  "no matches left after deleting the only season with matches",
+);
 check(errs.length === 0, "no page errors " + JSON.stringify(errs));
 await b.close();
 console.log(fails.length ? `${fails.length} FAILED` : "ALL PASSED");

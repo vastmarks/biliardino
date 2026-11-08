@@ -166,14 +166,15 @@ describe("seasons", () => {
       await expect(api.seasons.delete({ id: current.id })).rejects.toThrow(
         "current season",
       );
-      const two = await api.seasons.add({ number: 2 });
-      await expect(api.seasons.add({ number: 2 })).rejects.toThrow(
-        "already exists",
-      );
-      await api.seasons.activate({ id: two.id });
+      const two = await api.seasons.start();
+      expect(two).toMatchObject({ number: 2, current: true });
+      // season 1 has matches: only with its number typed again
       await expect(api.seasons.delete({ id: current.id })).rejects.toThrow(
-        "has",
+        "Type the season number",
       );
+      await expect(
+        api.seasons.delete({ id: current.id, confirm: 7 }),
+      ).rejects.toThrow("Type the season number");
       // new matches go to the new season
       const m = await add(["Anna"], ["Dario"], 10, 9);
       expect(m.season).toBe(2);
@@ -184,6 +185,35 @@ describe("seasons", () => {
         matches: 1,
       });
       expect(hof.seasons.map(s => s.season)).toContain(1);
+
+      // the list knows each season's matches and dates
+      const listed = await api.seasons.list();
+      const one = listed.find(s => s.number === 1)!;
+      expect(listed[0]).toMatchObject({ number: 2, current: true, matches: 1 });
+      expect(one.matches).toBeGreaterThan(0);
+      expect(one.firstMatchAt!.getTime()).toBeLessThanOrEqual(
+        one.lastMatchAt!.getTime(),
+      );
+
+      // an empty season goes without confirmation
+      const three = await api.seasons.start();
+      await api.seasons.activate({ id: two.id });
+      await expect(api.seasons.delete({ id: three.id })).resolves.toMatchObject(
+        { number: 3, deletedMatches: 0 },
+      );
+
+      // season 1 with its matches, ratings and achievements
+      const before = one.matches;
+      await expect(
+        api.seasons.delete({ id: one.id, confirm: 1 }),
+      ).resolves.toMatchObject({ number: 1, deletedMatches: before });
+      expect(await prisma.match.count({ where: { season: 1 } })).toBe(0);
+      expect(await prisma.teamMeta.count({ where: { season: 1 } })).toBe(0);
+      expect(await prisma.teamAchievement.count({ where: { season: 1 } })).toBe(
+        0,
+      );
+      expect(await prisma.match.count({ where: { season: 2 } })).toBe(1);
+      expect((await api.seasons.list()).map(s => s.number)).toEqual([2]);
     } finally {
       admin = false;
     }
