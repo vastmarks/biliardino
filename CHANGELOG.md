@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.0] - 2026-11-08
+
+### Changed
+
+- Everything brought up to date: **Next.js 16**, **Prisma 7**, **Tailwind CSS 4**, **ESLint 10** (8 and 9 are no longer supported), Jest 30, and the latest tRPC, TanStack Query and zustand. The app looks and behaves the same: 8 pages were compared pixel by pixel in light and dark, on phone and desktop.
+- A clean install prints one warning instead of four (`prebuild-install`, which comes with the SQLite driver and goes away with a future Prisma version)
+- Seasons page (admin): **Start season N** creates the next season and makes it current in one step; each season shows its dates (first and last match) and number of matches; clear dialogs for _Make current_ and _Delete_
+- Hall of Fame: each season shows the months it was played
+
+### Fixed
+
+- Deleting a season did nothing: the server refused seasons with matches but the page showed no error. Any season except the current one can now be deleted; one with matches is deleted together with its matches, team ratings and achievements, after typing its number.
+
+### Technical
+
+- `src/middleware.ts` is now `src/proxy.ts` (the Next.js 16 name)
+- Database settings in `prisma.config.ts`; the Prisma client is generated into `src/generated/prisma` (created by `npm install`, not in git)
+- ESLint configured in `eslint.config.mjs` and run with `eslint .` (`next lint` no longer exists)
+- Tailwind theme (colours, fonts) moved from `tailwind.config.js` to `src/styles/globals.css`
+
 ## [0.9.0] - 2026-11-08
 
 ### Added

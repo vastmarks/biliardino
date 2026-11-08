@@ -13,7 +13,7 @@ biliarDino is based on [Hilde](https://github.com/nehalist/hilde) by [nehalist](
 - Simple, intuitive interface
 - **Elo rating** for each team
 - **Elo rating for each player** (new), plus per-player statistics, partners and opponents
-- **Seasons** (manageable via admin interface)
+- **Seasons**: the admin starts a new one with one button; each season shows when it was played (its first and last match) and its match count
 - Detailed team statistics (win streaks, win rate, elo history chart, ...)
 - **Achievements** (e.g. "Win 100 Matches", "Win 10 Matches in a row", ...)
 - Compare teams against each other
@@ -33,7 +33,7 @@ Season 1 is created automatically. Then:
 1. Open **Players** and add everybody who plays (a player is defined once, with a unique name).
 2. On the start page choose **1v1** or **2v2**, type a name (or tap a suggestion) for each side and enter the score. An unknown name can be added as a new player on the spot.
 
-New seasons are managed in the admin UI (`/admin`, password from `ADMIN_PASSWORD`).
+Seasons are managed in the admin UI (`/admin`, password from `ADMIN_PASSWORD`): **Start season N** begins the next one (new matches count there, ratings start at 1000 again); an old season can be made current again or deleted (with its matches, after typing its number).
 
 ### Home server (Dockge, Portainer, TrueNAS) - recommended
 
