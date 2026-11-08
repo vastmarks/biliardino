@@ -5,8 +5,8 @@
  */
 import { mkdirSync } from "fs";
 import { dirname, isAbsolute, resolve } from "path";
-import { PrismaClient } from "@prisma/client";
-import { PrismaBetterSQLite3 } from "@prisma/adapter-better-sqlite3";
+import { PrismaClient } from "~/generated/prisma/client";
+import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 
 const prismaGlobal = global as typeof global & {
   prisma?: PrismaClient;
@@ -30,7 +30,7 @@ export function resolveDatabaseUrl(url: string): string {
 }
 
 function createClient() {
-  const adapter = new PrismaBetterSQLite3({
+  const adapter = new PrismaBetterSqlite3({
     url: resolveDatabaseUrl(
       process.env.DATABASE_URL ?? "file:../data/biliardino.db",
     ),

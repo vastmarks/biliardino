@@ -1,5 +1,5 @@
 import { FunctionComponent } from "react";
-import { Season } from "@prisma/client";
+import type { Season } from "~/generated/prisma/browser";
 import { TimeDistance } from "~/components/Elements/TimeDistance";
 import { trpc } from "~/utils/trpc";
 import { toast } from "~/utils/toast";

@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { Prisma } from "~/generated/prisma/client";
 import type { Db } from "~/server/db";
 import { getTeamSize } from "~/model";
 import { achievements as allAchievements } from "~/utils/achievements";
@@ -10,14 +10,14 @@ import {
   toMetaData,
 } from "~/utils/teamStats";
 
-export const teamWithMeta = Prisma.validator<Prisma.TeamDefaultArgs>()({
+export const teamWithMeta = {
   include: { meta: true },
-});
+} satisfies Prisma.TeamDefaultArgs;
 export type TeamWithMeta = Prisma.TeamGetPayload<typeof teamWithMeta>;
 
-export const teamWithAchievements = Prisma.validator<Prisma.TeamDefaultArgs>()({
+export const teamWithAchievements = {
   include: { achievements: true },
-});
+} satisfies Prisma.TeamDefaultArgs;
 export type TeamWithAchievements = Prisma.TeamGetPayload<
   typeof teamWithAchievements
 >;

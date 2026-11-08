@@ -8,7 +8,7 @@
  *   transactions on its single connection; the queue makes that guarantee explicit, so it
  *   doesn't depend on adapter internals (src/server/__tests__/api.test.ts checks it).
  */
-import type { Prisma } from "@prisma/client";
+import type { Prisma } from "~/generated/prisma/client";
 import { prisma } from "~/server/prisma";
 
 /** The client inside a transaction (same API as `prisma`). */

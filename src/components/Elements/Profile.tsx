@@ -3,7 +3,7 @@ import { FunctionComponent, useMemo } from "react";
 import { Card } from "~/components/Elements/Card";
 import { PlayerNames } from "~/components/Elements/PlayerNames";
 import { EloHistory } from "~/components/Elements/EloHistory";
-import { Match, Team, TeamMeta } from "@prisma/client";
+import type { Match, Team, TeamMeta } from "~/generated/prisma/browser";
 import { TeamWithMetaAndAchievements } from "~/server/model/team";
 import { AchievementList } from "~/components/Elements/AchievementList";
 import { getSeasonMeta } from "~/model";

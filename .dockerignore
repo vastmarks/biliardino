@@ -11,3 +11,4 @@ data
 npm-debug.log
 coverage
 design
+src/generated

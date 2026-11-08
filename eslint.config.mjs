@@ -6,5 +6,11 @@ import nextVitals from "eslint-config-next/core-web-vitals";
 
 export default defineConfig([
   ...nextVitals,
-  globalIgnores([".next/**", "next-env.d.ts", "design/**", "coverage/**"]),
+  globalIgnores([
+    ".next/**",
+    "next-env.d.ts",
+    "design/**",
+    "coverage/**",
+    "src/generated/**",
+  ]),
 ]);

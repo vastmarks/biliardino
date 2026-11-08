@@ -19,8 +19,8 @@ const nextConfig = {
       },
     ];
   },
-  // Files that are loaded dynamically at runtime (native SQLite module, Prisma's WASM
-  // query compiler) can't be found by file tracing, so ship them explicitly.
+  // The native SQLite module is loaded dynamically at runtime and can't be found by file
+  // tracing, so ship it explicitly. (Prisma 7 bundles its query compiler into the app.)
   outputFileTracingIncludes: {
     "/**": [
       "./node_modules/better-sqlite3/package.json",
@@ -28,8 +28,6 @@ const nextConfig = {
       "./node_modules/better-sqlite3/build/Release/*.node",
       "./node_modules/bindings/**/*",
       "./node_modules/file-uri-to-path/**/*",
-      // Rust-free Prisma client loads its query compiler from disk at runtime
-      "./node_modules/.prisma/client/*.wasm",
     ],
   },
 };

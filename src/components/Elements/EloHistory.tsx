@@ -1,6 +1,6 @@
 import type { FunctionComponent } from "react";
 import { useMemo } from "react";
-import { Match } from "@prisma/client";
+import type { Match } from "~/generated/prisma/browser";
 import { LineChart } from "~/components/Elements/LineChart";
 
 const COLORS = ["#65a30d", "#0891b2"]; // lime-600, cyan-600

@@ -1,5 +1,5 @@
 import { Achievement, achievements } from "~/utils/achievements";
-import { Match, Team, TeamMeta } from "@prisma/client";
+import type { Match, Team, TeamMeta } from "~/generated/prisma/browser";
 import { TeamWithMetaAndAchievements } from "~/server/model/team";
 import { getDefaultTeamMeta, getTeamSize } from "~/model";
 

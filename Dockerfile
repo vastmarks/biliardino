@@ -10,8 +10,10 @@ FROM node:22-alpine AS deps
 RUN apk add --no-cache libc6-compat python3 make g++
 WORKDIR /app
 COPY package.json package-lock.json ./
-# `npm ci` runs `prisma generate` (postinstall), which needs the schema
+# `npm ci` runs `prisma generate` (postinstall), which needs the schema and prisma.config.ts;
+# it writes the client to src/generated/prisma
 COPY prisma ./prisma
+COPY prisma.config.ts ./
 RUN npm ci
 
 # ---- build ----
@@ -19,6 +21,7 @@ FROM node:22-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+COPY --from=deps /app/src/generated ./src/generated
 ENV NEXT_TELEMETRY_DISABLED=1
 # The env vars are validated at build time; these throwaway values never reach the final image.
 RUN DATABASE_URL=file:/tmp/build.db \
@@ -55,6 +58,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
+COPY --from=builder --chown=nextjs:nodejs /app/prisma.config.ts ./
 COPY --chmod=755 entrypoint.sh ./entrypoint.sh
 
 # Runs as an unprivileged user. To use your own user (e.g. TrueNAS "apps", 568:568),

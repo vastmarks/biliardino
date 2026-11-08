@@ -1,4 +1,4 @@
-import { Match, Team } from "@prisma/client";
+import type { Match, Team } from "~/generated/prisma/browser";
 import { getSeasonMeta, getTeamSize } from "~/model";
 import { TeamWithMeta, TeamWithMetaAndAchievements } from "~/server/model/team";
 import { defaultRating } from "~/utils/elo";

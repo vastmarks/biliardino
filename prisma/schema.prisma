@@ -1,14 +1,17 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
+// Prisma Client is generated into src/generated/prisma (not committed; `npm install` creates it).
+// CommonJS output, matching the rest of the project (Next.js bundles it either way).
 generator client {
-  provider   = "prisma-client-js"
-  engineType = "client"
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
 }
 
+// the database address is in prisma.config.ts
 datasource db {
   provider = "sqlite"
-  url      = env("DATABASE_URL")
 }
 
 model Match {

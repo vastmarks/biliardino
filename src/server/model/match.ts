@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { Prisma } from "~/generated/prisma/client";
 import { TRPCError } from "@trpc/server";
 import type { Db } from "~/server/db";
 import { getCurrentSeason } from "~/server/model/season";
@@ -12,10 +12,9 @@ import { getTeamSize } from "~/model";
 import { checkAchievements } from "~/utils/achievements";
 import { applyResult } from "~/utils/teamStats";
 
-export const matchWithAchievements =
-  Prisma.validator<Prisma.MatchDefaultArgs>()({
-    include: { achievements: true },
-  });
+export const matchWithAchievements = {
+  include: { achievements: true },
+} satisfies Prisma.MatchDefaultArgs;
 export type MatchWithAchievements = Prisma.MatchGetPayload<
   typeof matchWithAchievements
 >;

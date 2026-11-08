@@ -1,5 +1,5 @@
 import { FunctionComponent } from "react";
-import { Team } from "@prisma/client";
+import type { Team } from "~/generated/prisma/browser";
 import Link from "next/link";
 import { usePlayerNames } from "~/utils/usePlayerNames";
 
