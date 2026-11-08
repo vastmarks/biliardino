@@ -94,7 +94,7 @@ If you get `command not found`, Docker Desktop isn't running yet: start it and t
    - `pwd` (_print working directory_) shows where you are: `/Users/<you>/Code/biliardino`.
    - `ls` (_list_) shows what's in the folder. You should see `Dockerfile`, `docker-compose.yml`, `package.json`, `src`, `docs` and others. [ARCHITECTURE.md](ARCHITECTURE.md) explains what each one is.
 
-**If you still have the old `hilde` folder from your first test:** its database lived in a Docker volume called `hilde_hilde-data`. It's test data, so the cleanest thing is to remove it before you start. See [Part 7](#Part%207%20-%20Cleaning%20up%20the%20old%20Hilde%20test).
+**If you still have the old `hilde` folder from your first test:** its database lived in a Docker volume called `hilde_hilde-data`. It's test data, so the cleanest thing is to remove it before you start. See Part 7 below.
 
 ---
 
@@ -203,7 +203,7 @@ Starting Biliardino on port 3000...
 
 On later starts the middle part says `No pending migrations to apply.`
 
-The start script (`entrypoint.sh`) first checks your settings, then brings the database up to date (_migrations_, see [ARCHITECTURE.md](ARCHITECTURE.md#6.%20The%20database)), then starts the app. `docker compose logs -f` (_follow_) keeps showing new lines as they come; `Ctrl C` stops watching, not the app.
+The start script (`entrypoint.sh`) first checks your settings, then brings the database up to date (_migrations_, see section 6 of [ARCHITECTURE.md](ARCHITECTURE.md)), then starts the app. `docker compose logs -f` (_follow_) keeps showing new lines as they come; `Ctrl C` stops watching, not the app.
 
 **Open it:** <http://localhost:3000>. `localhost` means "this computer".
 

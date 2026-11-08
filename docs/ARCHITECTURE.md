@@ -1,6 +1,6 @@
 # How Biliardino is built
 
-This document explains how the app works inside, for someone who wants to understand and change it without a programming background. Read it from the top the first time: each part builds on the one before. Afterwards it works as a reference: the [folder tour](#3.%20A%20tour%20of%20the%20folders) and the [glossary](#14.%20Glossary) are the quickest way back in.
+This document explains how the app works inside, for someone who wants to understand and change it without a programming background. Read it from the top the first time: each part builds on the one before. Afterwards it works as a reference: the folder tour (section 3) and the glossary (section 14) are the quickest way back in.
 
 You don't need to read code to follow it, but every section names the files involved, so you can open them next to this text. They are commented for this purpose.
 
@@ -31,9 +31,9 @@ flowchart LR
 2. **The server** does two jobs: it delivers the pages (via **Next.js**), and it answers data requests from those pages, like "save this match" or "give me the leaderboard" (via **tRPC**).
 3. **The database** is a single file, `biliardino.db`, read and written with **SQLite** through **Prisma**.
 
-Everything is written in **TypeScript**, so the same language is used in the browser and on the server. That is what lets tRPC check that both sides agree on every request (see [section 5](#5.%20How%20the%20browser%20talks%20to%20the%20server)).
+Everything is written in **TypeScript**, so the same language is used in the browser and on the server. That is what lets tRPC check that both sides agree on every request (see section 5).
 
-**Who can do what.** Nobody logs in to use the app: anyone who can open the page can add players and record matches. That's deliberate for an office table: entering a score must take seconds. There's a single **admin** password for the things that could do damage, such as seasons, changing old matches and deleting players who have played. See [section 8](#8.%20Rules%20and%20the%20admin%20login).
+**Who can do what.** Nobody logs in to use the app: anyone who can open the page can add players and record matches. That's deliberate for an office table: entering a score must take seconds. There's a single **admin** password for the things that could do damage, such as seasons, changing old matches and deleting players who have played. See section 8.
 
 ---
 
@@ -161,7 +161,7 @@ Step by step, with the files:
 2. **The call.** Save runs `trpc.matches.add.useMutation()`. tRPC turns that into an HTTP request to `/api/trpc/matches.add`. Your code just calls a function.
 3. **The door** (`src/pages/api/trpc/[trpc].ts`) hands every API request to the main router, `src/server/routers/_app.ts`, which forwards it to `matchesRouter.add` in `src/server/routers/matches.ts`.
 4. **Input check.** `matchAddValidation` (in `src/utils/validation.ts`) declares the rules: 1 or 2 players per side matching the format, no player on both sides, scores 0–99, note up to 500 characters. Anything else is rejected with a message before any database work.
-5. **Players → teams.** The router loads the players and builds the two team names with `teamNameFromKeys` (`src/utils/players.ts`). See [section 6](#6.%20The%20database) for why a team is identified by a name.
+5. **Players → teams.** The router loads the players and builds the two team names with `teamNameFromKeys` (`src/utils/players.ts`). See section 6 for why a team is identified by a name.
 6. **Safe write.** Everything that _reads then writes_ runs inside `writeTransaction` (`src/server/db.ts`). Two reasons:
    - _All or nothing._ If anything fails halfway, every change is undone; you never get a match without its rating update.
    - _One at a time._ Two phones saving at the same moment are queued, so neither overwrites the other's rating.
@@ -172,7 +172,7 @@ Step by step, with the files:
    - stores the numbers, the match (including each team's rating change, shown as `+15.5`), and any achievements earned.
 8. **Back in the browser.** On success the form tells TanStack Query that the dashboard, matches and players data are out of date (`invalidate`). Every component showing those refetches and redraws: the leaderboard moves and the match appears in _Recent matches_. The players stay selected for a rematch.
 
-Editing and deleting a match (`matches.update`, `matches.delete` in the same router) follow the same path, with one difference: because every later rating depends on earlier ones, they **recalculate the whole season** afterwards (`rebuildSeason`, see [section 7](#7.%20Ratings%20and%20statistics)).
+Editing and deleting a match (`matches.update`, `matches.delete` in the same router) follow the same path, with one difference: because every later rating depends on earlier ones, they **recalculate the whole season** afterwards (`rebuildSeason`, see section 7).
 
 ---
 
@@ -425,7 +425,7 @@ Say you want a **"Location"** field on matches (which table was used). The path 
 5. **Test**: in `src/server/__tests__/api.test.ts`, add a case that saves a match with a location and reads it back.
 6. **Check**: `npm run check`. The type checker will point at any place you forgot.
 7. **Try**: `npm run dev` (needs `npm ci` once and a `.env`), or `docker compose up -d --build`.
-8. **Record**: a line in `CHANGELOG.md`, the version in `package.json`, then `git add -A`, `git commit`, `git push`, and a tag for a release ([DEPLOY.md](DEPLOY.md#Updating%20to%20a%20new%20version)).
+8. **Record**: a line in `CHANGELOG.md`, the version in `package.json`, then `git add -A`, `git commit`, `git push`, and a tag for a release ([DEPLOY.md](DEPLOY.md), _Updating to a new version_).
 
 Steps 1 → 4 are the order data flows: table, rules, server, screen. Most changes follow this shape.
 
@@ -459,7 +459,7 @@ Steps 1 → 4 are the order data flows: table, rules, server, screen. Most chang
 
 ## Sources
 
-The official documentation for each technology is linked in [section 2](#2.%20The%20technologies,%20and%20why%20each%20one). Good places to learn more, in the order they're useful here:
+The official documentation for each technology is linked in section 2. Good places to learn more, in the order they're useful here:
 
 - React, _Learn_ (interactive, starts from zero): <https://react.dev/learn>
 - Next.js Pages Router: <https://nextjs.org/docs/pages>

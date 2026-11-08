@@ -2,22 +2,11 @@
 
 A self-hosted tracker for the office foosball table (_biliardino_): 1v1 and 2v2 matches, Elo ratings for players and pairs, leaderboards, achievements and a mobile-first page for entering a result right after the game.
 
-biliarDino is based on [Hilde](https://github.com/nehalist/hilde) by [nehalist](https://github.com/nehalist) (MIT licence), modernised and extended; see [Changes from Hilde](#Changes%20from%20Hilde).
+biliarDino is based on [Hilde](https://github.com/nehalist/hilde) by [nehalist](https://github.com/nehalist) (MIT licence), modernised and extended; see _Changes from Hilde_ below.
 
 **Guides:** [run it on your computer](docs/LOCAL.md) · [deploy it on a home server](docs/DEPLOY.md) · [how the app is built](docs/ARCHITECTURE.md) · [brand guide](docs/BRAND.md)
 
 ![biliarDino home page](docs/screenshot.png)
-
-## Table of Contents
-
-1. [Features](#Features) - What it does
-2. [Getting Started](#Getting%20Started) - How to get it up and running
-3. [Development](#Development) - Working on the code
-4. [Home page](#Home%20page) - What the start page shows
-5. [Player statistics](#Player%20statistics) - Per-player ratings and stats
-6. [Configuration](#Configuration) - Environment variables
-7. [Changes from Hilde](#Changes%20from%20Hilde) - What was modernised
-8. [License](#License)
 
 ## Features
 
