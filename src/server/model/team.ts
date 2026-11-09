@@ -14,23 +14,14 @@ export const teamWithMeta = {
 } satisfies Prisma.TeamDefaultArgs;
 export type TeamWithMeta = Prisma.TeamGetPayload<typeof teamWithMeta>;
 
-export const teamWithAchievements = {
-  include: { achievements: true },
-} satisfies Prisma.TeamDefaultArgs;
-export type TeamWithAchievements = Prisma.TeamGetPayload<
-  typeof teamWithAchievements
->;
-
-export type TeamWithMetaAndAchievements = TeamWithMeta & TeamWithAchievements;
-
 /** The team with this canonical name (see `teamNameFromKeys`); created on first use. */
 export async function getOrCreateTeam(
   db: Db,
   name: string,
-): Promise<TeamWithMetaAndAchievements> {
+): Promise<TeamWithMeta> {
   return db.team.upsert({
     where: { name },
-    include: { meta: true, achievements: true },
+    include: { meta: true },
     update: {},
     create: { name, teamsize: getTeamSize(name) },
   });
@@ -60,7 +51,7 @@ export async function saveTeamNumbers(
 }
 
 /**
- * Deletes a team with all its matches and achievements, then recalculates every season it
+ * Deletes a team with all its matches, then recalculates every season it
  * played in (its opponents' ratings change too).
  */
 export async function deleteTeamCascade(

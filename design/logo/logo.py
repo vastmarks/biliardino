@@ -1,5 +1,6 @@
-"""The biliardino logo: the name in Geist SemiBold, the dots of its three i's turned into
-players on a foosball rod; the app icon is the b of the name with the rod and one player.
+"""The biliardino logo: the name in Geist SemiBold, its three i's turned into foosball
+players (a head, broad shoulders, light blue) on a rod; the app icon is the b of the name
+with the rod and one player.
 
 Run:  python3 design/logo/logo.py [output folder]   (default: design/logo/out)
 """
@@ -24,6 +25,15 @@ THEMES = {
 }
 
 
+def player_body(x, s, xh, color):
+    """a player's body in place of an i's stem: broad rounded shoulders that taper to the stem"""
+    sh, top = 1.45 * s, -xh
+    return (f'<path fill="{color}" d="M{x - sh:.1f} {top + 0.16 * xh:.1f} Q{x - sh:.1f} {top:.1f} {x - sh + 0.5 * s:.1f} {top:.1f} '
+            f'L{x + sh - 0.5 * s:.1f} {top:.1f} Q{x + sh:.1f} {top:.1f} {x + sh:.1f} {top + 0.16 * xh:.1f} '
+            f'L{x + sh:.1f} {top + 0.34 * xh:.1f} L{x + s:.1f} {top + 0.52 * xh:.1f} L{x + s:.1f} 0 L{x - s:.1f} 0 '
+            f'L{x - s:.1f} {top + 0.52 * xh:.1f} L{x - sh:.1f} {top + 0.34 * xh:.1f} Z"/>')
+
+
 def wordmark(theme="light", size=100, uid=None):
     """the horizontal logo: "biliardino", rod through the three i's"""
     text_c, dot_c, rod_c = THEMES[theme]
@@ -31,11 +41,12 @@ def wordmark(theme="light", size=100, uid=None):
     text = "biliardino"
     paths, adv, boxes = outline(text, 600, size)
     ib = [b for ch, b in zip(text, boxes) if ch == "i"]
-    r = size * 0.105                      # players: a little bigger than an i's dot
+    r = size * 0.105                      # heads: a little bigger than an i's dot
     cy = min(b[2] for b in ib) + size * 0.068
     xh = size * 0.53                      # Geist x-height
-    # hide the original i dots
-    cut = "".join(f'<rect x="{b[0] - 3:.1f}" y="{-size * 1.2:.1f}" width="{b[1] - b[0] + 6:.1f}" height="{size * 1.2 - xh - 3:.1f}" fill="black"/>' for b in ib)
+    s = (ib[0][1] - ib[0][0]) / 2         # half the width of an i's stem
+    # hide the original i's completely, they are redrawn as players below
+    cut = "".join(f'<rect x="{b[0] - 3:.1f}" y="{-size * 1.2:.1f}" width="{b[1] - b[0] + 6:.1f}" height="{size * 1.2 + 3:.1f}" fill="black"/>' for b in ib)
     xs = [(b[0] + b[1]) / 2 for b in ib]
     x1, x2 = -size * 0.10, adv + size * 0.10
     left, top = size * 0.14, size * 0.98
@@ -46,7 +57,7 @@ def wordmark(theme="light", size=100, uid=None):
             f'<g transform="translate({left:.1f} {top:.1f})">'
             f'<line x1="{x1:.1f}" y1="{cy:.1f}" x2="{x2:.1f}" y2="{cy:.1f}" stroke="{rod_c}" stroke-width="{size * 0.032:.1f}" stroke-linecap="round"/>'
             f'<g fill="{text_c}" mask="url(#i{uid})">{body}</g>'
-            + "".join(f'<circle cx="{x:.1f}" cy="{cy:.1f}" r="{r:.1f}" fill="{dot_c}"/>' for x in xs)
+            + "".join(f'<circle cx="{x:.1f}" cy="{cy:.1f}" r="{r:.1f}" fill="{dot_c}"/>' + player_body(x, s, xh, dot_c) for x in xs)
             + "</g></svg>")
 
 

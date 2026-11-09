@@ -57,6 +57,7 @@ const Player = () => {
           player={data.player}
           rank={data.rank}
           recentMatches={data.recentMatches}
+          achievements={data.achievements}
           scopeLabel={allTime ? "All time" : `Season ${selectedSeason}`}
         />
       )}

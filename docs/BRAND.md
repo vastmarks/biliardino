@@ -4,7 +4,7 @@ The logo, colours and typeface of the app, and how to use them. The logo files a
 
 ## The logo
 
-The name **biliardino**, always lowercase and in one word, set in Geist SemiBold. The dots of its three i's are **players on a foosball rod**: a thin rod runs through them across the whole word, the way a rod crosses the table. The app icon takes the **b** of the name with the rod at the top of its stem and one player beside it.
+The name **biliardino**, always lowercase and in one word, set in Geist SemiBold. Its three i's are **players on a foosball rod**: a round head, broad shoulders and a body that narrows to the letter's stem, all in the player blue, with a thin rod running through the heads across the whole word, the way a rod crosses the table. The app icon takes the **b** of the name with the rod at the top of its stem and one player beside it.
 
 | File | Use |
 | --- | --- |
@@ -16,7 +16,7 @@ The name **biliardino**, always lowercase and in one word, set in Geist SemiBold
 
 One-colour (`logo-mono`) and reversed (`logo-reverse`, white on celeste) versions come out of `design/logo/build-app-assets.sh` in `design/logo/out/`.
 
-**Construction.** The players are a little bigger than ordinary i-dots (radius 0.105 of the font size) and sit exactly where the dots were. The rod is thin (0.032 of the font size), lighter than the players, runs behind the letters and reaches just past both ends of the word. The icon uses the same b and the same proportions on a 96 × 96 grid.
+**Construction.** The heads are a little bigger than ordinary i-dots (radius 0.105 of the font size) and sit exactly where the dots were. Each body is the i's own stem with the top widened to 2.9 stem widths, rounded at the top corners, and tapering back to the stem at about half its height. The rod is thin (0.032 of the font size), lighter than the players, runs behind the letters and reaches just past both ends of the word. The icon uses the same b and the same proportions on a 96 × 96 grid.
 
 **Colours and sizes.** The icon has three tones only: celeste background, white b and player, navy rod. It was chosen because it stays clear in both light and dark browser tabs; colours that are close together blur into one at a few pixels, so the small icons don't use more.
 

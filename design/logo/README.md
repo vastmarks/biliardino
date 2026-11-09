@@ -5,7 +5,7 @@ The biliardino logo is drawn by code, so it can be changed precisely and regener
 | File | What it does |
 | --- | --- |
 | `word.py` | turns text into outlines with Geist, the app's own font (`src/fonts/`) |
-| `logo.py` | the logo (the name with the players on a rod, light/dark/mono/reverse), the icon drawing, the app icons and the favicon |
+| `logo.py` | the logo (the name with its i's drawn as players on a rod, light/dark/mono/reverse), the icon drawing, the app icons and the favicon |
 | `build-app-assets.sh` | regenerates everything and copies the app's files into `public/` |
 
 ## Regenerating

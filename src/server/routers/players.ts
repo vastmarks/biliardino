@@ -6,6 +6,11 @@ import { getCurrentSeason } from "~/server/model/season";
 import { writeTransaction } from "~/server/db";
 import { deleteTeamCascade } from "~/server/model/team";
 import {
+  earnedBy,
+  playerPoints,
+  withAchievements,
+} from "~/server/model/achievements";
+import {
   cleanPlayerName,
   playerKey,
   teamNameFromKeys,
@@ -38,7 +43,10 @@ async function loadMatches(scope: number | "all" | undefined) {
   });
 }
 
-type PlayerSummary = Omit<PlayerStats, "partners" | "opponents" | "history">;
+type PlayerSummary = Omit<PlayerStats, "partners" | "opponents" | "history"> & {
+  /** personal achievement points, all seasons together */
+  points: number;
+};
 
 export const playersRouter = router({
   /**
@@ -95,7 +103,7 @@ export const playersRouter = router({
 
   /**
    * Changes a player's name (typo, nickname). The key is part of every team name, so all
-   * teams, matches and achievements of the player are renamed with it.
+   * teams and matches of the player are renamed with it.
    */
   rename: publicProcedure
     .input(z.object({ id: z.number().int(), name: z.string().max(100) }))
@@ -139,10 +147,6 @@ export const playersRouter = router({
             await db.match.updateMany({
               where: { team2: team.name },
               data: { team2: renamed },
-            });
-            await db.teamAchievement.updateMany({
-              where: { teamId: team.id },
-              data: { teamName: renamed },
             });
           }
         }
@@ -214,13 +218,16 @@ export const playersRouter = router({
   list: publicProcedure
     .input(z.object({ season: scopeInput }))
     .query(async ({ input }): Promise<PlayerSummary[]> => {
-      const matches = await loadMatches(input.season);
+      const [matches, points] = await Promise.all([
+        loadMatches(input.season),
+        playerPoints(),
+      ]);
       return computePlayerStats(matches).map(
         ({ partners, opponents, history, ...summary }) => {
           void partners;
           void opponents;
           void history;
-          return summary;
+          return { ...summary, points: points.get(summary.name) ?? 0 };
         },
       );
     }),
@@ -248,12 +255,18 @@ export const playersRouter = router({
         )
         .slice(-10)
         .map(m => m.id);
-      const recentMatches = await prisma.match.findMany({
-        where: { id: { in: recentIds } },
-        include: { achievements: true },
-        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-      });
+      const recentMatches = await withAchievements(
+        await prisma.match.findMany({
+          where: { id: { in: recentIds } },
+          orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+        }),
+      );
+      // personal achievements are earned once and kept, whatever season is shown
+      const achievements = (await earnedBy("player", name)).map(e => ({
+        achievement: e.achievement,
+        createdAt: e.createdAt,
+      }));
 
-      return { player, rank, recentMatches };
+      return { player, rank, recentMatches, achievements };
     }),
 });

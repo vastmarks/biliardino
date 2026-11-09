@@ -1,23 +1,13 @@
-import { Prisma } from "~/generated/prisma/client";
 import { TRPCError } from "@trpc/server";
 import type { Db } from "~/server/db";
 import { getCurrentSeason } from "~/server/model/season";
 import {
   getOrCreateTeam,
   saveTeamNumbers,
-  TeamWithMetaAndAchievements,
   teamNumbers,
 } from "~/server/model/team";
 import { getTeamSize } from "~/model";
-import { checkAchievements } from "~/utils/achievements";
 import { applyResult } from "~/utils/teamStats";
-
-export const matchWithAchievements = {
-  include: { achievements: true },
-} satisfies Prisma.MatchDefaultArgs;
-export type MatchWithAchievements = Prisma.MatchGetPayload<
-  typeof matchWithAchievements
->;
 
 /** Same teams and result again within this time is treated as an accidental double entry. */
 export const DUPLICATE_WINDOW_MS = 5 * 60 * 1000;
@@ -32,13 +22,12 @@ export interface NewMatch {
   date?: Date;
   /** defaults to the current season */
   season?: number;
-  /** grant achievements (on by default) */
-  achievements?: boolean;
 }
 
 /**
- * Records a match: updates both teams' numbers, stores the match with the rating changes
- * and grants achievements. Call it inside `writeTransaction`.
+ * Records a match: updates both teams' numbers and stores the match with the rating
+ * changes. Achievements are derived from the matches, so nothing is granted here. Call it
+ * inside `writeTransaction`.
  */
 export async function createMatch(db: Db, input: NewMatch) {
   const date = input.date ?? new Date();
@@ -95,33 +84,5 @@ export async function createMatch(db: Db, input: NewMatch) {
     },
   });
 
-  if (input.achievements !== false) {
-    await grantAchievements(db, team1, team2, match);
-    await grantAchievements(db, team2, team1, match);
-  }
   return match;
-}
-
-async function grantAchievements(
-  db: Db,
-  team: TeamWithMetaAndAchievements,
-  opponent: TeamWithMetaAndAchievements,
-  match: Prisma.MatchGetPayload<object>,
-) {
-  const earned = checkAchievements(team, opponent, match);
-  if (earned.length === 0) {
-    return;
-  }
-  for (const achievement of earned) {
-    await db.teamAchievement.create({
-      data: {
-        season: match.season,
-        createdAt: match.createdAt,
-        teamId: team.id,
-        teamName: team.name,
-        achievement: achievement.id,
-        matchId: match.id,
-      },
-    });
-  }
 }

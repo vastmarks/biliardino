@@ -3,31 +3,47 @@ import { TRPCError } from "@trpc/server";
 import { protectedProcedure, publicProcedure, router } from "~/server/trpc";
 import { prisma } from "~/server/prisma";
 import { writeTransaction } from "~/server/db";
-import { deleteTeamCascade, rebuildSeason } from "~/server/model/team";
+import { deleteTeamCascade } from "~/server/model/team";
+import { earnedBy, getEarned } from "~/server/model/achievements";
 
 export const teamsRouter = router({
   list: publicProcedure
     .input(z.object({ teamsize: z.number().int().min(1).max(2).default(1) }))
-    .query(({ input }) =>
-      prisma.team.findMany({
-        // achievements: their points are shown for all seasons together
-        include: {
-          meta: true,
-          achievements: { select: { achievement: true } },
-        },
-        where: { teamsize: input.teamsize },
-      }),
-    ),
+    .query(async ({ input }) => {
+      const [teams, earned] = await Promise.all([
+        prisma.team.findMany({
+          include: { meta: true },
+          where: { teamsize: input.teamsize },
+        }),
+        getEarned(),
+      ]);
+      // team achievements (pairs): their points are shown for all seasons together
+      const mine = new Map<string, Array<{ achievement: string }>>();
+      for (const e of earned) {
+        if (e.scope !== "team") continue;
+        mine.set(e.subject, [
+          ...(mine.get(e.subject) ?? []),
+          { achievement: e.achievement },
+        ]);
+      }
+      return teams.map(t => ({ ...t, achievements: mine.get(t.name) ?? [] }));
+    }),
 
   /** Team page data; `null` if the team has never played. */
   byId: publicProcedure
     .input(z.object({ name: z.string().min(1).max(200) }))
-    .query(({ input }) =>
-      prisma.team.findUnique({
-        include: { meta: true, achievements: true },
+    .query(async ({ input }) => {
+      const team = await prisma.team.findUnique({
+        include: { meta: true },
         where: { name: input.name },
-      }),
-    ),
+      });
+      if (!team) return null;
+      const achievements = (await earnedBy("team", team.name)).map(e => ({
+        achievement: e.achievement,
+        createdAt: e.createdAt,
+      }));
+      return { ...team, achievements };
+    }),
 
   /** Deletes a team with all its matches, then recalculates the seasons involved (admin). */
   delete: protectedProcedure
@@ -40,25 +56,6 @@ export const teamsRouter = router({
         }
         await deleteTeamCascade(db, team);
         return team;
-      }),
-    ),
-
-  /** Takes an achievement away again (admin). */
-  deleteAchievement: protectedProcedure
-    .input(z.object({ id: z.number().int() }))
-    .mutation(({ input }) =>
-      writeTransaction(async db => {
-        const achievement = await db.teamAchievement.findUnique({
-          where: { id: input.id },
-        });
-        if (!achievement) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "Achievement not found",
-          });
-        }
-        await db.teamAchievement.delete({ where: { id: input.id } });
-        await rebuildSeason(db, achievement.season);
       }),
     ),
 });

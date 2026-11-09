@@ -63,7 +63,7 @@ export const seasonsRouter = router({
 
   /**
    * Changes a season's number (admin), e.g. to close a gap after deleting season 1. The
-   * number must be free. Matches, team ratings and achievements of the season follow, so
+   * number must be free. Matches and team ratings of the season follow, so
    * nothing is lost; players are not affected.
    */
   renumber: protectedProcedure
@@ -96,7 +96,6 @@ export const seasonsRouter = router({
         const data = { season: input.number };
         await db.match.updateMany({ where, data });
         await db.teamMeta.updateMany({ where, data });
-        await db.teamAchievement.updateMany({ where, data });
         return db.season.update({
           where: { id: season.id },
           data: { number: input.number },
@@ -106,7 +105,7 @@ export const seasonsRouter = router({
 
   /**
    * Deletes a season that isn't the current one (admin). A season with matches is deleted
-   * together with its matches, team ratings and achievements; for that the request must
+   * together with its matches and team ratings; for that the request must
    * repeat the season's number (`confirm`), like typing a name to delete a player.
    * Players stay, and their numbers in other seasons are not affected.
    */
@@ -142,12 +141,9 @@ export const seasonsRouter = router({
             message: `Season ${season.number} has ${matches} matches. Type the season number to delete it with all of them.`,
           });
         }
-        // achievements go with their matches (cascade); team ratings are per season
+        // team ratings are per season
         await db.match.deleteMany({ where: { season: season.number } });
         await db.teamMeta.deleteMany({ where: { season: season.number } });
-        await db.teamAchievement.deleteMany({
-          where: { season: season.number },
-        });
         await db.season.delete({ where: { id: season.id } });
         return { number: season.number, deletedMatches: matches };
       }),

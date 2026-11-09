@@ -5,6 +5,7 @@ import { publicProcedure, roleAwareProcedure, router } from "~/server/trpc";
 import { prisma } from "~/server/prisma";
 import { writeTransaction } from "~/server/db";
 import { createMatch } from "~/server/model/match";
+import { withAchievements } from "~/server/model/achievements";
 import { getOrCreateTeam } from "~/server/model/team";
 import { getCurrentSeason } from "~/server/model/season";
 import { rebuildSeason } from "~/server/model/team";
@@ -64,15 +65,16 @@ export const matchesRouter = router({
       }),
     )
     .query(async ({ input }) =>
-      prisma.match.findMany({
-        take: input.limit,
-        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-        include: { achievements: true },
-        where: {
-          ...teamFilter(input.team1, input.team2),
-          season: input.season ?? (await getCurrentSeason()),
-        },
-      }),
+      withAchievements(
+        await prisma.match.findMany({
+          take: input.limit,
+          orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+          where: {
+            ...teamFilter(input.team1, input.team2),
+            season: input.season ?? (await getCurrentSeason()),
+          },
+        }),
+      ),
     ),
 
   /**
@@ -116,13 +118,12 @@ export const matchesRouter = router({
       const items = await prisma.match.findMany({
         take: input.limit + 1,
         where: { AND: where },
-        include: { achievements: true },
         cursor: input.cursor ? { id: input.cursor } : undefined,
         orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       });
       const nextCursor =
         items.length > input.limit ? items.pop()!.id : undefined;
-      return { items, nextCursor };
+      return { items: await withAchievements(items), nextCursor };
     }),
 
   /**
@@ -196,15 +197,6 @@ export const matchesRouter = router({
         await getOrCreateTeam(db, team1);
         await getOrCreateTeam(db, team2);
 
-        // achievements were earned by the old result: they don't apply to a changed one
-        const changed =
-          match.team1 !== team1 ||
-          match.team2 !== team2 ||
-          match.score1 !== input.score1 ||
-          match.score2 !== input.score2;
-        if (changed) {
-          await db.teamAchievement.deleteMany({ where: { matchId: match.id } });
-        }
         await db.match.update({
           where: { id: match.id },
           data: {

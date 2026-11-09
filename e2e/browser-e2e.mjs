@@ -306,6 +306,25 @@ check(
 );
 check((await overflow()) <= 0, "teams: no horizontal overflow");
 await shot("teams");
+check(
+  (await page.evaluate(() => document.body.innerText)).includes("🏅 Points"),
+  "teams: team achievement points column",
+);
+const pairHref = await page.evaluate(() =>
+  [...document.querySelectorAll("a[href^='/teams/']")]
+    .map(a => a.getAttribute("href"))
+    .find(h => decodeURIComponent(h).includes(",")),
+);
+await page.goto(BASE + pairHref, { waitUntil: "load" });
+await sleep(900);
+check(
+  /team achievement points/i.test(
+    await page.evaluate(() => document.body.innerText),
+  ),
+  "a pair's page shows its team achievements",
+);
+await shot("team-page");
+await page.goto(BASE + "/teams", { waitUntil: "load" });
 
 await page.goto(BASE + "/players", { waitUntil: "load" });
 await sleep(900);
@@ -315,6 +334,24 @@ check(
   ),
   "players: management section",
 );
+check(
+  (await page.evaluate(() => document.body.innerText)).includes("🏅 Points"),
+  "players: personal achievement points column",
+);
+const playerHref = await page.evaluate(() =>
+  document.querySelector("table a[href^='/players/']")?.getAttribute("href"),
+);
+await page.goto(BASE + playerHref, { waitUntil: "load" });
+await sleep(900);
+check(
+  /personal achievement points/i.test(
+    await page.evaluate(() => document.body.innerText),
+  ),
+  "a player's page shows personal achievements",
+);
+await shot("player-page");
+await page.goto(BASE + "/players", { waitUntil: "load" });
+await sleep(900);
 await page.evaluate(() => {
   const li = [...document.querySelectorAll("section li")].find(l =>
     l.innerText.includes("Newbie"),
@@ -443,8 +480,10 @@ const help = await page.evaluate(() => document.body.innerText);
 check(
   /how the rating works/i.test(help) &&
     /achievement points/i.test(help) &&
-    /goals this team scored/i.test(help),
-  "help page explains rating, teams columns and achievements",
+    /goals this team scored/i.test(help) &&
+    /personal achievements/i.test(help) &&
+    /team achievements \(pairs\)/i.test(help),
+  "help page explains rating, teams columns and both kinds of achievements",
 );
 await shot("help");
 

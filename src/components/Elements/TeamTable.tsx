@@ -127,7 +127,7 @@ export const TeamTable: FunctionComponent<{ teams: TeamRow[] }> = ({
             </th>
             <th
               className="p-3"
-              title="Achievement points, all seasons together"
+              title="Team achievement points of a pair, all seasons together. Single players earn personal ones, see the Players page."
               onClick={() => setOrdering("achievementPoints")}
             >
               🏅 Points {orderIcon("achievementPoints")}
@@ -183,7 +183,9 @@ export const TeamTable: FunctionComponent<{ teams: TeamRow[] }> = ({
                   )}
                 </td>
                 <td className={`p-3`}>
-                  {achievementPoints(team.achievements)}
+                  {team.teamsize === 1
+                    ? "–"
+                    : achievementPoints(team.achievements)}
                 </td>
                 <td className={`p-3`}>{+team.meta.rating.toFixed(2)}</td>
               </tr>

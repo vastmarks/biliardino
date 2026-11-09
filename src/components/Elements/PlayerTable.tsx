@@ -2,9 +2,18 @@ import { FunctionComponent, useMemo, useState } from "react";
 import { PlayerLink } from "~/components/Elements/PlayerLink";
 import type { PlayerStats } from "~/utils/playerStats";
 
-type Summary = Omit<PlayerStats, "partners" | "opponents" | "history">;
+type Summary = Omit<PlayerStats, "partners" | "opponents" | "history"> & {
+  /** personal achievement points, all seasons together */
+  points: number;
+};
 type SortKey =
-  "rating" | "matches" | "wins" | "losses" | "winRate" | "goalDifference";
+  | "rating"
+  | "matches"
+  | "wins"
+  | "losses"
+  | "winRate"
+  | "goalDifference"
+  | "points";
 
 export function formatStreak(streak: PlayerStats["currentStreak"]) {
   return streak.type ? `${streak.type}${streak.length}` : "-";
@@ -26,8 +35,9 @@ export const PlayerTable: FunctionComponent<{ players: Summary[] }> = ({
     return desc ? list : list.reverse();
   }, [players, sortBy, desc]);
 
-  const header = (key: SortKey, label: string) => (
+  const header = (key: SortKey, label: string, title?: string) => (
     <th
+      title={title}
       className="p-3 cursor-pointer select-none whitespace-nowrap"
       onClick={() => {
         if (key === sortBy) {
@@ -55,6 +65,11 @@ export const PlayerTable: FunctionComponent<{ players: Summary[] }> = ({
             {header("losses", "L")}
             {header("winRate", "Win %")}
             {header("goalDifference", "+/−")}
+            {header(
+              "points",
+              "🏅 Points",
+              "Personal achievement points, all seasons together",
+            )}
             <th className="p-3">Streak</th>
           </tr>
         </thead>
@@ -90,6 +105,7 @@ export const PlayerTable: FunctionComponent<{ players: Summary[] }> = ({
                 {p.goalDifference > 0 ? "+" : ""}
                 {p.goalDifference}
               </td>
+              <td className="p-3">{p.points}</td>
               <td
                 className={`p-3 ${
                   p.currentStreak.type === "W"

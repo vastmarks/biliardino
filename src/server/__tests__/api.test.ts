@@ -156,6 +156,48 @@ describe("matches", () => {
   });
 });
 
+describe("achievements", () => {
+  it("are personal for players and shared by the pairs", async () => {
+    const anna = await api.players.byName({ name: "anna", season: "all" });
+    const mine = anna!.achievements.map(a => a.achievement);
+    expect(mine).toEqual(expect.arrayContaining(["matches-1", "wins-1"]));
+
+    // her 2v2 match with Ben earned the pair its own
+    const pair = await api.teams.byId({ name: "anna,ben" });
+    expect(pair!.achievements.map(a => a.achievement)).toContain("duo-wins-1");
+    // a single player's "team" has none
+    const single = await api.teams.byId({ name: "anna" });
+    expect(single!.achievements).toEqual([]);
+
+    // points on the players list, and the 🏅 of the matches
+    const list = await api.players.list({ season: "all" });
+    expect(list.find(p => p.name === "anna")!.points).toBeGreaterThan(0);
+    const page = await api.matches.infiniteList({ season: "all", limit: 100 });
+    const badges = page.items.flatMap(m => m.achievements);
+    expect(badges.some(b => b.scope === "player")).toBe(true);
+    expect(badges.some(b => b.scope === "team")).toBe(true);
+  });
+
+  it("follow an edit: a wrong result no longer earns what it did", async () => {
+    // Ben and Dario: a shutout earns the winner "Dominator"
+    const m = await add(["Dario"], ["Ben"], 10, 0);
+    const dominator = () =>
+      api.players
+        .byName({ name: "dario", season: "all" })
+        .then(p => p!.achievements.some(a => a.achievement === "diff-max"));
+    expect(await dominator()).toBe(true);
+    await api.matches.update({
+      id: m.id,
+      players1: [ids.Dario],
+      players2: [ids.Ben],
+      score1: 10,
+      score2: 4,
+      comment: "",
+    });
+    expect(await dominator()).toBe(false);
+  });
+});
+
 describe("seasons", () => {
   it("protects the current season and seasons with matches", async () => {
     admin = true;
@@ -202,16 +244,13 @@ describe("seasons", () => {
         { number: 3, deletedMatches: 0 },
       );
 
-      // season 1 with its matches, ratings and achievements
+      // season 1 with its matches and ratings
       const before = one.matches;
       await expect(
         api.seasons.delete({ id: one.id, confirm: 1 }),
       ).resolves.toMatchObject({ number: 1, deletedMatches: before });
       expect(await prisma.match.count({ where: { season: 1 } })).toBe(0);
       expect(await prisma.teamMeta.count({ where: { season: 1 } })).toBe(0);
-      expect(await prisma.teamAchievement.count({ where: { season: 1 } })).toBe(
-        0,
-      );
       expect(await prisma.match.count({ where: { season: 2 } })).toBe(1);
       expect((await api.seasons.list()).map(s => s.number)).toEqual([2]);
     } finally {
@@ -233,18 +272,12 @@ describe("seasons", () => {
       ).rejects.toThrow("already exists");
       const matches = await prisma.match.count({ where: { season: 2 } });
       const metas = await prisma.teamMeta.count({ where: { season: 2 } });
-      const awards = await prisma.teamAchievement.count({
-        where: { season: 2 },
-      });
       // 2 -> 1 closes the gap left by the deleted season 1
       await expect(
         api.seasons.renumber({ id: two.id, number: 1 }),
       ).resolves.toMatchObject({ number: 1, current: true });
       expect(await prisma.match.count({ where: { season: 1 } })).toBe(matches);
       expect(await prisma.teamMeta.count({ where: { season: 1 } })).toBe(metas);
-      expect(await prisma.teamAchievement.count({ where: { season: 1 } })).toBe(
-        awards,
-      );
       expect(await prisma.match.count({ where: { season: 2 } })).toBe(0);
       expect((await api.seasons.list()).map(s => s.number)).toEqual([1, 3]);
       // and back, leaving the data as it was

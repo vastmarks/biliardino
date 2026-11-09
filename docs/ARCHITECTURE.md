@@ -95,7 +95,7 @@ biliardino/
 │   │   ├── teamStats.ts        team ratings and numbers
 │   │   ├── playerStats.ts      player ratings and numbers
 │   │   ├── dashboard.ts        home-page numbers (periods, form, highlights)
-│   │   ├── achievements.ts     all achievements and their conditions
+│   │   ├── achievements.ts     all achievements, and the replay that derives them
 │   │   ├── players.ts          player names and team names
 │   │   ├── validation.ts       what valid input looks like
 │   │   └── editRules.ts        the 24-hour rule
@@ -151,7 +151,7 @@ sequenceDiagram
     M->>D: same result in the last 5 min? (double entry)
     M->>D: get or create both teams
     M->>M: new ratings (applyResult, pure)
-    M->>D: save team numbers, the match, achievements
+    M->>D: save team numbers and the match
     T-->>R: done (or everything undone on error)
     R-->>C: the saved match
     C->>C: refresh dashboard, matches, players
@@ -172,7 +172,7 @@ Step by step, with the files:
    - refuses the exact same result between the same teams within 5 minutes (a double tap);
    - fetches or creates both teams (`getOrCreateTeam`);
    - computes the new numbers for both teams with `applyResult` (`src/utils/teamStats.ts`), a pure function;
-   - stores the numbers, the match (including each team's rating change, shown as `+15.5`), and any achievements earned.
+   - stores the numbers and the match (including each team's rating change, shown as `+15.5`). Achievements are not granted here: they are derived from the matches (see section 7).
 8. **Back in the browser.** On success the form tells TanStack Query that the dashboard, matches and players data are out of date (`invalidate`). Every component showing those refetches and redraws: the leaderboard moves and the match appears in _Recent matches_. The players stay selected for a rematch.
 
 Editing and deleting a match (`matches.update`, `matches.delete` in the same router) follow the same path, with one difference: because every later rating depends on earlier ones, they **recalculate the whole season** afterwards (`rebuildSeason`, see section 7).
@@ -186,10 +186,10 @@ The API is a set of **procedures**: named functions on the server the browser ma
 | Router | Main procedures |
 | --- | --- |
 | `matches` | `list`, `infiniteList` (paged, "Load more"; filters: player, format, season or all seasons), `add`, `update`, `delete` |
-| `players` | `all`, `names`, `list` (leaderboard), `byName` (one player's stats), `create`, `rename`, `archive`, `delete` |
-| `teams` | `list`, `byId`, `delete`, `deleteAchievement` |
+| `players` | `all`, `names`, `list` (leaderboard, with personal achievement points), `byName` (one player's stats and achievements), `create`, `rename`, `archive`, `delete` |
+| `teams` | `list`, `byId` (with the pair's team achievements), `delete` |
 | `hallOfFame` | `get`: all-time records and the champion of every season (computed in `src/utils/hallOfFame.ts`) |
-| `seasons` | `list`, `add`, `activate`, `delete` |
+| `seasons` | `list`, `start`, `activate`, `renumber`, `delete` |
 | `dashboard` | `get`: everything the home page shows, in one request |
 | `session` | `isAdmin`: is the admin logged in? |
 
@@ -204,7 +204,7 @@ Each procedure is defined with one of three starting points from `src/server/trp
 | --- | --- | --- |
 | `publicProcedure` | everyone | reading; adding players and matches |
 | `roleAwareProcedure` | everyone, but the procedure knows whether the caller is the admin (`ctx.isAdmin`) | rules that differ: editing matches, deleting players |
-| `protectedProcedure` | admin only, others get "unauthorized" | managing seasons, deleting teams and achievements |
+| `protectedProcedure` | admin only, others get "unauthorized" | managing seasons, deleting teams |
 
 **Why tRPC helps a beginner.** The type of the whole API (`AppRouter`) is exported from `_app.ts` and imported by the browser client (`src/utils/trpc.ts`). If you rename a field on the server, every page using the old name fails the type check (`npm run check`) before anything is deployed. **superjson** is also configured on both sides, so dates arrive in the browser as real dates rather than as text.
 
@@ -249,19 +249,11 @@ erDiagram
         int currentWinStreak
         string more "wins, losses, goals..."
     }
-    TeamAchievement {
-        int teamId
-        int matchId
-        string achievement "id from achievements.ts"
-        int season
-    }
     Season {
         int number
         bool current
     }
     Team ||--o{ TeamMeta : "one row per season"
-    Team ||--o{ TeamAchievement : earns
-    Match ||--o{ TeamAchievement : "earned in"
 ```
 
 **Teams are identified by their name, and the name is made from the players.** A team is "the set of players who played together". Its name is the players' keys, sorted alphabetically and joined by a comma: Elena + Chiara and Chiara + Elena are both `chiara,elena`. That gives three useful properties:
@@ -270,12 +262,12 @@ erDiagram
 - a match row shows who played without looking anything up;
 - per-player statistics can be computed from the match list alone (split the name at the commas).
 
-The price: renaming a player has to rewrite every team name, match and achievement that contains their key. `players.rename` does exactly that, inside one transaction.
+The price: renaming a player has to rewrite every team name and match that contains their key. `players.rename` does exactly that, inside one transaction.
 
 **What is stored and what is calculated.**
 
-- _Stored:_ players, teams, matches (with the team ratings at that moment), achievements earned, and `TeamMeta`, the current numbers of each team per season (rating, wins, streaks...). Storing them makes team pages fast.
-- _Calculated on demand:_ everything about individual players (rating, form, partners, opponents) and the home-page leaderboards. They're recomputed from the matches every time. That sounds slow but takes milliseconds for thousands of matches, and it can never go out of sync.
+- _Stored:_ players, teams, matches (with the team ratings at that moment), and `TeamMeta`, the current numbers of each team per season (rating, wins, streaks...). Storing them makes team pages fast.
+- _Calculated on demand:_ everything about individual players (rating, form, partners, opponents), the home-page leaderboards and the achievements. They're recomputed from the matches every time. That sounds slow but takes milliseconds for thousands of matches, and it can never go out of sync.
 
 ### Migrations, changing the tables safely
 
@@ -320,7 +312,13 @@ The same replay produces each player's history, partners ("with") and opponents 
 
 ### Achievements
 
-`src/utils/achievements.ts` lists about fifty achievements, each with an id, a title, points and a _condition_: a small function that receives the team, the opponent and the match and answers yes or no ("won 10 in a row", "won 10:0"...). After a match is saved, `checkAchievements` tests every condition the team hasn't earned yet. Achievements are earned **once per team, ever**: milestones (wins, matches, goals) use the team's numbers of all seasons added up (`career`), while rating and streak conditions use the current season, because ratings restart. Points are never stored: `achievementPoints` adds them up from the earned achievements. Editing a match's result removes the achievements earned with it, because their conditions may no longer hold.
+Two kinds, both **earned once, ever**: _personal_ achievements belong to a player (any format, any partner; in a 2v2 each player of a side earns them on their own count) and _team_ achievements belong to a pair (matches and wins together, the team rating, streaks as a pair, beating a much stronger pair). A single player has no team achievements.
+
+`src/utils/achievements.ts` lists them (about fifty personal, thirteen for pairs). Each has an id, a title, points, a scope and a _condition_: a small function that looks at a summary of the situation right after a match (career totals, this season's rating and streaks, the day's matches, the ratings before the match, the date) and answers yes or no.
+
+Nothing is stored. `computeAchievements` replays **all matches in order**, like the player statistics, keeps running totals per player and per pair, and records the first match in which each condition became true. `src/server/model/achievements.ts` caches the result until the next write (`dataVersion` in `src/server/db.ts`; a cheap fingerprint of the match table also catches changes from another process). Because it is derived, editing or deleting a match can never leave an achievement behind or lose one, and there is no migration to run when a rule changes.
+
+Milestones (wins, matches, goals) add up all seasons; ratings and streaks are per season, because ratings restart. Personal rating conditions use the individual rating before the match; team ones use the team rating. Points are never stored either: `achievementPoints` adds them up.
 
 ---
 

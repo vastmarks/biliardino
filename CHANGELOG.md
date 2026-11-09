@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.15.0] - 2026-11-09
+
+### Changed
+
+- **Achievements are personal and for pairs.** Every player earns **personal** achievements in any format and with any partner (in a 2v2 each player of a side earns them on their own count): milestones, the individual rating, streaks, calendar and daily feats. **Team** achievements belong to a pair and are about doing things together: matches and wins together, the team rating, streaks as a pair, beating a much stronger pair (13 of them). A single player has no team achievements. Personal points are on the Players page and a player's page, team points on the Teams page and a pair's page; they are never added together.
+- Achievements are **derived from the matches** instead of stored: correcting or deleting a match also corrects what it earned, and changing a rule needs no migration. The `team_achievement` table is dropped by an automatic migration and everything is recomputed from the match history, so milestones that were split across partners now add up; some players will see several achievements at once on the first start.
+- Rating-based personal achievements (David, Goliath, underdog, bad day) compare ratings **before** the match; before, they looked at ratings that already included it.
+- The 🏅 next to a match lists what each side earned; in a pair it says whose it is ("Anna: 10 Wins").
+- The three "i"s of the logo are now **players** (head, broad shoulders, in the player blue) on the rod.
+- Help: the Achievements section explains both kinds and lists them separately.
+
+### Removed
+
+- The admin's "delete achievement" button: an achievement that shouldn't exist comes from a wrong match, so fix or delete the match (the 🏅 follows). The three joke achievements that could never be earned ("1 vs 2" ones and the Hilde contributor one) are gone.
+
+### Fixed
+
+- _Back from vacation_ compared the last match with today instead of with the player's previous match, so it practically never triggered
+
 ## [0.14.0] - 2026-11-09
 
 ### Added

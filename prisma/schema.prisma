@@ -29,7 +29,6 @@ model Match {
   game              String
   teamsize          Int
   season            Int               @default(1)
-  achievements      TeamAchievement[]
 
   @@index(season)
   @@map("match")
@@ -41,7 +40,6 @@ model Team {
   name         String
   teamsize     Int
   meta         TeamMeta[]
-  achievements TeamAchievement[]
 
   @@unique([name])
   @@map("team")
@@ -77,21 +75,6 @@ model TeamMeta {
   @@unique([season, teamId])
   @@index([teamId, season])
   @@map("team_meta")
-}
-
-model TeamAchievement {
-  id          Int      @id @default(autoincrement())
-  createdAt   DateTime @default(now())
-  team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  teamName    String
-  teamId      Int
-  achievement String
-  season      Int      @default(1)
-  match       Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
-  matchId     Int
-
-  @@index([matchId, teamId])
-  @@map("team_achievement")
 }
 
 model Season {

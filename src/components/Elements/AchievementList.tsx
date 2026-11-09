@@ -1,45 +1,31 @@
 import { Fragment, FunctionComponent } from "react";
-import { Achievement, achievements } from "~/utils/achievements";
+import { Achievement, achievements, Scope } from "~/utils/achievements";
 import { TimeDistance } from "~/components/Elements/TimeDistance";
-import { TeamWithMetaAndAchievements } from "~/server/model/team";
-import { trpc } from "~/utils/trpc";
-import { toast } from "~/utils/toast";
-import { useIsAdmin } from "~/utils/useIsAdmin";
+
+export interface EarnedItem {
+  achievement: string;
+  createdAt: Date | string;
+}
 
 const AchievementCard: FunctionComponent<{
   achievement: Achievement;
-  earned: Array<{
-    teamName: string;
-    date: Date;
-    cssClasses: string;
-    id?: number;
-  }>;
+  earned: Array<{ name: string; date: Date | string; cssClasses: string }>;
   display: "single" | "versus";
 }> = ({ achievement, earned, display }) => {
   let bgColor;
   switch (true) {
-    case achievement.points > 25:
+    case achievement.points >= 50:
       bgColor = "bg-linear-to-b from-yellow-500 to-amber-600";
       break;
-    case achievement.points > 10:
+    case achievement.points >= 25:
       bgColor = "bg-linear-to-b from-gray-400 to-gray-500";
       break;
     default:
       bgColor = "bg-linear-to-b from-amber-700 to-amber-800";
   }
-  const isAdmin = useIsAdmin();
-  const utils = trpc.useUtils();
-  const deleteMutation = trpc.teams.deleteAchievement.useMutation({
-    onSuccess: async () => {
-      await utils.teams.invalidate();
-      toast("Its gone. Forever.", {
-        type: "success",
-      });
-    },
-  });
 
   return (
-    <div className="w-full border rounded-sm flex items-center dark:border-gray-500 group">
+    <div className="w-full border rounded-sm flex items-center dark:border-gray-500">
       <div className={`p-3 text-lg h-full text-white flex items-center`}>
         <div>
           <span
@@ -56,32 +42,15 @@ const AchievementCard: FunctionComponent<{
           {display === "single" ? (
             <>
               ✅ <TimeDistance date={new Date(earned[0].date)} />
-              {isAdmin && (
-                <button
-                  className="group-hover:opacity-100 opacity-0 transition-opacity ml-2 text-lg text-red-500"
-                  onClick={() => {
-                    if (
-                      window.confirm(
-                        `Are you sure you want to delete the achievement "${achievement.title}" from ${earned[0].teamName}?`,
-                      ) &&
-                      earned[0].id
-                    ) {
-                      deleteMutation.mutate({ id: earned[0].id });
-                    }
-                  }}
-                >
-                  <span aria-hidden>✕</span>
-                </button>
-              )}
             </>
           ) : (
             <>
               {earned.map(e => (
-                <Fragment key={`${e.teamName}-${e.date}`}>
+                <Fragment key={`${e.name}-${e.date}`}>
                   <span
                     className={`p-1 text-gray-800 rounded-lg bg-gray-200 mr-1 ${e.cssClasses}`}
                   >
-                    {e.teamName}
+                    {e.name}
                   </span>
                 </Fragment>
               ))}
@@ -93,50 +62,56 @@ const AchievementCard: FunctionComponent<{
   );
 };
 
+/**
+ * The achievements of a player or a pair (`scope`), earned once and kept for good whatever
+ * season is selected. With `versus`, a second one is compared on the same cards.
+ */
 export const AchievementList: FunctionComponent<{
-  team: TeamWithMetaAndAchievements;
-  versus?: TeamWithMetaAndAchievements;
-}> = ({ team, versus }) => {
-  // achievements are earned once and kept for good, whatever season is selected
-  const teamAchievements = achievements.filter(achievement =>
-    team.achievements.find(a => a.achievement === achievement.id),
+  scope: Scope;
+  name: string;
+  earned: EarnedItem[];
+  versus?: { name: string; earned: EarnedItem[] };
+}> = ({ scope, name, earned, versus }) => {
+  const mine = achievements.filter(
+    a => a.scope === scope && earned.some(e => e.achievement === a.id),
   );
-  const versusAchievements = versus
-    ? achievements.filter(achievement =>
-        versus.achievements.find(a => a.achievement === achievement.id),
+  const theirs = versus
+    ? achievements.filter(
+        a =>
+          a.scope === scope && versus.earned.some(e => e.achievement === a.id),
       )
     : [];
+  const unique = [...new Set([...mine, ...theirs])];
 
-  const uniqueAchievements = [
-    ...new Set([...teamAchievements, ...versusAchievements]),
-  ];
+  if (unique.length === 0) {
+    return (
+      <p className="text-sm italic opacity-60 text-center">
+        No achievements yet.
+      </p>
+    );
+  }
 
   return (
     <div className="grid grid-cols-2 gap-3">
-      {uniqueAchievements.map(achievement => (
+      {unique.map(achievement => (
         <AchievementCard
           key={achievement.id}
           achievement={achievement}
           earned={[
-            ...teamAchievements
-              .filter(a => a.id === achievement.id)
-              .map(() => {
-                const teamAchievement = team.achievements.find(
-                  a => a.achievement === achievement.id,
-                )!;
-                return {
-                  id: teamAchievement.id,
-                  teamName: team.name,
-                  date: teamAchievement.createdAt,
-                  cssClasses: "bg-lime-600 text-white",
-                };
-              }),
-            ...versusAchievements
+            ...mine
               .filter(a => a.id === achievement.id)
               .map(() => ({
-                teamName: versus!.name,
-                date: versus!.achievements.find(
-                  a => a.achievement === achievement.id,
+                name,
+                date: earned.find(e => e.achievement === achievement.id)!
+                  .createdAt,
+                cssClasses: "bg-lime-600 text-white",
+              })),
+            ...theirs
+              .filter(a => a.id === achievement.id)
+              .map(() => ({
+                name: versus!.name,
+                date: versus!.earned.find(
+                  e => e.achievement === achievement.id,
                 )!.createdAt,
                 cssClasses: "bg-cyan-600 text-white",
               })),

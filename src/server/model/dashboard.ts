@@ -1,5 +1,6 @@
 import { prisma } from "~/server/prisma";
 import { getCurrentSeason } from "~/server/model/season";
+import { withAchievements } from "~/server/model/achievements";
 import {
   computeDashboard,
   DashboardStats,
@@ -18,7 +19,11 @@ export interface DashboardRecentMatch {
   comment: string;
   team1RatingChange: number;
   team2RatingChange: number;
-  achievements: Array<{ teamName: string; achievement: string }>;
+  achievements: Array<{
+    scope: "player" | "team";
+    subject: string;
+    achievement: string;
+  }>;
 }
 
 export interface DashboardData extends DashboardStats {
@@ -79,9 +84,6 @@ export async function loadDashboard(
       where: { season },
       take: 8,
       orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-      include: {
-        achievements: { select: { teamName: true, achievement: true } },
-      },
     }),
   ]);
 
@@ -118,7 +120,7 @@ export async function loadDashboard(
       pair => !pair.players.some(key => archived.has(key)),
     ),
     totalMatches: matches.length,
-    recent: recent.map(m => ({
+    recent: (await withAchievements(recent)).map(m => ({
       id: m.id,
       createdAt: m.createdAt.toISOString(),
       team1: m.team1,

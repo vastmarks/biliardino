@@ -15,6 +15,10 @@ import { prisma } from "~/server/prisma";
 export type Db = Prisma.TransactionClient;
 
 let queue: Promise<unknown> = Promise.resolve();
+let version = 0;
+
+/** Changes after every write, so values derived from the matches know when to be recomputed. */
+export const dataVersion = () => version;
 
 export function writeTransaction<T>(work: (db: Db) => Promise<T>): Promise<T> {
   const run = queue.then(() =>
@@ -22,5 +26,10 @@ export function writeTransaction<T>(work: (db: Db) => Promise<T>): Promise<T> {
   );
   // keep the queue going even if this transaction fails
   queue = run.catch(() => undefined);
+  // registered before the caller's await, so the new version is visible to whatever follows
+  const bump = () => {
+    version += 1;
+  };
+  run.then(bump, bump);
   return run;
 }

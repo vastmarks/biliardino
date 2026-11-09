@@ -15,10 +15,10 @@ biliardino is based on [Hilde](https://github.com/nehalist/hilde) by [nehalist](
 - **Elo rating for each player** (new), plus per-player statistics, partners and opponents
 - **Seasons**: the admin starts a new one with one button; each season shows when it was played (its first and last match) and its match count
 - Detailed team statistics (win streaks, win rate, elo history chart, ...)
-- **Achievements** (e.g. "Win 100 Matches", "Win 10 Matches in a row", ...)
+- **Achievements**, personal (e.g. "Win 100 Matches", "Win 10 Matches in a row") and for pairs (e.g. "Win 50 matches together")
 - Compare teams against each other
 - Matches are entered by picking **1v1 or 2v2** and the players from a list of defined players
-- A team is just a set of players: Elena+Chiara and Chiara+Elena are always the same team, so recurring pairs get their own stats, rating and achievements
+- A team is just a set of players: Elena+Chiara and Chiara+Elena are always the same team, so recurring pairs get their own stats, rating and team achievements, while every player also earns personal achievements in any format
 - **Light/Dark theme**
 - Match comments
 - **Hall of Fame**: all-time records (highest rating, longest win streak, biggest win, biggest upset, ...) and the champion of every season
@@ -115,7 +115,7 @@ Players are defined once on the **Players** page (names are unique, case-insensi
 
 **Fixing mistakes**
 
-- _Matches_: anyone can edit or delete a match for 24 hours after it was entered (**✎ Edit** on the match). Older matches can only be changed by the admin (link _Admin_ in the footer). If an edit changes the result, achievements awarded for that match are removed.
+- _Matches_: anyone can edit or delete a match for 24 hours after it was entered (**✎ Edit** on the match). Older matches can only be changed by the admin (link _Admin_ in the footer). Achievements and ratings follow an edit automatically, because they are worked out from the matches.
 - _Players_: anyone can rename a player or archive one (hidden from the picker and leaderboards, history is kept). A player without matches can be deleted by anyone; deleting a player _with_ matches also deletes those matches and is admin-only, with a second step where the name must be typed.
 
 ## Configuration
@@ -132,17 +132,18 @@ Players are defined once on the **Players** page (names are unique, case-insensi
 
 Based on [nehalist/hilde](https://github.com/nehalist/hilde) (last upstream commit: November 2023).
 
-- New identity: celeste palette for light and dark (0.8.0), Geist for all text (0.10.0), the logo with players on a rod (0.11.0).
+- New identity: celeste palette for light and dark (0.8.0), Geist for all text (0.10.0), the logo with players on a rod (0.11.0), the i's drawn as players (0.15.0).
+- Achievements: earned once and kept across seasons, personal for every player and separate ones for pairs, derived from the matches so edits and deletions keep them right (0.15.0).
 - Renamed to **biliardino** (0.7.1). A database file from before the rename (`hilde.db`) is renamed automatically on start.
 
 - Dependencies brought up to date (0.10.0): Next.js 16, React 19, tRPC 11, TanStack Query 5, Prisma 7, Tailwind CSS 4, ESLint 10, Jest 30, TypeScript 5.9, Node 22
 - **MySQL replaced by SQLite** (Prisma's Rust-free client with the better-sqlite3 driver adapter): one container, one volume. A fresh initial migration replaces the old MySQL ones, **existing MySQL data is not migrated automatically**.
-- Secure by default: no built-in admin password or session secret (the app refuses to start without them); deleting old matches, teams or achievements and deleting players with matches require the admin login
+- Secure by default: no built-in admin password or session secret (the app refuses to start without them); deleting old matches or teams and deleting players with matches require the admin login
 - New per-player statistics (see above)
 - **New match entry**: a separate Players page and a form with a 1v1/2v2 switch and player pickers instead of free-text team names
 - A fresh install starts with season 1 active (before, the form was unusable until a season was created in `/admin`)
 - Docker image rebuilt (multi-stage, non-root, healthcheck, migrations on start), CI checks every push and publishes releases to GHCR
-- Team ratings are recalculated from the remaining matches when a match, team or achievement is deleted (before, deleting a lost match lowered the loser's rating further; opponents of deleted teams kept stale ratings)
+- Team ratings are recalculated from the remaining matches when a match or team is deleted (before, deleting a lost match lowered the loser's rating further; opponents of deleted teams kept stale ratings)
 - Saving is transactional: two phones saving at the same moment can't overwrite each other's ratings
 - Fixed a MySQL-only assumption (placeholder `id: 0` on team creation) that breaks on SQLite
 - Not changed on purpose: next-auth 4 (now maintained by Better Auth with security fixes; the admin login doesn't need more) and TypeScript 7 (until 7.1 lets ESLint and Jest work with it)

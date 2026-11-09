@@ -23,7 +23,7 @@ Suggested order: 1 and 2 first (infrastructure only), then 3 and 5 in the app, a
 
 ## Product
 
-- Per-player achievements for 2v2 (today they belong to the team).
+- More team achievements for pairs, if people want them (the first set is small on purpose).
 - Export of all matches as CSV from the admin pages.
 
 ## Technical upkeep

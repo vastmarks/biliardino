@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import Link from "next/link";
 import { PageTitle } from "~/components/Elements";
-import { achievements } from "~/utils/achievements";
+import { Achievement, achievements } from "~/utils/achievements";
 import { calculateRating, defaultRating, getExpectedRating } from "~/utils/elo";
 import { PROVISIONAL_MATCHES } from "~/utils/playerStats";
 import {
@@ -96,6 +96,25 @@ function example() {
   };
 }
 
+const AchievementItems = ({ list }: { list: Achievement[] }) => (
+  <ul className="mt-2 divide-y divide-gray-100 dark:divide-gray-700">
+    {list.map(a => (
+      <li key={a.id} className="flex gap-3 py-1.5 text-sm">
+        <span className="w-10 shrink-0 text-right tabular-nums font-semibold text-blue-500 dark:text-blue-300">
+          {a.points}
+        </span>
+        <span>
+          <b>{a.title}</b>
+          <span className="text-gray-500 dark:text-gray-400">
+            {" "}
+            · {a.description.replace(/\s+/g, " ")}
+          </span>
+        </span>
+      </li>
+    ))}
+  </ul>
+);
+
 /**
  * Help for players: what every page shows, how the rating works, seasons, achievements and
  * how to fix a wrong entry. Numbers (thresholds, the rating example, the achievement list)
@@ -103,7 +122,8 @@ function example() {
  */
 const Help = () => {
   const ex = example();
-  const shown = achievements.filter(a => !a.retired);
+  const personal = achievements.filter(a => a.scope === "player");
+  const pairs = achievements.filter(a => a.scope === "team");
   return (
     <>
       <PageTitle title="Help" />
@@ -232,7 +252,8 @@ const Help = () => {
             <a href="#teams" className="text-blue-500 dark:text-blue-300">
               Teams
             </a>
-            ); 🏅 means an achievement was earned in that match.
+            ); 🏅 means somebody earned an achievement in that match (hover or
+            tap it to see which).
           </p>
         </Section>
 
@@ -274,6 +295,19 @@ const Help = () => {
               ["Win %", "Share of matches won."],
               ["+/−", "Goal difference: goals scored minus goals conceded."],
               [
+                "🏅 Points",
+                <>
+                  Personal{" "}
+                  <a
+                    href="#achievements"
+                    className="text-blue-500 dark:text-blue-300"
+                  >
+                    achievement
+                  </a>{" "}
+                  points, all seasons together. Earned in 1v1 and 2v2 alike.
+                </>,
+              ],
+              [
                 "Streak",
                 "The current run: W3 means three wins in a row, L2 two losses.",
               ],
@@ -282,10 +316,11 @@ const Help = () => {
           <H3>A player&apos;s page</H3>
           <p>
             Current, highest and lowest rating; wins, goals and streaks; results
-            per format (1v1 and 2v2); a chart of the rating match by match; and
-            two tables: <b>Partners</b> (how you do <i>with</i> each teammate)
-            and <b>Opponents</b> (how you do <i>against</i> each one). Best
-            partner and toughest opponent are picked from those.
+            per format (1v1 and 2v2); a chart of the rating match by match; the
+            personal achievements; and two tables: <b>Partners</b> (how you do{" "}
+            <i>with</i> each teammate) and <b>Opponents</b> (how you do{" "}
+            <i>against</i> each one). Best partner and toughest opponent are
+            picked from those.
           </p>
           <H3>Managing players</H3>
           <p>
@@ -320,25 +355,25 @@ const Help = () => {
               [
                 "🏅 Points",
                 <>
-                  Achievement points: each{" "}
+                  Team{" "}
                   <a
                     href="#achievements"
                     className="text-blue-500 dark:text-blue-300"
                   >
                     achievement
                   </a>{" "}
-                  is worth more the harder it is (from 5 to 200 points), and
-                  this is their total over all seasons (achievements are earned
-                  once and kept for good).
+                  points of a pair, all seasons together. Singles show a dash: a
+                  player on their own earns personal achievements, shown on the
+                  Players page.
                 </>,
               ],
               ["Rating", "The team's own rating this season."],
             ]}
           />
           <p>
-            A team&apos;s page shows its numbers, its rating chart, its
-            achievements, and a <b>Versus</b> menu to compare it with another
-            team head to head.
+            A team&apos;s page shows its numbers, its rating chart, its team
+            achievements (pairs), and a <b>Versus</b> menu to compare it with
+            another team head to head.
           </p>
         </Section>
 
@@ -512,35 +547,40 @@ const Help = () => {
           intro="Small badges for milestones, streaks and fun moments. Earned once, kept for good."
         >
           <p>
-            Achievements belong to a <b>team</b> (you alone in 1v1, or a pair in
-            2v2). Each one is earned <b>once</b> and kept across seasons.
-            Milestones (wins, matches, goals) count all seasons together, so
-            &quot;1000 matches&quot; is reachable; the ones about rating or
-            streaks happen within a season, because ratings start again at{" "}
-            {defaultRating} every season. The harder an achievement, the more it
-            is worth (from 5 to 200 points); the total is the 🏅 column on the
-            Teams page. A 🏅 next to a match shows one was earned there.
+            There are two kinds. <b>Personal</b> achievements belong to you,
+            whatever the format and whoever your partner is: in a 2v2 both
+            players of a side earn them, each on their own count. <b>Team</b>{" "}
+            achievements belong to a pair: what two people do together. A single
+            player has no team achievements, so a 1v1 only counts for the
+            personal ones.
+          </p>
+          <p>
+            Each one is earned <b>once</b> and kept across seasons. Milestones
+            (wins, matches, goals) count all seasons together, so &quot;1000
+            matches&quot; is reachable; the ones about rating or streaks happen
+            within a season, because ratings start again at {defaultRating}{" "}
+            every season. Personal ones use your individual rating, team ones
+            the pair&apos;s team rating. In a 2v2 the goals of the side count
+            for each of its players, as in the player statistics.
+          </p>
+          <p>
+            The harder an achievement, the more it is worth (from 5 to 200
+            points). Personal points are the 🏅 column on the Players page, team
+            points the one on the Teams page; the two are never added together.
+            Achievements are worked out from the matches themselves, so
+            correcting or deleting a match also corrects what it earned.
           </p>
           <details className="rounded-lg border border-gray-200 dark:border-gray-700 p-3">
             <summary className="cursor-pointer font-semibold">
-              All {shown.length} achievements
+              All {personal.length} personal achievements
             </summary>
-            <ul className="mt-2 divide-y divide-gray-100 dark:divide-gray-700">
-              {shown.map(a => (
-                <li key={a.id} className="flex gap-3 py-1.5 text-sm">
-                  <span className="w-10 shrink-0 text-right tabular-nums font-semibold text-blue-500 dark:text-blue-300">
-                    {a.points}
-                  </span>
-                  <span>
-                    <b>{a.title}</b>
-                    <span className="text-gray-500 dark:text-gray-400">
-                      {" "}
-                      · {a.description.replace(/\s+/g, " ")}
-                    </span>
-                  </span>
-                </li>
-              ))}
-            </ul>
+            <AchievementItems list={personal} />
+          </details>
+          <details className="rounded-lg border border-gray-200 dark:border-gray-700 p-3">
+            <summary className="cursor-pointer font-semibold">
+              All {pairs.length} team achievements (pairs)
+            </summary>
+            <AchievementItems list={pairs} />
           </details>
         </Section>
 
@@ -553,7 +593,7 @@ const Help = () => {
             items={[
               [
                 `First ${EDIT_WINDOW_HOURS} hours`,
-                "Anyone can correct or delete a match with ✎ Edit on the match. Ratings of the whole season are recalculated.",
+                "Anyone can correct or delete a match with ✎ Edit on the match. Ratings of the whole season are recalculated, and so is what the match earned.",
               ],
               [
                 `After ${EDIT_WINDOW_HOURS} hours`,

@@ -1,10 +1,14 @@
 import { FunctionComponent, ReactNode } from "react";
 import { Card } from "~/components/Elements/Card";
-import { MatchTable } from "~/components/Elements/MatchTable";
+import { MatchRowData, MatchTable } from "~/components/Elements/MatchTable";
 import { PlayerLink } from "~/components/Elements/PlayerLink";
 import { PlayerRatingHistory } from "~/components/Elements/PlayerRatingHistory";
 import { formatStreak } from "~/components/Elements/PlayerTable";
-import type { MatchWithAchievements } from "~/server/model/match";
+import {
+  AchievementList,
+  EarnedItem,
+} from "~/components/Elements/AchievementList";
+import { achievementPoints } from "~/utils/achievements";
 import type { PersonStat, PlayerStats } from "~/utils/playerStats";
 
 const MIN_MATCHES_FOR_HIGHLIGHT = 3;
@@ -66,9 +70,11 @@ const PeopleTable: FunctionComponent<{ title: string; rows: PersonStat[] }> = ({
 export const PlayerProfile: FunctionComponent<{
   player: PlayerStats;
   rank: number;
-  recentMatches: MatchWithAchievements[];
+  recentMatches: MatchRowData[];
+  /** personal achievements, earned once and kept for good (all seasons) */
+  achievements: EarnedItem[];
   scopeLabel: string;
-}> = ({ player, rank, recentMatches, scopeLabel }) => {
+}> = ({ player, rank, recentMatches, achievements, scopeLabel }) => {
   const eligible = (list: PersonStat[]) =>
     list.filter(p => p.matches >= MIN_MATCHES_FOR_HIGHLIGHT);
   const bestPartner = [...eligible(player.partners)].sort(
@@ -186,6 +192,20 @@ export const PlayerProfile: FunctionComponent<{
         </div>
         <div className="col-span-6 md:col-span-3">
           <PeopleTable title="Opponents" rows={player.opponents} />
+        </div>
+
+        <div className="col-span-6 border-t dark:border-gray-600 p-3">
+          <div className="my-3 text-2xl font-semibold text-center">
+            🏅 {achievementPoints(achievements)}
+            <div className="text-xs font-normal opacity-60">
+              personal achievement points, all seasons
+            </div>
+          </div>
+          <AchievementList
+            scope="player"
+            name={player.name}
+            earned={achievements}
+          />
         </div>
 
         {recentMatches.length > 0 && (

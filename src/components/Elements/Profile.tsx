@@ -4,15 +4,21 @@ import { Card } from "~/components/Elements/Card";
 import { PlayerNames } from "~/components/Elements/PlayerNames";
 import { EloHistory } from "~/components/Elements/EloHistory";
 import type { Match, Team, TeamMeta } from "~/generated/prisma/browser";
-import { TeamWithMetaAndAchievements } from "~/server/model/team";
-import { AchievementList } from "~/components/Elements/AchievementList";
+import type { TeamWithMeta } from "~/server/model/team";
+import {
+  AchievementList,
+  EarnedItem,
+} from "~/components/Elements/AchievementList";
+import { PlayerLink } from "~/components/Elements/PlayerLink";
 import { achievementPoints } from "~/utils/achievements";
 import { getSeasonMeta } from "~/model";
 import { useStore } from "~/utils/store";
 
+type TeamData = TeamWithMeta & { achievements: EarnedItem[] };
+
 export const Profile: FunctionComponent<{
-  team: TeamWithMetaAndAchievements;
-  versus?: TeamWithMetaAndAchievements | null;
+  team: TeamData;
+  versus?: TeamData | null;
   matches?: Match[];
   onVersusSelect: (teamName: string) => void;
   versusOptions: Team[];
@@ -195,18 +201,37 @@ export const Profile: FunctionComponent<{
           )}
         </div>
         <div className="col-span-6 p-3">
-          <div className="my-5 text-2xl font-semibold text-center">
-            🏅 {achievementPoints(team.achievements)}
-            {versus && (
-              <small className="opacity-50 ml-1">
-                {achievementPoints(versus.achievements)}
-              </small>
-            )}
-            <div className="text-xs font-normal opacity-60">
-              achievement points, all seasons
-            </div>
-          </div>
-          <AchievementList team={team} versus={versus || undefined} />
+          {team.teamsize === 1 ? (
+            <p className="my-5 text-sm text-center opacity-70">
+              Achievements of a single player are on their own page:{" "}
+              <PlayerLink name={team.name} />. Team achievements are earned by
+              pairs.
+            </p>
+          ) : (
+            <>
+              <div className="my-5 text-2xl font-semibold text-center">
+                🏅 {achievementPoints(team.achievements)}
+                {versus && (
+                  <small className="opacity-50 ml-1">
+                    {achievementPoints(versus.achievements)}
+                  </small>
+                )}
+                <div className="text-xs font-normal opacity-60">
+                  team achievement points, all seasons
+                </div>
+              </div>
+              <AchievementList
+                scope="team"
+                name={team.name}
+                earned={team.achievements}
+                versus={
+                  versus
+                    ? { name: versus.name, earned: versus.achievements }
+                    : undefined
+                }
+              />
+            </>
+          )}
         </div>
       </div>
     </Card>
