@@ -39,6 +39,7 @@ const Seasons = () => {
   const utils = trpc.useUtils();
   const [dialog, setDialog] = useState<
     | { kind: "start" }
+    | { kind: "renumber"; season: Season }
     | { kind: "activate"; season: Season }
     | { kind: "delete"; season: Season }
     | null
@@ -57,6 +58,14 @@ const Seasons = () => {
     onSuccess: async s => {
       await refresh();
       toast(`Season ${s.number} started`, { type: "success" });
+      close();
+    },
+    onError,
+  });
+  const renumber = trpc.seasons.renumber.useMutation({
+    onSuccess: async s => {
+      await refresh();
+      toast(`Now season ${s.number}`, { type: "success" });
       close();
     },
     onError,
@@ -124,22 +133,33 @@ const Seasons = () => {
                   ` · ${s.matches} ${s.matches === 1 ? "match" : "matches"}`}
               </div>
             </div>
-            {!s.current && (
-              <div className="flex gap-2">
-                <button
-                  className={`${small} text-blue-500 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-gray-700`}
-                  onClick={() => setDialog({ kind: "activate", season: s })}
-                >
-                  Make current
-                </button>
-                <button
-                  className={`${small} text-red-500 hover:bg-red-500/10`}
-                  onClick={() => setDialog({ kind: "delete", season: s })}
-                >
-                  Delete
-                </button>
-              </div>
-            )}
+            <div className="flex gap-2">
+              <button
+                className={`${small} text-blue-500 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-gray-700`}
+                onClick={() => {
+                  setTyped(String(s.number));
+                  setDialog({ kind: "renumber", season: s });
+                }}
+              >
+                Change number
+              </button>
+              {!s.current && (
+                <>
+                  <button
+                    className={`${small} text-blue-500 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-gray-700`}
+                    onClick={() => setDialog({ kind: "activate", season: s })}
+                  >
+                    Make current
+                  </button>
+                  <button
+                    className={`${small} text-red-500 hover:bg-red-500/10`}
+                    onClick={() => setDialog({ kind: "delete", season: s })}
+                  >
+                    Delete
+                  </button>
+                </>
+              )}
+            </div>
           </li>
         ))}
       </ul>
@@ -173,6 +193,56 @@ const Seasons = () => {
             </button>
           </div>
         </div>
+      </Modal>
+
+      <Modal
+        open={dialog?.kind === "renumber"}
+        onClose={close}
+        title={target ? `Change the number of season ${target.number}` : ""}
+      >
+        {target && (
+          <form
+            className="grid gap-3 text-sm"
+            onSubmit={e => {
+              e.preventDefault();
+              renumber.mutate({ id: target.id, number: Number(typed) });
+            }}
+          >
+            <p>
+              Its matches, ratings and achievements move with it. Use a number
+              that no other season has, for example to close a gap after
+              deleting a season.
+            </p>
+            <label className="grid gap-1">
+              <span>New number</span>
+              <input
+                autoFocus
+                inputMode="numeric"
+                value={typed}
+                onChange={e => setTyped(e.target.value.replace(/\D/g, ""))}
+                aria-label="New season number"
+                onFocus={e => e.target.select()}
+                className="h-11 px-3 text-base rounded-lg bg-gray-100 dark:bg-gray-900 border-0 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
+              />
+            </label>
+            <div className="flex justify-end gap-2">
+              <button type="button" className={secondary} onClick={close}>
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className={primary}
+                disabled={
+                  renumber.isPending ||
+                  !(Number(typed) >= 1) ||
+                  Number(typed) === target.number
+                }
+              >
+                Save
+              </button>
+            </div>
+          </form>
+        )}
       </Modal>
 
       <Modal

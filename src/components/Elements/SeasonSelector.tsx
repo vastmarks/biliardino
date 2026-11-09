@@ -10,10 +10,15 @@ export const SeasonSelector: FunctionComponent = () => {
   const { season: selectedSeason, setSeason, setDefaultSeason } = useStore();
 
   useEffect(() => {
-    if (seasons.data) {
-      setDefaultSeason(seasons.data.find(s => s.current)?.number || 1);
+    if (!seasons.data) return;
+    const current = seasons.data.find(s => s.current)?.number || 1;
+    // a season that was deleted or renumbered since it was picked: back to the current one
+    if (!seasons.data.some(s => s.number === selectedSeason)) {
+      useStore.setState({ season: current, seasonPicked: false });
+    } else {
+      setDefaultSeason(current);
     }
-  }, [seasons.data, setDefaultSeason]);
+  }, [seasons.data, selectedSeason, setDefaultSeason]);
 
   // nothing to choose from until a second season exists
   if (!seasons.data || seasons.data.length < 2) {

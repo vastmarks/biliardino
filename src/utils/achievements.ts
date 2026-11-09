@@ -68,7 +68,7 @@ export const achievements: Achievement[] = [
     },
     title: "First Win",
     description: "Win your first game",
-    points: 10,
+    points: 5,
   },
   {
     id: "wins-10",
@@ -94,7 +94,7 @@ export const achievements: Achievement[] = [
     },
     title: "50 Wins",
     description: "Win 50 games",
-    points: 10,
+    points: 25,
   },
   {
     id: "wins-100",
@@ -107,7 +107,7 @@ export const achievements: Achievement[] = [
     },
     title: "100 Wins",
     description: "Win 100 matches",
-    points: 25,
+    points: 50,
   },
   {
     id: "wins-500",
@@ -120,7 +120,7 @@ export const achievements: Achievement[] = [
     },
     title: "500 Wins",
     description: "Win 500 matches",
-    points: 25,
+    points: 100,
   },
   {
     id: "wins-1000",
@@ -133,7 +133,7 @@ export const achievements: Achievement[] = [
     },
     title: "Winning is my hobby",
     description: "Win 1000 matches",
-    points: 50,
+    points: 200,
   },
   {
     id: "elo-range",
@@ -148,7 +148,7 @@ export const achievements: Achievement[] = [
     description: `Reach an elo rating of lower than ${
       defaultRating - 300
     } AND at least ${defaultRating + 300}`,
-    points: 50,
+    points: 100,
   },
   {
     id: "elo-minus300",
@@ -178,7 +178,7 @@ export const achievements: Achievement[] = [
     },
     title: "Look mom, no hands!",
     description: `Reach an elo rating of ${defaultRating + 200}`,
-    points: 10,
+    points: 25,
   },
   {
     id: "elo-300",
@@ -188,7 +188,7 @@ export const achievements: Achievement[] = [
     },
     title: "Whenever I need expert advice, I talk to myself",
     description: `Reach a rating of ${defaultRating + 300}`,
-    points: 25,
+    points: 50,
   },
   {
     id: "elo-400",
@@ -198,7 +198,7 @@ export const achievements: Achievement[] = [
     },
     title: "Call me Magnus Carlsen",
     description: `Reach a rating of ${defaultRating + 400}`,
-    points: 25,
+    points: 100,
   },
   {
     id: "elo-500",
@@ -208,7 +208,7 @@ export const achievements: Achievement[] = [
     },
     title: "Kneel before me, mortals!",
     description: `Reach a rating of ${defaultRating + 500}`,
-    points: 50,
+    points: 200,
   },
   {
     id: "consecutive-wins-5",
@@ -234,7 +234,7 @@ export const achievements: Achievement[] = [
     },
     title: "Behold!",
     description: `Win 10 consecutive games`,
-    points: 50,
+    points: 100,
   },
   {
     id: "consecutive-losses-10",
@@ -257,7 +257,7 @@ export const achievements: Achievement[] = [
     },
     title: "First match",
     description: `Play your first match`,
-    points: 10,
+    points: 5,
   },
   {
     id: "matches-10",
@@ -267,7 +267,7 @@ export const achievements: Achievement[] = [
     },
     title: "10 Matches",
     description: `Play 10 matches`,
-    points: 10,
+    points: 5,
   },
   {
     id: "matches-50",
@@ -297,7 +297,7 @@ export const achievements: Achievement[] = [
     },
     title: "500 Matches",
     description: `Play 500 matches`,
-    points: 25,
+    points: 60,
   },
   {
     id: "matches-1000",
@@ -307,7 +307,7 @@ export const achievements: Achievement[] = [
     },
     title: "I haven't left this place for years",
     description: `Play 1000 matches`,
-    points: 50,
+    points: 120,
   },
   {
     id: "score-1",
@@ -317,7 +317,7 @@ export const achievements: Achievement[] = [
     },
     title: "First goal",
     description: `Score your first goal`,
-    points: 10,
+    points: 5,
   },
   {
     id: "score-10",
@@ -327,7 +327,7 @@ export const achievements: Achievement[] = [
     },
     title: "10 Goals",
     description: `Score a total of 10 goals`,
-    points: 10,
+    points: 5,
   },
   {
     id: "score-100",
@@ -337,7 +337,7 @@ export const achievements: Achievement[] = [
     },
     title: "100 Goals",
     description: `Score a total of 100 goals`,
-    points: 25,
+    points: 10,
   },
   {
     id: "score-1000",
@@ -347,7 +347,7 @@ export const achievements: Achievement[] = [
     },
     title: "1000 Goals",
     description: `Score a total of 1000 goals`,
-    points: 25,
+    points: 30,
   },
   {
     id: "score-2500",
@@ -357,7 +357,7 @@ export const achievements: Achievement[] = [
     },
     title: "2500 Goals",
     description: `Score a total of 2500 goals`,
-    points: 50,
+    points: 60,
   },
   {
     id: "score-5000",
@@ -367,7 +367,7 @@ export const achievements: Achievement[] = [
     },
     title: "5000 Goals",
     description: `Score a total of 5000 goals`,
-    points: 50,
+    points: 100,
   },
   {
     id: "underdog",
@@ -382,7 +382,7 @@ export const achievements: Achievement[] = [
     title: "Underdog",
     description:
       "Win a game against someone rated at least 100 higher than you",
-    points: 25,
+    points: 10,
   },
   {
     id: "badday",
@@ -397,7 +397,7 @@ export const achievements: Achievement[] = [
     title: "Bad days happen",
     description:
       "Lose a game against someone rated at least 100 lower than you",
-    points: 25,
+    points: 10,
   },
   {
     id: "david",
@@ -412,7 +412,7 @@ export const achievements: Achievement[] = [
     title: "David",
     description:
       "Win a game against someone rated at least 250 higher than you",
-    points: 50,
+    points: 25,
   },
   {
     id: "goliath",
@@ -436,18 +436,18 @@ export const achievements: Achievement[] = [
     },
     title: "Everyday is work day",
     description: "Play a match on a weekend",
-    points: 10,
+    points: 25,
   },
   {
     id: "night-match",
     condition: (team, opponent, match) => {
       return (
-        match.createdAt.getHours() >= 20 && match.createdAt.getHours() <= 6
+        match.createdAt.getHours() >= 20 || match.createdAt.getHours() <= 6
       );
     },
     title: "Night shift",
-    description: "Play a match during the night",
-    points: 10,
+    description: "Play a match between 20:00 and 06:59",
+    points: 25,
   },
   {
     id: "xmas-match",
@@ -458,7 +458,7 @@ export const achievements: Achievement[] = [
     },
     title: "Merry Christmas",
     description: "Play a game on Christmas eve (24.12.)",
-    points: 10,
+    points: 25,
   },
   {
     id: "daily-matches-5",
@@ -491,7 +491,7 @@ export const achievements: Achievement[] = [
     },
     title: "Probably getting paid for this",
     description: "Win 5 matches in a single day",
-    points: 10,
+    points: 15,
   },
   {
     id: "daily-wins-10",
@@ -504,7 +504,7 @@ export const achievements: Achievement[] = [
     },
     title: "Suffering from success",
     description: "Win 10 matches in a single day",
-    points: 25,
+    points: 50,
   },
   {
     id: "hangover",
@@ -513,7 +513,7 @@ export const achievements: Achievement[] = [
     },
     title: "Berliner Luft",
     description: "Play a match on a thursday",
-    points: 25,
+    points: 10,
   },
   {
     id: "contributor",
@@ -529,7 +529,7 @@ export const achievements: Achievement[] = [
     id: "daily-o-clock",
     condition: (team, opponent, match) => {
       return (
-        match.createdAt.getHours() === 8 &&
+        match.createdAt.getHours() === 9 &&
         match.createdAt.getMinutes() >= 0 &&
         match.createdAt.getMinutes() <= 15
       );
@@ -567,7 +567,7 @@ export const achievements: Achievement[] = [
     },
     title: "Take a leap",
     description: "Play on 29.2",
-    points: 25,
+    points: 50,
   },
   {
     id: "vacation",
@@ -592,7 +592,7 @@ export const achievements: Achievement[] = [
     },
     title: "Trick or treat",
     description: "Play on 31.10.",
-    points: 10,
+    points: 25,
   },
   {
     id: "diff-max",
@@ -605,7 +605,7 @@ export const achievements: Achievement[] = [
     },
     title: "Dominator",
     description: "Win while your opponent score is 0",
-    points: 10,
+    points: 25,
   },
   {
     id: "diff-min",

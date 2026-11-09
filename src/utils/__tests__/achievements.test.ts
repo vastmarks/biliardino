@@ -418,6 +418,48 @@ describe("across seasons", () => {
     ).toBe(first + tenth);
   });
 
+  test("harder milestones are worth more", () => {
+    for (const ladder of [
+      ["wins-1", "wins-10", "wins-50", "wins-100", "wins-500", "wins-1000"],
+      [
+        "matches-1",
+        "matches-10",
+        "matches-50",
+        "matches-100",
+        "matches-500",
+        "matches-1000",
+      ],
+      [
+        "score-1",
+        "score-10",
+        "score-100",
+        "score-1000",
+        "score-2500",
+        "score-5000",
+      ],
+      ["elo-100", "elo-200", "elo-300", "elo-400", "elo-500"],
+      ["consecutive-wins-5", "consecutive-wins-10"],
+      ["daily-wins-5", "daily-wins-10"],
+      ["daily-matches-5", "daily-matches-10"],
+    ]) {
+      const pts = ladder.map(id => getAchievement(id).points);
+      expect(pts).toEqual([...pts].sort((a, b) => a - b));
+    }
+  });
+
+  test("the night shift can be earned", () => {
+    const opp = createTeam("bob");
+    const team = createTeam("anna");
+    const at = (h: number) => {
+      const m = createMatch(team, opp, 10, 5);
+      m.createdAt = new Date(2026, 10, 3, h, 30);
+      return getAchievement("night-match").condition(team, opp, m);
+    };
+    expect(at(22)).toBe(true);
+    expect(at(5)).toBe(true);
+    expect(at(14)).toBe(false);
+  });
+
   test("5000 goals needs 5000 goals", () => {
     const opp = createTeam("bob");
     const team = withSeasons("anna", [{ season: 1, totalScore: 4999 }]);

@@ -218,6 +218,43 @@ describe("seasons", () => {
       admin = false;
     }
   });
+
+  it("renumbers a season together with everything in it", async () => {
+    admin = true;
+    try {
+      const two = await prisma.season.findFirstOrThrow({
+        where: { number: 2 },
+      });
+      const empty = await api.seasons.start(); // season 3, now current
+      await api.seasons.activate({ id: two.id });
+      // taken numbers are refused
+      await expect(
+        api.seasons.renumber({ id: empty.id, number: 2 }),
+      ).rejects.toThrow("already exists");
+      const matches = await prisma.match.count({ where: { season: 2 } });
+      const metas = await prisma.teamMeta.count({ where: { season: 2 } });
+      const awards = await prisma.teamAchievement.count({
+        where: { season: 2 },
+      });
+      // 2 -> 1 closes the gap left by the deleted season 1
+      await expect(
+        api.seasons.renumber({ id: two.id, number: 1 }),
+      ).resolves.toMatchObject({ number: 1, current: true });
+      expect(await prisma.match.count({ where: { season: 1 } })).toBe(matches);
+      expect(await prisma.teamMeta.count({ where: { season: 1 } })).toBe(metas);
+      expect(await prisma.teamAchievement.count({ where: { season: 1 } })).toBe(
+        awards,
+      );
+      expect(await prisma.match.count({ where: { season: 2 } })).toBe(0);
+      expect((await api.seasons.list()).map(s => s.number)).toEqual([1, 3]);
+      // and back, leaving the data as it was
+      await api.seasons.renumber({ id: two.id, number: 2 });
+      await api.seasons.delete({ id: empty.id });
+      expect((await api.seasons.list()).map(s => s.number)).toEqual([2]);
+    } finally {
+      admin = false;
+    }
+  });
 });
 
 describe("dashboard", () => {

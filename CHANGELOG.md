@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.14.0] - 2026-11-09
+
+### Added
+
+- **Change a season's number** (Admin, Seasons, _Change number_): its matches, team ratings and achievements move with it. Useful to close a gap, for example after deleting season 1. The number must be free.
+- **docs/ROADMAP.md**: ideas that are not built yet, starting with the options for protecting the app against accidental or mischievous edits (network, snapshots, PIN, rate limit, audit trail).
+
+### Changed
+
+- **Achievement points follow the effort**, from 5 (first win, first match, first goal) up to 200 (1000 wins, rating +500). Examples: 100 wins 50 (was 25), 500 wins 100 (25), 1000 wins 200 (50), 5000 goals 100 (50), 10 wins in a row 100 (50), 10 wins in a day 50 (25), rare dates such as Christmas eve and 29 February 25 and 50. Cheap ones were lowered: playing on a Thursday 10 (was 25), losing to a weaker team 10 (25), underdog win 10 (25). Totals are added up from the achievements, so every team's 🏅 updates by itself.
+- A season that was picked in the header and no longer exists (deleted or renumbered) falls back to the current one.
+
+### Fixed
+
+- _Night shift_ could never be earned; it now counts matches from 20:00 to 06:59
+- _No daily today?_ checked 08:00-08:15 while saying 09:00-09:15
+
 ## [0.13.0] - 2026-11-08
 
 ### Changed

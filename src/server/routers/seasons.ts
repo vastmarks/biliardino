@@ -62,6 +62,49 @@ export const seasonsRouter = router({
     ),
 
   /**
+   * Changes a season's number (admin), e.g. to close a gap after deleting season 1. The
+   * number must be free. Matches, team ratings and achievements of the season follow, so
+   * nothing is lost; players are not affected.
+   */
+  renumber: protectedProcedure
+    .input(
+      z.object({
+        id: z.number().int(),
+        number: z.number().int().min(1).max(9999),
+      }),
+    )
+    .mutation(({ input }) =>
+      writeTransaction(async db => {
+        const season = await db.season.findUnique({ where: { id: input.id } });
+        if (!season) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Season not found",
+          });
+        }
+        if (season.number === input.number) return season;
+        const taken = await db.season.findUnique({
+          where: { number: input.number },
+        });
+        if (taken) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: `Season ${input.number} already exists. Pick a free number.`,
+          });
+        }
+        const where = { season: season.number };
+        const data = { season: input.number };
+        await db.match.updateMany({ where, data });
+        await db.teamMeta.updateMany({ where, data });
+        await db.teamAchievement.updateMany({ where, data });
+        return db.season.update({
+          where: { id: season.id },
+          data: { number: input.number },
+        });
+      }),
+    ),
+
+  /**
    * Deletes a season that isn't the current one (admin). A season with matches is deleted
    * together with its matches, team ratings and achievements; for that the request must
    * repeat the season's number (`confirm`), like typing a name to delete a player.

@@ -327,8 +327,9 @@ const Help = () => {
                   >
                     achievement
                   </a>{" "}
-                  is worth 10, 25 or 50 points, and this is their total over all
-                  seasons (achievements are earned once and kept for good).
+                  is worth more the harder it is (from 5 to 200 points), and
+                  this is their total over all seasons (achievements are earned
+                  once and kept for good).
                 </>,
               ],
               ["Rating", "The team's own rating this season."],
@@ -516,9 +517,9 @@ const Help = () => {
             Milestones (wins, matches, goals) count all seasons together, so
             &quot;1000 matches&quot; is reachable; the ones about rating or
             streaks happen within a season, because ratings start again at{" "}
-            {defaultRating} every season. Each is worth 10, 25 or 50 points; the
-            total is the 🏅 column on the Teams page. A 🏅 next to a match shows
-            one was earned there.
+            {defaultRating} every season. The harder an achievement, the more it
+            is worth (from 5 to 200 points); the total is the 🏅 column on the
+            Teams page. A 🏅 next to a match shows one was earned there.
           </p>
           <details className="rounded-lg border border-gray-200 dark:border-gray-700 p-3">
             <summary className="cursor-pointer font-semibold">
@@ -527,7 +528,7 @@ const Help = () => {
             <ul className="mt-2 divide-y divide-gray-100 dark:divide-gray-700">
               {shown.map(a => (
                 <li key={a.id} className="flex gap-3 py-1.5 text-sm">
-                  <span className="w-8 shrink-0 text-right tabular-nums font-semibold text-blue-500 dark:text-blue-300">
+                  <span className="w-10 shrink-0 text-right tabular-nums font-semibold text-blue-500 dark:text-blue-300">
                     {a.points}
                   </span>
                   <span>

@@ -257,6 +257,16 @@ await page.waitForFunction(
   { timeout: 8000 },
 );
 check(true, "season 1 and its matches deleted");
+// close the gap: season 2 becomes season 1
+await clickIn("body", /^Change number$/);
+await page.waitForSelector("dialog[open] input");
+await page.type("dialog[open] input", "1");
+await clickIn("dialog[open]", /^Save$/);
+await page.waitForFunction(
+  () => /Season 1\s*Current/.test(document.body.innerText),
+  { timeout: 8000 },
+);
+check(true, "season 2 renumbered to 1 and still current");
 await page.goto(base + "/matches?season=all", { waitUntil: "load" });
 await new Promise(r => setTimeout(r, 800));
 check(

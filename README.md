@@ -4,7 +4,7 @@ A self-hosted tracker for the office foosball table (_biliardino_): 1v1 and 2v2 
 
 biliardino is based on [Hilde](https://github.com/nehalist/hilde) by [nehalist](https://github.com/nehalist) (MIT licence), modernised and extended; see _Changes from Hilde_ below.
 
-**Guides:** [run it on your computer](docs/LOCAL.md) · [deploy it on a home server](docs/DEPLOY.md) · [how the app is built](docs/ARCHITECTURE.md) · [brand guide](docs/BRAND.md)
+**Guides:** [run it on your computer](docs/LOCAL.md) · [deploy it on a home server](docs/DEPLOY.md) · [how the app is built](docs/ARCHITECTURE.md) · [brand guide](docs/BRAND.md) · [roadmap](docs/ROADMAP.md)
 
 ![biliardino home page](docs/screenshot.png)
 
@@ -85,7 +85,7 @@ Where things are:
 | `prisma/` | database schema and migrations |
 | `src/**/__tests__/` | unit tests; `src/server/__tests__/` runs the API on a temporary database |
 | `e2e/` | browser tests (Chrome/Firefox, see `e2e/README.md`) |
-| `docs/` | guides: local run, home-server deployment, architecture, brand |
+| `docs/` | guides: local run, home-server deployment, architecture, brand, roadmap |
 | `design/logo/` | the logo as code; regenerates every logo file and app icon |
 
 Database changes: edit `prisma/schema.prisma`, then `npm run db:migrate:dev -- --name what-changed` creates a migration; it's applied automatically on the next container start.
