@@ -61,6 +61,13 @@ npm run build
 npm start
 ```
 
+### Updating, backups and security
+
+- **Updating:** read the top entry of the [changelog](CHANGELOG.md) first (some versions change the database; it says so), then pull the new image or rebuild. Migrations are applied automatically at start. Step by step: [DEPLOY.md](docs/DEPLOY.md#updating-to-a-new-version).
+- **Backups:** everything is one SQLite file in the data folder or volume. Take a TrueNAS/ZFS snapshot, or copy the file, before updating. [DEPLOY.md](docs/DEPLOY.md#backups) explains snapshots, copying and restoring.
+- **Security:** anybody who can open the page can add and edit matches (on purpose: a result takes seconds to enter); only `/admin` has a password. Run it on your own network, never forward a port to it, and use a VPN for outside access. Options to protect it more are in the [roadmap](docs/ROADMAP.md).
+- **Your own copy:** the `ghcr.io/YOUR-GITHUB-USER/biliardino` image in the compose file is built by GitHub from _your_ repository when you publish a release (fork or copy this repository, then follow DEPLOY.md). Without GitHub, `docker compose up -d --build` from a checkout works on any machine with Docker.
+
 ## Development
 
 ```bash

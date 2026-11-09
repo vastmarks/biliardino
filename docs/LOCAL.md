@@ -44,7 +44,7 @@ On the NAS the only difference is the first arrow: GitHub builds the image inste
 
 ## Part 1 - Install Docker Desktop (once)
 
-You may already have it from your first test. If the whale icon is in the menu bar at the top of the screen, skip to Part 2.
+You may already have it. If the whale icon is in the menu bar at the top of the screen, skip to Part 2.
 
 1. Go to <https://docs.docker.com/desktop/setup/install/mac-install/> and download the version for your chip: **Apple silicon** for any M1–M5 Mac (Apple menu → _About This Mac_ shows the chip).
 2. Open the downloaded `Docker.dmg` and drag Docker into _Applications_.
@@ -94,7 +94,7 @@ If you get `command not found`, Docker Desktop isn't running yet: start it and t
    - `pwd` (_print working directory_) shows where you are: `/Users/<you>/Code/biliardino`.
    - `ls` (_list_) shows what's in the folder. You should see `Dockerfile`, `docker-compose.yml`, `package.json`, `src`, `docs` and others. [ARCHITECTURE.md](ARCHITECTURE.md) explains what each one is.
 
-**If you still have the old `hilde` folder from your first test:** its database lived in a Docker volume called `hilde_hilde-data`. It's test data, so the cleanest thing is to remove it before you start. See Part 7 below.
+**If you ran the original Hilde before:** its data lived in a Docker volume called `hilde_hilde-data`. If it was only test data, the cleanest thing is to remove it before you start. See Part 7 below.
 
 ---
 
@@ -254,27 +254,35 @@ The `.gitignore` doesn't cover `backup.db`, so move it out of the project folder
 
 ---
 
-## Part 7 - Cleaning up the old Hilde test
+## Part 7 - Removing a test installation
 
-Your first test ran from a folder called `hilde`, so Compose named everything after it. To remove it completely:
+To remove everything a copy of the project created (containers, data volume and image), for example the original Hilde or a test you no longer need:
 
 ```sh
-cd ~/path/to/hilde          # wherever that folder is
+cd ~/path/to/the/folder     # the folder you started it from
 docker compose down -v --rmi all
 ```
 
-- `down -v` removes the container and its volume (`hilde_hilde-data`, the test data).
-- `--rmi all` (_remove images_) also deletes the image the project used (`hilde:local`, the one built on your Mac), freeing about half a gigabyte.
+- `down -v` removes the container and its volume (the data; for the original Hilde it is called `hilde_hilde-data`).
+- `--rmi all` (_remove images_) also deletes the image built on your Mac, freeing about half a gigabyte.
 
-Then delete the `hilde` folder in Finder. If you no longer have that folder, open Docker Desktop → _Containers_, _Volumes_ and _Images_, and delete the ones whose name starts with `hilde` from there.
+Then delete the folder in Finder. If you no longer have the folder, open Docker Desktop → _Containers_, _Volumes_ and _Images_ and delete the ones with that project's name from there.
 
-Want to keep the test data instead? The new version renames a `hilde.db` it finds into `biliardino.db` on first start. The volume has a different name now, though, so it would have to be copied across first; for test data it isn't worth it.
+A database file from before the rename (`hilde.db`) is renamed to `biliardino.db` on first start. The volume has a different name than Hilde's, though, so old data would have to be copied across first.
 
 ---
 
-## Part 8 - When I send you a new version (before GitHub is set up)
+## Part 8 - Updating your copy
 
-Once the code is on GitHub (see [DEPLOY.md](DEPLOY.md)), updates come as _pull requests_ and `git pull`, which is cleaner. Until then, with a new archive from the chat:
+If you cloned the repository with git:
+
+```sh
+cd ~/Code/biliardino
+git pull
+docker compose up -d --build
+```
+
+If you got a new archive instead (a `.tar.gz` of the project):
 
 ```sh
 cd ~/Code
@@ -290,6 +298,8 @@ docker compose up -d --build
 - `cp` copies your settings into the new folder (the archive never contains a `.env`).
 - `up -d --build` builds the new code and replaces the container. Because the folder is still called `biliardino`, Compose finds the same volume: your matches are still there. Database changes are applied automatically by the start script.
 
+Before updating, read the top entry of [CHANGELOG.md](../CHANGELOG.md): some versions change the database. To back up a local installation first: `docker compose cp biliardino:/data/biliardino.db ./biliardino-backup.db` (run it from the project folder while the container is running).
+
 When the new version works, delete `biliardino-old`.
 
 ---
@@ -304,7 +314,7 @@ When the new version works, delete `biliardino-old`.
 | `ERROR: ADMIN_PASSWORD must be set and at least 8 characters long.` in the logs | The password is too short. Fix `.env`, then `docker compose up -d`. |
 | `Bind for 0.0.0.0:3000 failed: port is already allocated` | Another program uses port 3000. Set `BILIARDINO_PORT=3010` in `.env`, `docker compose up -d`, open <http://localhost:3010>. |
 | The browser says it can't connect | Wait for `(healthy)` in `docker compose ps`; check `docker compose logs`. |
-| The build fails | Copy the last 30 lines of the output and send them to Claude. Common cause: no internet during the first build. |
+| The build fails | Copy the last 30 lines of the output and search for them, or ask in an issue on the repository. Common cause: no internet during the first build. |
 | Disk filling up | Docker Desktop → _Images_, or `docker system df` to see what uses space and `docker image prune` to remove images nothing uses. |
 
 ## Sources

@@ -94,18 +94,18 @@ This is the same as the apps you already run: their authors publish images, your
    - `--push`: uploads the commits.
 
 4. Open `https://github.com/YOUR-GITHUB-USER/biliardino`. You should see the files and the README.
-5. Click the **Actions** tab. A run called _Build_ has started: it checks the code and builds the Docker image as a test. Wait until it shows a green ✓ (about 5-10 minutes; click it to watch the steps). If it shows a red ✗, open it, copy the red error text and send it to Claude.
+5. Click the **Actions** tab. A run called _Build_ has started: it checks the code and builds the Docker image as a test. Wait until it shows a green ✓ (about 5-10 minutes; click it to watch the steps). If it shows a red ✗, open it, copy the red error text and search for it, or ask for help in an issue on the repository.
 
 ## Part 3 - Publish the first release (once, then for every update)
 
 A _release_ is what your NAS installs. You publish one by tagging a commit:
 
 ```sh
-git tag v0.8.0
-git push origin v0.8.0
+git tag v0.15.0
+git push origin v0.15.0
 ```
 
-GitHub Actions runs again (Actions tab). This time, after the checks, it also uploads the image to `ghcr.io/YOUR-GITHUB-USER/biliardino` with the tags `0.8.0` and `latest`.
+GitHub Actions runs again (Actions tab). This time, after the checks, it also uploads the image to `ghcr.io/YOUR-GITHUB-USER/biliardino` with the tags `0.15.0` and `latest` (use the version number in `package.json` and at the top of the changelog).
 
 **Make the image public (only after the very first release).** New images on GitHub are private by default, which means your NAS couldn't download it without a password.
 
@@ -113,6 +113,8 @@ GitHub Actions runs again (Actions tab). This time, after the checks, it also up
 2. **Package settings** (right-hand sidebar) → at the bottom, _Danger Zone_ → **Change visibility** → **Public** → type `biliardino` → **I understand the consequences, change package visibility**.
 
 A public package can't be made private again. That's fine here: it only contains the app, never your data or passwords.
+
+**Keep it on your network.** Anybody who can open the page can add and edit matches (that is what makes entering a result take seconds); only `/admin` asks for a password. So run it on the home or office network and never forward a port from your router to it. For access from outside, use a VPN (Tailscale or WireGuard). The options for protecting it further are in [ROADMAP.md](ROADMAP.md).
 
 ## Part 4 - Prepare the data folder on the NAS (once)
 
@@ -164,11 +166,19 @@ Done. 🎉
 
 ## Backups
 
-Everything is in `/mnt/apps/docker/data/biliardino/biliardino.db`. Include that dataset in your TrueNAS snapshot / replication tasks, or copy the file somewhere else while the stack is stopped.
+Everything biliardino knows is in one file: `/mnt/apps/docker/data/biliardino/biliardino.db` (the folder from Part 4). Losing it means losing every match, so back it up before you rely on it.
+
+**Recommended: TrueNAS snapshots.** Storage → **Data Protection** → **Periodic Snapshot Tasks** → Add, choose the dataset that holds `/mnt/apps/docker/data` (or a child dataset just for it), daily, keep for 30 days. A snapshot is instant, costs almost no space and is consistent. This is also your safety net against a wrong bulk edit or a vandalised match list.
+
+**By hand.** Stop the stack in Dockge (so the file isn't being written), copy `biliardino.db` somewhere else (and `biliardino.db-wal` / `-shm` if they exist next to it), start the stack again.
+
+**Restoring.** Stop the stack, put the file back (keep the owner: `sudo chown 568:568 /mnt/apps/docker/data/biliardino/biliardino.db`), start the stack. With snapshots: browse the snapshot folder (`.zfs/snapshot/<name>/`) and copy the file from there.
 
 ## Updating to a new version
 
-When the code changes (you or Claude changed something):
+**Before you update:** read the top entry of [CHANGELOG.md](../CHANGELOG.md) (some versions change the database, and it says what to expect), and make sure you have a recent backup or snapshot (see above). Database changes are applied automatically at start and cannot be undone by running an older version, so the backup is what you go back to.
+
+When the code changes:
 
 ```sh
 cd ~/Code/biliardino
@@ -179,18 +189,20 @@ git commit -m "Short description of the change"
 git push                   # upload; GitHub runs the checks (Actions tab)
 ```
 
-Wait for the green ✓, then publish it as a release with the next version number:
+Wait for the green ✓, then publish it as a release with the next version number (the one in `package.json` and at the top of the changelog):
 
 ```sh
-git tag v0.8.1
-git push origin v0.8.1
+git tag v0.15.1
+git push origin v0.15.1
 ```
 
-When that Actions run is green, go to Dockge → stack `biliardino` → **Update**. It pulls the new `latest` image and restarts; database changes are applied automatically on start. Your data stays where it is.
+When that Actions run is green, go to Dockge → stack `biliardino` → **Update**. It pulls the new `latest` image and restarts; database changes are applied automatically on start. In the log, after `Applying database migrations...`, you should see the new migration applied and no error. Your data stays where it is.
 
-Version numbers follow [semantic versioning](https://semver.org): `v0.8.1` for fixes, `v0.9.0` for new features.
+Version numbers follow [semantic versioning](https://semver.org): `v0.15.1` for fixes, `v0.16.0` for new features.
 
-**Getting changes from Claude.** The easiest way: in a Claude session, attach your GitHub repository. Claude can then push its changes as a _pull request_ (a proposed change). You read it on GitHub (tab _Pull requests_ → _Files changed_), click **Merge**, then `git pull` on your Mac and tag a release as above.
+**Going back to an older version.** Every release is also published under its own number, so in the compose file you can replace `:latest` with e.g. `:0.15.0` and deploy again. If the newer version had changed the database, also restore the backup taken before the update (see _Restoring_), because an older version can't read a newer database.
+
+**Getting changes through a pull request.** If someone (or an AI assistant with access to your repository) proposes a change, it arrives as a _pull request_. You read it on GitHub (tab _Pull requests_ → _Files changed_), click **Merge**, then `git pull` on your Mac and tag a release as above.
 
 ## Troubleshooting
 
@@ -203,7 +215,7 @@ Version numbers follow [semantic versioning](https://semver.org): `v0.8.1` for f
 | `port is already allocated` | Another app uses that port: change `BILIARDINO_PORT` in `.env`. |
 | The admin login loops back to the login page | Only behind a reverse proxy with its own address: set `NEXTAUTH_URL` in the compose file to exactly that address (see the comment there). |
 | Forgot the admin password | Change `ADMIN_PASSWORD` in Dockge's `.env`, deploy again. |
-| A red ✗ in GitHub Actions | Open the run, click the red step, copy the error and send it to Claude. Nothing reaches your NAS until it's green. |
+| A red ✗ in GitHub Actions | Open the run, click the red step, copy the error and search for it, or ask in an issue. Nothing reaches your NAS until it's green. |
 
 ## Sources
 
