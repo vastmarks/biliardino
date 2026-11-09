@@ -1,6 +1,6 @@
-# Deploying biliardino on your home server (TrueNAS + Dockge)
+# Deploying biliardino on your home server
 
-This guide is written for someone who runs self-hosted apps with Docker Compose (Immich, FileBrowser, …) but has never published their _own_ project. It explains every command. Plan about an hour for the first time; later updates take a few minutes.
+This guide is written for someone who runs self-hosted apps with Docker Compose (Immich, FileBrowser, …) but has never published their _own_ project. It explains every command. It works with any tool that can run a compose file: **Portainer** is spelled out step by step, **Dockge** and plain **`docker compose`** are covered too. The data-folder examples use TrueNAS paths; on another system use any folder you like. Plan about an hour for the first time; later updates take a few minutes.
 
 Want to try it on your Mac first? That's [LOCAL.md](LOCAL.md); it also explains Docker itself.
 
@@ -11,14 +11,14 @@ flowchart TD
     mac["Your Mac<br/>the code (git repository)"]
     gh["GitHub<br/>stores the code, runs the checks,<br/>builds the Docker image"]
     ghcr["ghcr.io<br/>the published image"]
-    nas["Your NAS<br/>Dockge pulls the image"]
+    nas["Your server<br/>Portainer (or Dockge, or docker compose)<br/>pulls the image"]
     mac -- "git push" --> gh
     mac -- "git push of a v… tag (release)" --> gh
     gh -- "only for a release" --> ghcr
     ghcr -- "Deploy / Update" --> nas
 ```
 
-This is the same as the apps you already run: their authors publish images, your Dockge pulls them. The only difference is that _you_ are the author now, and GitHub does the building for you (free for public repositories).
+This is the same as the apps you already run: their authors publish images, your server pulls them. The only difference is that _you_ are the author now, and GitHub does the building for you (free for public repositories).
 
 **Words used below**
 
@@ -89,7 +89,7 @@ This is the same as the apps you already run: their authors publish images, your
    gh repo create biliardino --public --source=. --remote=origin --push
    ```
 
-   - `--public`: anyone can see the code (there are no secrets in it; your passwords only live in Dockge). Public also gives you free, unlimited GitHub Actions minutes.
+   - `--public`: anyone can see the code (there are no secrets in it; your passwords only live in your server's stack settings). Public also gives you free, unlimited GitHub Actions minutes.
    - `--remote=origin`: "origin" is git's nickname for your GitHub copy.
    - `--push`: uploads the commits.
 
@@ -98,7 +98,7 @@ This is the same as the apps you already run: their authors publish images, your
 
 ## Part 3 - Publish the first release (once, then for every update)
 
-A _release_ is what your NAS installs. You publish one by tagging a commit:
+A _release_ is what your server installs. You publish one by tagging a commit:
 
 ```sh
 git tag v0.15.0
@@ -107,7 +107,7 @@ git push origin v0.15.0
 
 GitHub Actions runs again (Actions tab). This time, after the checks, it also uploads the image to `ghcr.io/YOUR-GITHUB-USER/biliardino` with the tags `0.15.0` and `latest` (use the version number in `package.json` and at the top of the changelog).
 
-**Make the image public (only after the very first release).** New images on GitHub are private by default, which means your NAS couldn't download it without a password.
+**Make the image public (only after the very first release).** New images on GitHub are private by default, which means your server couldn't download it without a password.
 
 1. On GitHub, click your profile picture → **Your profile** → tab **Packages** → **biliardino**.
 2. **Package settings** (right-hand sidebar) → at the bottom, _Danger Zone_ → **Change visibility** → **Public** → type `biliardino` → **I understand the consequences, change package visibility**.
@@ -116,7 +116,7 @@ A public package can't be made private again. That's fine here: it only contains
 
 **Keep it on your network.** Anybody who can open the page can add and edit matches (that is what makes entering a result take seconds); only `/admin` asks for a password. So run it on the home or office network and never forward a port from your router to it. For access from outside, use a VPN (Tailscale or WireGuard). The options for protecting it further are in [ROADMAP.md](ROADMAP.md).
 
-## Part 4 - Prepare the data folder on the NAS (once)
+## Part 4 - Prepare the data folder on the server (once)
 
 biliardino keeps everything in one database file. Like your FileBrowser setup, it lives in a folder on your apps dataset and the container runs as TrueNAS's `apps` user (568).
 
@@ -131,21 +131,29 @@ biliardino keeps everything in one database file. Like your FileBrowser setup, i
 
    (If your apps live somewhere else, use that path here and in the compose file.)
 
-## Part 5 - Create the stack in Dockge (once)
+## Part 5 - Create the stack (once)
 
-1. On your Mac, create a random secret for the admin login and copy the output:
+A _stack_ is a compose file plus its settings, run as one unit. First, on your Mac, create a random secret for the admin login and copy the output:
 
-   ```sh
-   openssl rand -base64 32
-   ```
+```sh
+openssl rand -base64 32
+```
 
-2. Dockge → **+ Compose** → stack name `biliardino`.
-3. In the big compose box, paste the content of `dockge/compose.yaml` from the repository and replace `YOUR-GITHUB-USER` (lower case!).
-4. In the `.env` box, paste `dockge/.env.example` and fill in:
-   - `ADMIN_PASSWORD`: the password for the admin pages (at least 8 characters).
-   - `NEXTAUTH_SECRET`: the random string from step 1.
-   - `BILIARDINO_PORT`: keep `3000` unless another app already uses it (then e.g. `3010`).
-5. **Deploy**. Dockge downloads the image and starts it. In the log you should see:
+You will enter three settings (the template is [`deploy/.env.example`](../deploy/.env.example)):
+
+- `ADMIN_PASSWORD`: the password for the admin pages (at least 8 characters).
+- `NEXTAUTH_SECRET`: the random string from above.
+- `BILIARDINO_PORT`: keep `3000` unless another app already uses it (then e.g. `3010`).
+
+Pick the tool you use.
+
+### Portainer
+
+1. Portainer → choose your environment (usually **local**) → **Stacks** → **+ Add stack**.
+2. **Name**: `biliardino`. **Build method**: _Web editor_.
+3. Paste the content of [`deploy/compose.yaml`](../deploy/compose.yaml) into the editor and replace `YOUR-GITHUB-USER` with your GitHub username (lower case!). If your data folder isn't `/mnt/apps/docker/data/biliardino` (Part 4), change that line too.
+4. Scroll to **Environment variables**. Either click **+ Add an environment variable** for each of `ADMIN_PASSWORD`, `NEXTAUTH_SECRET` and `BILIARDINO_PORT`, or click **Load variables from .env file** and pick a copy of `deploy/.env.example` that you edited on your Mac.
+5. **Deploy the stack**. Portainer downloads the image and starts it. Open the stack, click the container `biliardino` → **Logs**; you should see:
 
    ```
    Applying database migrations...
@@ -154,13 +162,29 @@ biliardino keeps everything in one database file. Like your FileBrowser setup, i
    ✓ Ready
    ```
 
+### Dockge
+
+1. Dockge → **+ Compose** → stack name `biliardino`.
+2. Paste `deploy/compose.yaml` in the compose box (replace `YOUR-GITHUB-USER`, lower case).
+3. Paste `deploy/.env.example` in the `.env` box and fill in the three settings.
+4. **Deploy**, then check the log as above.
+
+### Plain Docker Compose (any machine with Docker)
+
+```sh
+mkdir biliardino && cd biliardino
+# put compose.yaml (replace YOUR-GITHUB-USER) and a .env file with the three settings here
+docker compose up -d
+docker compose logs -f      # Ctrl+C to leave the log; the app keeps running
+```
+
 ## Part 6 - First run
 
-1. Open `http://NAS-IP:3000` (your NAS address, the port from `.env`).
+1. Open `http://SERVER-IP:3000` (your server's address, the port you chose).
 2. **Players** → add everybody who plays.
 3. Home page → choose 1v1 or 2v2, type each player's name (or tap a suggestion), type the score, **Save**. The match shows up under _Recent matches_ and the leaderboard updates.
 4. On your phone, open the same address and add it to the home screen (Safari: Share → _Add to Home Screen_). It then opens like an app.
-5. **Admin**: open `http://NAS-IP:3000/admin`, log in with `ADMIN_PASSWORD`. There you manage seasons, and (while logged in) correct or delete matches older than 24 hours with **✎ Edit**. Newer matches can be fixed by anyone.
+5. **Admin**: open `http://SERVER-IP:3000/admin`, log in with `ADMIN_PASSWORD`. There you manage seasons, and (while logged in) correct or delete matches older than 24 hours with **✎ Edit**. Newer matches can be fixed by anyone.
 
 Done. 🎉
 
@@ -170,7 +194,7 @@ Everything biliardino knows is in one file: `/mnt/apps/docker/data/biliardino/bi
 
 **Recommended: TrueNAS snapshots.** Storage → **Data Protection** → **Periodic Snapshot Tasks** → Add, choose the dataset that holds `/mnt/apps/docker/data` (or a child dataset just for it), daily, keep for 30 days. A snapshot is instant, costs almost no space and is consistent. This is also your safety net against a wrong bulk edit or a vandalised match list.
 
-**By hand.** Stop the stack in Dockge (so the file isn't being written), copy `biliardino.db` somewhere else (and `biliardino.db-wal` / `-shm` if they exist next to it), start the stack again.
+**By hand.** Stop the stack (so the file isn't being written), copy `biliardino.db` somewhere else (and `biliardino.db-wal` / `-shm` if they exist next to it), start the stack again.
 
 **Restoring.** Stop the stack, put the file back (keep the owner: `sudo chown 568:568 /mnt/apps/docker/data/biliardino/biliardino.db`), start the stack. With snapshots: browse the snapshot folder (`.zfs/snapshot/<name>/`) and copy the file from there.
 
@@ -196,7 +220,13 @@ git tag v0.15.1
 git push origin v0.15.1
 ```
 
-When that Actions run is green, go to Dockge → stack `biliardino` → **Update**. It pulls the new `latest` image and restarts; database changes are applied automatically on start. In the log, after `Applying database migrations...`, you should see the new migration applied and no error. Your data stays where it is.
+When that Actions run is green, update the stack:
+
+- **Portainer:** **Stacks** → `biliardino` → **Editor** → switch on **Re-pull image and redeploy** → **Update the stack**. (Without that switch Portainer reuses the image it already has.)
+- **Dockge:** stack `biliardino` → **Update**.
+- **Plain compose:** `docker compose pull && docker compose up -d`.
+
+The new `latest` image is pulled and the container restarted; database changes are applied automatically on start. In the log, after `Applying database migrations...`, you should see the new migration applied and no error. Your data stays where it is.
 
 Version numbers follow [semantic versioning](https://semver.org): `v0.15.1` for fixes, `v0.16.0` for new features.
 
@@ -208,18 +238,20 @@ Version numbers follow [semantic versioning](https://semver.org): `v0.15.1` for 
 
 | What you see | What it means / what to do |
 | --- | --- |
-| Dockge: `denied` / `unauthorized` when pulling the image | The image is still private (Part 3), or the username in `image:` isn't lower case. |
-| Dockge: `manifest unknown` / `not found` | No release published yet, or its Actions run failed (Part 3). |
+| `denied` / `unauthorized` when pulling the image | The image is still private (Part 3), or the username in `image:` isn't lower case. |
+| Portainer: the stack stays on the old version after an update | **Re-pull image and redeploy** was off: switch it on and update the stack again. |
+| `manifest unknown` / `not found` | No release published yet, or its Actions run failed (Part 3). |
 | Container stops: `The data folder /data is not writable for user 568:568` | Run the `chown` from Part 4 again. |
-| Container stops: `ADMIN_PASSWORD must be set...` | Fix the `.env` box in Dockge and deploy again. |
+| Container stops: `ADMIN_PASSWORD must be set...` | Fix the environment variables of the stack (Portainer: Stacks → biliardino → Editor; Dockge: the `.env` box) and deploy again. |
 | `port is already allocated` | Another app uses that port: change `BILIARDINO_PORT` in `.env`. |
 | The admin login loops back to the login page | Only behind a reverse proxy with its own address: set `NEXTAUTH_URL` in the compose file to exactly that address (see the comment there). |
-| Forgot the admin password | Change `ADMIN_PASSWORD` in Dockge's `.env`, deploy again. |
-| A red ✗ in GitHub Actions | Open the run, click the red step, copy the error and search for it, or ask in an issue. Nothing reaches your NAS until it's green. |
+| Forgot the admin password | Change `ADMIN_PASSWORD` in the stack's environment variables and redeploy. |
+| A red ✗ in GitHub Actions | Open the run, click the red step, copy the error and search for it, or ask in an issue. Nothing reaches your server until it's green. |
 
 ## Sources
 
 - GitHub CLI, `gh repo create`: <https://cli.github.com/manual/gh_repo_create>
 - Package visibility (new packages are private, how to make one public): <https://docs.github.com/en/packages/learn-github-packages/configuring-a-packages-access-control-and-visibility>
 - Pro Git book (free, the standard git introduction): <https://git-scm.com/book/en/v2>
-- Why images are built on GitHub instead of in Dockge (Dockge can't rebuild): <https://github.com/louislam/dockge/discussions/267>
+- Portainer, deploying a stack from the web editor and updating it: <https://docs.portainer.io/user/docker/stacks/add>
+- Why images are built on GitHub instead of on the server (Dockge can't rebuild): <https://github.com/louislam/dockge/discussions/267>

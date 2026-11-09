@@ -2,7 +2,7 @@
 #
 # biliardino - multi-stage image: install -> build -> small runtime image.
 # Build:  docker build -t biliardino .
-# Run:    see docker-compose.yml / dockge/compose.yaml
+# Run:    see docker-compose.yml / deploy/compose.yaml
 
 # ---- dependencies ----
 FROM node:22-alpine AS deps

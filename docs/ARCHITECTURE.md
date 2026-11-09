@@ -116,7 +116,7 @@ biliardino/
 ├── Dockerfile                how to build the image
 ├── entrypoint.sh             what the container does when it starts
 ├── docker-compose.yml        run it from this folder (your Mac)
-├── dockge/                   run the published image (your NAS)
+├── deploy/                   run the published image (your server)
 ├── .github/workflows/        GitHub Actions: checks and image publishing
 ├── package.json              the project's name, version, scripts and libraries
 ├── package-lock.json         the exact versions of every library (don't edit by hand)
@@ -359,7 +359,7 @@ Other choices for speed and phones:
 
 ## 10. Settings and start-up
 
-**Settings** come from environment variables (the `.env` file locally, the `.env` box in Dockge). `src/server/env.js` checks them with Zod when the app builds and when it starts: a missing or too short `ADMIN_PASSWORD` or `NEXTAUTH_SECRET` stops the app with a clear message instead of running insecurely. There are no default passwords anywhere.
+**Settings** come from environment variables (the `.env` file locally, the stack's environment variables in Portainer or Dockge). `src/server/env.js` checks them with Zod when the app builds and when it starts: a missing or too short `ADMIN_PASSWORD` or `NEXTAUTH_SECRET` stops the app with a clear message instead of running insecurely. There are no default passwords anywhere.
 
 **Start-up** (`entrypoint.sh`, run every time the container starts):
 

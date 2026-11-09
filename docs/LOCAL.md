@@ -10,7 +10,7 @@ When it works here, [DEPLOY.md](DEPLOY.md) takes the same app to your home serve
 
 ## Part 0 - Five ideas you need first
 
-You already use Docker through Dockge, so some of this will be familiar. Here it is from the point of view of someone who _builds_ the app instead of only downloading it.
+If you already run apps through Portainer, Dockge or Docker Compose, some of this will be familiar. Here it is from the point of view of someone who _builds_ the app instead of only downloading it.
 
 | Idea | What it is | Everyday comparison |
 | --- | --- | --- |
@@ -38,7 +38,7 @@ flowchart LR
     br -- "port 3000" --> ctr
 ```
 
-On the NAS the only difference is the first arrow: GitHub builds the image instead of your Mac, and Dockge downloads it.
+On the NAS the only difference is the first arrow: GitHub builds the image instead of your Mac, and your server (Portainer, Dockge, ...) downloads it.
 
 ---
 

@@ -1,6 +1,6 @@
 # For running from a checkout of this repository: `cp .env.example .env`, edit, then
 #   docker compose up -d --build
-# For Dockge / a home server use dockge/compose.yaml instead (see docs/DEPLOY.md).
+# For a home server (Portainer, Dockge, ...) use deploy/compose.yaml instead (see docs/DEPLOY.md).
 services:
   biliardino:
     build: .

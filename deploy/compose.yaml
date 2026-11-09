@@ -1,4 +1,4 @@
-# biliardino - office foosball tracker. Stack for Dockge (or `docker compose up -d`).
+# biliardino - office foosball tracker. Stack for Portainer, Dockge or plain `docker compose up -d`.
 # Step-by-step guide: docs/DEPLOY.md in the repository.
 
 services:

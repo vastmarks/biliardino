@@ -36,9 +36,9 @@ Season 1 is created automatically. Then:
 
 Seasons are managed in the admin UI (`/admin`, password from `ADMIN_PASSWORD`): **Start season N** begins the next one (new matches count there, ratings start at 1000 again); an old season can be made current again or deleted (with its matches, after typing its number).
 
-### Home server (Dockge, Portainer, TrueNAS) - recommended
+### Home server (Portainer, Dockge, plain Docker Compose) - recommended
 
-GitHub builds the Docker image whenever you publish a release (a `v…` tag); your server pulls it like any other app. The stack is in [`dockge/compose.yaml`](dockge/compose.yaml), the full beginner-friendly walkthrough (GitHub, first release, NAS folder, Dockge, updates, troubleshooting) in **[docs/DEPLOY.md](docs/DEPLOY.md)**.
+GitHub builds the Docker image whenever you publish a release (a `v…` tag); your server pulls it like any other app. The stack is in [`deploy/compose.yaml`](deploy/compose.yaml) and works with any tool that runs a compose file; the full beginner-friendly walkthrough (GitHub, first release, data folder, Portainer step by step, Dockge and plain Docker alternatives, updates, troubleshooting) in **[docs/DEPLOY.md](docs/DEPLOY.md)**.
 
 ### Docker Compose from a checkout
 
@@ -154,6 +154,10 @@ Based on [nehalist/hilde](https://github.com/nehalist/hilde) (last upstream comm
 - Saving is transactional: two phones saving at the same moment can't overwrite each other's ratings
 - Fixed a MySQL-only assumption (placeholder `id: 0` on team creation) that breaks on SQLite
 - Not changed on purpose: next-auth 4 (now maintained by Better Auth with security fixes; the admin login doesn't need more) and TypeScript 7 (until 7.1 lets ESLint and Jest work with it)
+
+## How this was made
+
+biliardino was built by vastmarks with [Claude](https://claude.ai) (Anthropic), starting from Hilde, as a "vibe-coded" project: vastmarks set the goals and tested the result, and Claude wrote the code, the tests and the documentation. It is checked by an automated test suite and by hand, but it has **not** had an independent code or security review. Read the code and the [security note](#updating-backups-and-security) before you rely on it, and keep it on a private network. The commits record Claude as co-author.
 
 ## License
 
