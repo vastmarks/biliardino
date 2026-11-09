@@ -1,4 +1,8 @@
-![biliardino](public/brand/logo-light.svg)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="public/brand/logo-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="public/brand/logo-light.svg">
+  <img alt="biliardino" src="public/brand/logo-light.svg" width="300">
+</picture>
 
 A self-hosted tracker for the office foosball table (_biliardino_): 1v1 and 2v2 matches, Elo ratings for players and pairs, leaderboards, a Hall of Fame, achievements and a mobile-first page for entering a result right after the game.
 
