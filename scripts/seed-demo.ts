@@ -11,7 +11,7 @@ import { playerKey, teamNameFromKeys } from "~/utils/players";
 
 // hidden "true skill" of each demo player, only used to make the results plausible
 const SKILL: Record<string, number> = {
-  Elena: 1.2,
+  Carlo: 1.2,
   Chiara: 1.0,
   Luca: 0.6,
   Sara: 0.9,
